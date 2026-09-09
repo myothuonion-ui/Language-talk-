@@ -89,7 +89,7 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient()) {
     ): TutorReply {
         val prompt = """
             Learner message: $userText
-            Gemini draft: ${json.encodeToString(JsonObject.serializer(), replyToJson(draft))}
+            Gemini draft: ${replyToJson(draft)}
             Independent NVIDIA review: $review
 
             Produce the final tutoring response. Keep what is correct, fix only genuine issues,

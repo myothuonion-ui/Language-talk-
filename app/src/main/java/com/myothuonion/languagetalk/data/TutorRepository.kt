@@ -149,7 +149,7 @@ class TutorRepository(
     }
 
     suspend fun analyzeAndAddSource(name: String, mimeType: String, uri: String, bytes: ByteArray) {
-        require(bytes.size <= 18 * 1024 * 1024) { "File size must be 18 MB or less" }
+        require(bytes.size <= 14 * 1024 * 1024) { "File size must be 14 MB or less" }
         val settings = settingsStore.settings.first()
         val summary = gemini.summarizeSource(
             secrets.geminiApiKey, settings.geminiModel, name, mimeType, bytes

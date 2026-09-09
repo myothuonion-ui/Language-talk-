@@ -509,7 +509,7 @@ private fun ChatScreen(
                     Text(work.status, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            IconButton(onClick = if (work.isSpeaking) onStopSpeaking else {}) {
+            IconButton(onClick = { if (work.isSpeaking) onStopSpeaking() }) {
                 Icon(if (work.isSpeaking) Icons.Default.Stop else Icons.Default.MoreHoriz, null)
             }
         }
