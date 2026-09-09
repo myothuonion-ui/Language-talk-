@@ -13,9 +13,13 @@ import com.myothuonion.languagetalk.data.MemoryEntity
 import com.myothuonion.languagetalk.data.MessageEntity
 import com.myothuonion.languagetalk.model.BrainMode
 import com.myothuonion.languagetalk.model.TutorConfig
+import com.myothuonion.languagetalk.network.GeminiLiveSession
+import com.myothuonion.languagetalk.network.LivePhase
+import com.myothuonion.languagetalk.network.LiveState
 import com.myothuonion.languagetalk.util.GeminiAudioPlayer
 import com.myothuonion.languagetalk.util.VoiceRecorder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -58,12 +62,20 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val messages: StateFlow<List<MessageEntity>> = _currentChatId.flatMapLatest { id ->
         if (id == null) flowOf(emptyList()) else repository.messages(id)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val chatMemories: StateFlow<List<MemoryEntity>> = _currentChatId.flatMapLatest { id ->
+        if (id == null) flowOf(emptyList()) else repository.chatMemories(id)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val _work = MutableStateFlow(WorkState())
     val work: StateFlow<WorkState> = _work
+    private val _liveState = MutableStateFlow(LiveState())
+    val liveState: StateFlow<LiveState> = _liveState
+    private var liveSession: GeminiLiveSession? = null
+    private var liveCollector: Job? = null
 
     fun openChat(id: Long) { _currentChatId.value = id }
     fun closeChat() {
+        stopLive()
         recorder.stopSilently()
         player.stop()
         _currentChatId.value = null
@@ -170,6 +182,58 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch { runWork("Saving memory…") { repository.addMemory(title.trim(), content.trim()) } }
     }
 
+    fun addChatMemory(title: String, content: String) {
+        val id = _currentChatId.value ?: return
+        if (title.isBlank() || content.isBlank()) return
+        viewModelScope.launch {
+            runWork("Saving chat memory…") {
+                repository.addMemory(title.trim(), content.trim(), "Chat", id)
+            }
+        }
+    }
+
+    fun updateChatBehavior(behavior: String) {
+        val id = _currentChatId.value ?: return
+        viewModelScope.launch {
+            runWork("Saving chat behavior…") { repository.updateChatBehavior(id, behavior) }
+        }
+    }
+
+    fun startLive(chatId: Long) {
+        if (liveSession != null && _currentChatId.value == chatId) return
+        stopLive()
+        _currentChatId.value = chatId
+        _liveState.value = LiveState(phase = LivePhase.CONNECTING)
+        viewModelScope.launch {
+            try {
+                val config = repository.liveSessionConfig(chatId)
+                val session = GeminiLiveSession(config) { user, ai ->
+                    repository.saveLiveTurn(chatId, user, ai)
+                }
+                liveSession = session
+                liveCollector = launch {
+                    session.state.collect { state -> _liveState.value = state }
+                }
+                session.start()
+            } catch (e: Exception) {
+                _liveState.value = LiveState(phase = LivePhase.ERROR, error = friendlyError(e))
+            }
+        }
+    }
+
+    fun toggleLiveMic() {
+        val session = liveSession ?: return
+        session.setMicEnabled(!liveState.value.micEnabled)
+    }
+
+    fun stopLive() {
+        liveCollector?.cancel()
+        liveCollector = null
+        liveSession?.stop()
+        liveSession = null
+        _liveState.value = LiveState()
+    }
+
     fun toggleMemory(item: MemoryEntity) = viewModelScope.launch { repository.toggleMemory(item) }
     fun deleteMemory(item: MemoryEntity) = viewModelScope.launch { repository.deleteMemory(item) }
     fun toggleSource(item: KnowledgeSourceEntity) = viewModelScope.launch { repository.toggleSource(item) }
@@ -234,6 +298,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     override fun onCleared() {
+        stopLive()
         recorder.stopSilently()
         player.stop()
         super.onCleared()

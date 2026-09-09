@@ -46,12 +46,13 @@ data class MessageEntity(
     val createdAt: Long = System.currentTimeMillis()
 )
 
-@Entity(tableName = "memories")
+@Entity(tableName = "memories", indices = [Index("scopeChatId")])
 data class MemoryEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String,
     val content: String,
     val category: String = "Personal",
+    val scopeChatId: Long? = null,
     val enabled: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()

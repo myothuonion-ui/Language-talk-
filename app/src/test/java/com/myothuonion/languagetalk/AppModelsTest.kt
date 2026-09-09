@@ -2,6 +2,7 @@ package com.myothuonion.languagetalk
 
 import com.myothuonion.languagetalk.model.AppLanguage
 import com.myothuonion.languagetalk.model.DefaultVoicePresets
+import com.myothuonion.languagetalk.model.TutorConfig
 import com.myothuonion.languagetalk.model.TutorReply
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -25,5 +26,11 @@ class AppModelsTest {
         assertTrue(DefaultVoicePresets.any { it.name.contains("Korean") })
         assertTrue(DefaultVoicePresets.any { it.name.contains("English") })
         assertTrue(DefaultVoicePresets.any { it.name.contains("EPS") })
+    }
+
+    @Test
+    fun chatCanStartWithScopedMemory() {
+        val config = TutorConfig(initialMemory = "My contract shift starts at 8 AM")
+        assertEquals("My contract shift starts at 8 AM", config.initialMemory)
     }
 }

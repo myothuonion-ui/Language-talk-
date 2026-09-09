@@ -123,7 +123,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private enum class Screen { HOME, NEW_CHAT, HISTORY, MEMORY, SETTINGS, CHAT }
+private enum class Screen { HOME, NEW_CHAT, HISTORY, CHAT_HUB, MEMORY, SETTINGS, MESSAGE_CHAT, LIVE_CHAT }
 
 @Composable
 fun LanguageTalkApp(viewModel: AppViewModel) {
@@ -133,10 +133,13 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
         val chats by viewModel.chats.collectAsState()
         val currentId by viewModel.currentChatId.collectAsState()
         val messages by viewModel.messages.collectAsState()
+        val chatMemories by viewModel.chatMemories.collectAsState()
+        val liveState by viewModel.liveState.collectAsState()
         val work by viewModel.work.collectAsState()
         val memories by viewModel.memories.collectAsState()
         val sources by viewModel.sources.collectAsState()
         val snackbar = remember { SnackbarHostState() }
+        var profileChatId by rememberSaveable { mutableStateOf<Long?>(null) }
 
         LaunchedEffect(work.error) {
             work.error?.let {
@@ -147,14 +150,18 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
 
         val openChat: (Long) -> Unit = {
             viewModel.openChat(it)
-            screen = Screen.CHAT
+            screen = Screen.MESSAGE_CHAT
+        }
+        val openLiveChat: (Long) -> Unit = {
+            viewModel.openChat(it)
+            screen = Screen.LIVE_CHAT
         }
 
         Scaffold(
             snackbarHost = { SnackbarHost(snackbar) },
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
-                if (screen in listOf(Screen.HOME, Screen.HISTORY, Screen.MEMORY, Screen.SETTINGS)) {
+                if (screen in listOf(Screen.HOME, Screen.HISTORY, Screen.CHAT_HUB, Screen.MEMORY, Screen.SETTINGS)) {
                     AppBottomBar(screen) { screen = it }
                 }
             }
@@ -166,7 +173,7 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                         work = work,
                         onNewChat = { screen = Screen.NEW_CHAT },
                         onQuickStart = { config ->
-                            viewModel.createChat(config) { screen = Screen.CHAT }
+                            viewModel.createChat(config) { screen = Screen.MESSAGE_CHAT }
                         },
                         onOpenChat = openChat,
                         onSettings = { screen = Screen.SETTINGS }
@@ -174,9 +181,22 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                     Screen.NEW_CHAT -> NewChatScreen(
                         defaultBrain = settings.brainMode,
                         onBack = { screen = Screen.HOME },
-                        onStart = { config -> viewModel.createChat(config) { screen = Screen.CHAT } }
+                        onStart = { config -> viewModel.createChat(config) { screen = Screen.MESSAGE_CHAT } }
                     )
                     Screen.HISTORY -> HistoryScreen(chats, openChat, viewModel::deleteChat)
+                    Screen.CHAT_HUB -> ChatHubScreen(
+                        chats = chats,
+                        onNewChat = { screen = Screen.NEW_CHAT },
+                        onMessageChat = { id ->
+                            if (id != null) openChat(id)
+                            else viewModel.createChat(TutorConfig()) { screen = Screen.MESSAGE_CHAT }
+                        },
+                        onLiveChat = { id ->
+                            if (id != null) openLiveChat(id)
+                            else viewModel.createChat(TutorConfig()) { screen = Screen.LIVE_CHAT }
+                        },
+                        onCustomize = { id -> viewModel.openChat(id); profileChatId = id }
+                    )
                     Screen.MEMORY -> MemoryScreen(
                         memories, sources, work,
                         viewModel::addMemory,
@@ -194,22 +214,50 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                         onSave = viewModel::saveSettings,
                         onPreviewVoice = viewModel::previewVoice
                     )
-                    Screen.CHAT -> {
+                    Screen.MESSAGE_CHAT -> {
                         val chat = chats.firstOrNull { it.id == currentId }
                         if (chat != null) {
                             ChatScreen(
                                 chat, messages, work,
-                                onBack = { viewModel.closeChat(); screen = Screen.HOME },
+                                onBack = { viewModel.closeChat(); screen = Screen.CHAT_HUB },
                                 onSend = viewModel::send,
                                 onMic = viewModel::toggleRecording,
                                 onSpeak = { text -> viewModel.speak(chat.id, text) },
-                                onStopSpeaking = viewModel::stopSpeaking
+                                onStopSpeaking = viewModel::stopSpeaking,
+                                onCustomize = { profileChatId = chat.id }
                             )
                         } else {
                             LoadingPane("Opening conversation…")
                         }
                     }
+                    Screen.LIVE_CHAT -> {
+                        val chat = chats.firstOrNull { it.id == currentId }
+                        if (chat != null) {
+                            LiveChatScreen(
+                                chat = chat,
+                                state = liveState,
+                                onStart = { viewModel.startLive(chat.id) },
+                                onToggleMic = viewModel::toggleLiveMic,
+                                onStop = viewModel::stopLive,
+                                onBack = { screen = Screen.CHAT_HUB },
+                                onCustomize = { profileChatId = chat.id }
+                            )
+                        } else LoadingPane("Opening Live conversation…")
+                    }
                 }
+            }
+        }
+        profileChatId?.let { id ->
+            chats.firstOrNull { it.id == id }?.let { chat ->
+                ChatProfileDialog(
+                    chat = chat,
+                    memories = chatMemories,
+                    onDismiss = { profileChatId = null },
+                    onSaveBehavior = viewModel::updateChatBehavior,
+                    onAddMemory = viewModel::addChatMemory,
+                    onToggleMemory = viewModel::toggleMemory,
+                    onDeleteMemory = viewModel::deleteMemory
+                )
             }
         }
     }
@@ -221,6 +269,7 @@ private fun AppBottomBar(screen: Screen, onSelect: (Screen) -> Unit) {
         listOf(
             Triple(Screen.HOME, Icons.Default.Home, "Home"),
             Triple(Screen.HISTORY, Icons.Default.History, "History"),
+            Triple(Screen.CHAT_HUB, Icons.Default.ChatBubbleOutline, "Chat"),
             Triple(Screen.MEMORY, Icons.Default.AutoAwesome, "Memory"),
             Triple(Screen.SETTINGS, Icons.Default.Settings, "Settings")
         ).forEach { (target, icon, label) ->
@@ -365,6 +414,7 @@ private fun NewChatScreen(defaultBrain: BrainMode, onBack: () -> Unit, onStart: 
     var role by rememberSaveable { mutableStateOf(TutorRole.TEACHER) }
     var correction by rememberSaveable { mutableStateOf(CorrectionMode.AFTER_REPLY) }
     var prompt by rememberSaveable { mutableStateOf("") }
+    var initialMemory by rememberSaveable { mutableStateOf("") }
     var brain by rememberSaveable { mutableStateOf(defaultBrain) }
     var voiceIndex by rememberSaveable { mutableStateOf(0) }
 
@@ -412,14 +462,36 @@ private fun NewChatScreen(defaultBrain: BrainMode, onBack: () -> Unit, onStart: 
             }
             OutlinedTextField(
                 value = prompt, onValueChange = { prompt = it },
-                label = { Text("Custom prompt") },
+                label = { Text("ဒီ Chat ရဲ့ Behaviour") },
                 placeholder = { Text("ဥပမာ—အမှားကို မြန်မာလိုတိုတိုရှင်းပြပါ") },
                 minLines = 3, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp)
+            )
+            OutlinedTextField(
+                value = initialMemory,
+                onValueChange = { initialMemory = it },
+                label = { Text("ဒီ Chat ရဲ့ Memory (optional)") },
+                placeholder = { Text("ဥပမာ—ဒီ chat မှာ ငါ့အလုပ်စာချုပ်အကြောင်းပဲ ဆက်ပြောမယ်") },
+                minLines = 3,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
             )
             Button(
                 onClick = {
                     val voice = DefaultVoicePresets[voiceIndex]
-                    onStart(TutorConfig(language, level, topic, role, correction, prompt, voice.voice, voice.style, brain))
+                    onStart(
+                        TutorConfig(
+                            language = language,
+                            level = level,
+                            topic = topic,
+                            role = role,
+                            correctionMode = correction,
+                            customPrompt = prompt,
+                            voiceName = voice.voice,
+                            voiceStyle = voice.style,
+                            brainMode = brain,
+                            initialMemory = initialMemory
+                        )
+                    )
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(18.dp)
@@ -477,7 +549,8 @@ private fun ChatScreen(
     onSend: (String) -> Unit,
     onMic: () -> Unit,
     onSpeak: (String) -> Unit,
-    onStopSpeaking: () -> Unit
+    onStopSpeaking: () -> Unit,
+    onCustomize: () -> Unit
 ) {
     var input by rememberSaveable { mutableStateOf("") }
     val listState = rememberLazyListState()
@@ -509,7 +582,7 @@ private fun ChatScreen(
                     Text(work.status, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            IconButton(onClick = { if (work.isSpeaking) onStopSpeaking() }) {
+            IconButton(onClick = { if (work.isSpeaking) onStopSpeaking() else onCustomize() }) {
                 Icon(if (work.isSpeaking) Icons.Default.Stop else Icons.Default.MoreHoriz, null)
             }
         }
@@ -781,8 +854,8 @@ private fun MemoryScreen(
     ) {
         item {
             Column(Modifier.statusBarsPadding()) {
-                Text("Memory & Context", fontSize = 28.sp, fontWeight = FontWeight.Bold)
-                Text("AI က မင်းအကြောင်းနဲ့ စာရွက်စာတမ်းတွေကို သက်ဆိုင်တဲ့အချိန်မှာအသုံးပြုမယ်", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Global Memory & Context", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                Text("ဒီ memory နဲ့ document တွေကို chat အားလုံးမှာ အသုံးပြုမယ်", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         item {
@@ -912,6 +985,8 @@ private fun SettingsScreen(
     var geminiModel by remember(settings.geminiModel) { mutableStateOf(settings.geminiModel) }
     var ttsModel by remember(settings.geminiTtsModel) { mutableStateOf(settings.geminiTtsModel) }
     var nvidiaModel by remember(settings.nvidiaModel) { mutableStateOf(settings.nvidiaModel) }
+    var liveModel by remember(settings.liveModel) { mutableStateOf(settings.liveModel) }
+    var globalBehavior by remember(settings.globalBehavior) { mutableStateOf(settings.globalBehavior) }
 
     LazyColumn(
         Modifier.fillMaxSize(),
@@ -968,6 +1043,23 @@ private fun SettingsScreen(
             }
         }
         item {
+            SettingsCard("Global AI Behaviour") {
+                Text(
+                    "ဒီ prompt ကို Message Chat နဲ့ Live Chat အားလုံးမှာ အခြေခံ behaviour အဖြစ်သုံးမယ်။ Chat တစ်ခုချင်းစီမှာ ထပ်ပြောင်းနိုင်ပါတယ်။",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(10.dp))
+                OutlinedTextField(
+                    globalBehavior,
+                    { globalBehavior = it },
+                    label = { Text("Chat အားလုံးရဲ့ Behaviour") },
+                    minLines = 6,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        item {
             SettingsCard("Gemini voices") {
                 DefaultVoicePresets.forEach { preset ->
                     Row(
@@ -1010,6 +1102,8 @@ private fun SettingsScreen(
                 Spacer(Modifier.height(9.dp))
                 OutlinedTextField(ttsModel, { ttsModel = it }, label = { Text("Gemini TTS model") }, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(9.dp))
+                OutlinedTextField(liveModel, { liveModel = it }, label = { Text("Gemini Live model") }, modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(9.dp))
                 OutlinedTextField(nvidiaModel, { nvidiaModel = it }, label = { Text("NVIDIA reasoning model") }, modifier = Modifier.fillMaxWidth())
             }
         }
@@ -1024,7 +1118,9 @@ private fun SettingsScreen(
                             darkTheme = darkTheme,
                             geminiModel = geminiModel.trim(),
                             geminiTtsModel = ttsModel.trim(),
-                            nvidiaModel = nvidiaModel.trim()
+                            nvidiaModel = nvidiaModel.trim(),
+                            liveModel = liveModel.trim(),
+                            globalBehavior = globalBehavior.trim()
                         ),
                         geminiKey.trim().takeIf { it.isNotEmpty() },
                         nvidiaKey.trim().takeIf { it.isNotEmpty() }

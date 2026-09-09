@@ -1,15 +1,18 @@
 # Language Talk AI
 
-Premium Android language tutor for natural Korean and English practice. It combines Gemini voice, multimodal document understanding, persistent personal memory, chat history, and optional NVIDIA Nemotron verification.
+Premium Android language tutor for natural Korean and English practice. It combines Gemini Live hands-free conversation, Gemini voice, multimodal document understanding, persistent scoped memory, chat history, and optional NVIDIA Nemotron verification.
 
 ## What works
 
 - Korean, English, or mixed-language tutor chats
-- Two-way push-to-talk voice conversations
+- Hands-free Gemini Live audio-to-audio conversations with barge-in (speak while the AI is talking)
+- Cinematic Listening / Thinking / Speaking orb and a transcript that can be shown or hidden
+- Message Chat for typed messages and push-to-talk voice messages
 - Gemini 3.8 Flash reasoning and Gemini 3.1 Flash TTS
 - Optional Hybrid Auto, Best Quality, and NVIDIA Brain modes
 - NVIDIA Nemotron 3 Ultra text reasoning/verification
-- Per-chat topic, level, tutor role, correction mode, custom prompt, brain mode, and voice
+- Global behavior and memory shared across every conversation
+- Per-chat topic, level, tutor role, correction mode, behavior, memory, brain mode, and voice
 - Gemini voice presets for Korean, English, and EPS listening style
 - Persistent chats and messages with Room
 - Editable personal memories
@@ -27,7 +30,7 @@ On first launch:
 2. Paste a Gemini API key and tap **Save settings**.
 3. Optionally paste an NVIDIA API key to unlock hybrid brain modes.
 4. Keep **Gemini Only** for the fastest and simplest setup.
-5. Start a new Korean or English conversation.
+5. Open **Chat**, then choose **Message Chat** or **Gemini Live**.
 
 API keys are never committed to the repository. They are entered by the user and encrypted at rest with a non-exportable Android Keystore key.
 
@@ -42,6 +45,8 @@ API keys are never committed to the repository. They are entered by the user and
 
 NVIDIA is optional. The complete app continues to work with only a Gemini key.
 
+Gemini Live always uses `gemini-3.1-flash-live-preview` directly for low-latency native audio. The other brain modes apply to Message Chat; all non-live speech output still uses Gemini TTS.
+
 ## Development
 
 Requirements:
@@ -51,7 +56,7 @@ Requirements:
 - Android SDK 35
 - Gradle 8.10.2
 
-The GitHub workflow installs the required Gradle version, generates a wrapper for the CI job, runs unit tests and lint, builds an installable debug APK, uploads it as a workflow artifact, and publishes it to the `v0.1.0` release.
+The GitHub workflow installs the required Gradle version, generates a wrapper for the CI job, runs unit tests and lint, builds an installable debug APK, uploads it as a workflow artifact, and publishes it to the `v0.2.0` release.
 
 ```bash
 gradle wrapper --gradle-version 8.10.2

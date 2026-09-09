@@ -45,13 +45,13 @@ jobs:
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug --stacktrace
 
       - name: Prepare APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.1.0.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.2.0.apk
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: language-talk-v0.1.0-apk
-          path: language-talk-v0.1.0.apk
+          name: language-talk-v0.2.0-apk
+          path: language-talk-v0.2.0.apk
           if-no-files-found: error
           retention-days: 90
 
@@ -59,14 +59,18 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.1.0
-          name: Language Talk AI v0.1.0
+          tag_name: v0.2.0
+          name: Language Talk AI v0.2.0
           body: |
-            First installable Android release.
+            Hands-free Live Chat release.
 
             - Gemini Korean/English/Myanmar tutor
-            - Gemini voice and push-to-talk
+            - Gemini Live continuous, interruptible audio conversation
+            - Cinematic Listening / Thinking / Speaking UI and hideable transcript
+            - Message Chat and Live Chat modes
+            - Global and per-chat behavior / memory
+            - Gemini voice and push-to-talk message mode
             - Optional NVIDIA Nemotron reasoning
             - Memory vault, PDF/image context, chat history, custom prompts and voices
-          files: language-talk-v0.1.0.apk
+          files: language-talk-v0.2.0.apk
           make_latest: true

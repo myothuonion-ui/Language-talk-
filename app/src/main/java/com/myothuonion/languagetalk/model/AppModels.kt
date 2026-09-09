@@ -38,7 +38,15 @@ data class TutorConfig(
     val customPrompt: String = "",
     val voiceName: String = "Kore",
     val voiceStyle: String = "နူးညံ့ပြီး ရှင်းလင်းသော ဆရာမအသံ",
-    val brainMode: BrainMode = BrainMode.GEMINI_ONLY
+    val brainMode: BrainMode = BrainMode.GEMINI_ONLY,
+    val initialMemory: String = ""
+)
+
+data class LiveSessionConfig(
+    val apiKey: String,
+    val model: String,
+    val systemInstruction: String,
+    val voiceName: String
 )
 
 data class TutorReply(

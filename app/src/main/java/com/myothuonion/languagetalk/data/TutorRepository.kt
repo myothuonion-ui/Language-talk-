@@ -3,6 +3,7 @@ package com.myothuonion.languagetalk.data
 import com.myothuonion.languagetalk.model.AppLanguage
 import com.myothuonion.languagetalk.model.BrainMode
 import com.myothuonion.languagetalk.model.MessageRole
+import com.myothuonion.languagetalk.model.LiveSessionConfig
 import com.myothuonion.languagetalk.model.TutorConfig
 import com.myothuonion.languagetalk.model.TutorReply
 import com.myothuonion.languagetalk.network.AudioPayload
@@ -20,14 +21,16 @@ class TutorRepository(
     private val nvidia: NvidiaClient
 ) {
     val chats = dao.observeChats()
-    val memories = dao.observeMemories()
+    val memories = dao.observeGlobalMemories()
     val sources = dao.observeKnowledgeSources()
     val settings = settingsStore.settings
 
     fun messages(chatId: Long) = dao.observeMessages(chatId)
+    fun chatMemories(chatId: Long) = dao.observeChatMemories(chatId)
 
-    suspend fun createChat(config: TutorConfig): Long = dao.insertChat(
-        ChatEntity(
+    suspend fun createChat(config: TutorConfig): Long {
+        val chatId = dao.insertChat(
+            ChatEntity(
             title = config.topic.ifBlank { "New conversation" },
             language = config.language.name,
             topic = config.topic,
@@ -38,16 +41,21 @@ class TutorRepository(
             voiceName = config.voiceName,
             voiceStyle = config.voiceStyle,
             brainMode = config.brainMode.name
+            )
         )
-    )
+        if (config.initialMemory.isNotBlank()) {
+            addMemory("ဒီ Chat အတွက် Memory", config.initialMemory.trim(), "Chat", chatId)
+        }
+        return chatId
+    }
 
     suspend fun sendMessage(chatId: Long, userText: String, audio: AudioPayload? = null): TutorReply {
         val chat = dao.getChat(chatId) ?: error("Chat not found")
         val appSettings = settingsStore.settings.first()
         val history = dao.recentMessages(chatId).reversed()
-        val memories = dao.enabledMemories()
+        val memories = dao.enabledMemories(chatId)
         val sources = dao.enabledKnowledgeSources()
-        val system = buildSystemInstruction(chat, memories, sources, appSettings.explanationLanguage)
+        val system = buildSystemInstruction(chat, memories, sources, appSettings.explanationLanguage, appSettings.globalBehavior)
         val effectiveText = userText.ifBlank { "This is my voice message." }
 
         dao.insertMessage(
@@ -159,15 +167,60 @@ class TutorRepository(
         )
     }
 
-    suspend fun addMemory(title: String, content: String, category: String = "Personal") {
-        dao.insertMemory(MemoryEntity(title = title, content = content, category = category))
+    suspend fun addMemory(title: String, content: String, category: String = "Personal", chatId: Long? = null) {
+        dao.insertMemory(MemoryEntity(title = title, content = content, category = category, scopeChatId = chatId))
+    }
+
+    suspend fun updateChatBehavior(chatId: Long, behavior: String) {
+        val chat = dao.getChat(chatId) ?: return
+        dao.updateChat(chat.copy(customPrompt = behavior.trim(), updatedAt = System.currentTimeMillis()))
+    }
+
+    suspend fun liveSessionConfig(chatId: Long): LiveSessionConfig {
+        val chat = dao.getChat(chatId) ?: error("Chat not found")
+        val appSettings = settingsStore.settings.first()
+        val recentHistory = dao.recentMessages(chatId, 16).reversed()
+        val instruction = buildSystemInstruction(
+            chat,
+            dao.enabledMemories(chatId),
+            dao.enabledKnowledgeSources(),
+            appSettings.explanationLanguage,
+            appSettings.globalBehavior
+        ) + buildString {
+            if (recentHistory.isNotEmpty()) {
+                appendLine("\nRecent conversation to continue naturally:")
+                recentHistory.forEach { appendLine("${it.role}: ${it.content}") }
+            }
+            appendLine("\nThis is a hands-free live conversation. Speak naturally and briefly.")
+            appendLine("Listen continuously without requiring a send button. Let the learner interrupt you at any time.")
+        }
+        if (secrets.geminiApiKey.isBlank()) error("Settings ထဲတွင် Gemini API key ထည့်ပါ")
+        return LiveSessionConfig(
+            apiKey = secrets.geminiApiKey,
+            model = appSettings.liveModel,
+            systemInstruction = instruction,
+            voiceName = chat.voiceName
+        )
+    }
+
+    suspend fun saveLiveTurn(chatId: Long, userText: String, assistantText: String) {
+        if (userText.isNotBlank()) {
+            dao.insertMessage(MessageEntity(chatId = chatId, role = MessageRole.USER.name, content = userText))
+        }
+        if (assistantText.isNotBlank()) {
+            dao.insertMessage(MessageEntity(chatId = chatId, role = MessageRole.ASSISTANT.name, content = assistantText))
+        }
+        dao.touchChat(chatId)
     }
 
     suspend fun toggleMemory(memory: MemoryEntity) = dao.updateMemory(memory.copy(enabled = !memory.enabled))
     suspend fun deleteMemory(memory: MemoryEntity) = dao.deleteMemory(memory)
     suspend fun toggleSource(source: KnowledgeSourceEntity) = dao.updateKnowledgeSource(source.copy(enabled = !source.enabled))
     suspend fun deleteSource(source: KnowledgeSourceEntity) = dao.deleteKnowledgeSource(source)
-    suspend fun deleteChat(chatId: Long) = dao.deleteChat(chatId)
+    suspend fun deleteChat(chatId: Long) {
+        dao.deleteMemoriesForChat(chatId)
+        dao.deleteChat(chatId)
+    }
 
     suspend fun saveSettings(settings: AppSettings, geminiKey: String?, nvidiaKey: String?) {
         settingsStore.update { settings }
@@ -189,10 +242,12 @@ class TutorRepository(
         chat: ChatEntity,
         memories: List<MemoryEntity>,
         sources: List<KnowledgeSourceEntity>,
-        explanationLanguage: String
+        explanationLanguage: String,
+        globalBehavior: String
     ): String = buildString {
         val target = runCatching { AppLanguage.valueOf(chat.language) }.getOrDefault(AppLanguage.KOREAN)
         appendLine("You are Language Talk AI, a patient and practical language tutor.")
+        appendLine("Global behavior instructions: $globalBehavior")
         appendLine("Target language: ${target.label}; learner level: ${chat.level}; topic: ${chat.topic}.")
         appendLine("Role: ${chat.tutorRole}; correction mode: ${chat.correctionMode}.")
         appendLine("Explain corrections and meanings in $explanationLanguage, while keeping target-language examples intact.")

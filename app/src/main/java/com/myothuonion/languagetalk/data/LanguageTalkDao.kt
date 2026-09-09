@@ -28,6 +28,9 @@ interface LanguageTalkDao {
     @Query("DELETE FROM chats WHERE id = :chatId")
     suspend fun deleteChat(chatId: Long)
 
+    @Query("DELETE FROM memories WHERE scopeChatId = :chatId")
+    suspend fun deleteMemoriesForChat(chatId: Long)
+
     @Query("SELECT * FROM messages WHERE chatId = :chatId ORDER BY createdAt ASC, id ASC")
     fun observeMessages(chatId: Long): Flow<List<MessageEntity>>
 
@@ -37,11 +40,14 @@ interface LanguageTalkDao {
     @Insert
     suspend fun insertMessage(message: MessageEntity): Long
 
-    @Query("SELECT * FROM memories ORDER BY updatedAt DESC")
-    fun observeMemories(): Flow<List<MemoryEntity>>
+    @Query("SELECT * FROM memories WHERE scopeChatId IS NULL ORDER BY updatedAt DESC")
+    fun observeGlobalMemories(): Flow<List<MemoryEntity>>
 
-    @Query("SELECT * FROM memories WHERE enabled = 1 ORDER BY updatedAt DESC")
-    suspend fun enabledMemories(): List<MemoryEntity>
+    @Query("SELECT * FROM memories WHERE scopeChatId = :chatId ORDER BY updatedAt DESC")
+    fun observeChatMemories(chatId: Long): Flow<List<MemoryEntity>>
+
+    @Query("SELECT * FROM memories WHERE enabled = 1 AND (scopeChatId IS NULL OR scopeChatId = :chatId) ORDER BY scopeChatId ASC, updatedAt DESC")
+    suspend fun enabledMemories(chatId: Long): List<MemoryEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMemory(memory: MemoryEntity): Long
