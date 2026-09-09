@@ -1,0 +1,5 @@
+-keepattributes Signature
+-keep class kotlinx.serialization.** { *; }
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**

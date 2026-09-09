@@ -1,0 +1,72 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install SDK packages
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+
+      - name: Generate Gradle wrapper
+        run: gradle wrapper --gradle-version 8.10.2
+
+      - name: Test, lint, and build
+        run: ./gradlew testDebugUnitTest lintDebug assembleDebug --stacktrace
+
+      - name: Prepare APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.1.0.apk
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: language-talk-v0.1.0-apk
+          path: language-talk-v0.1.0.apk
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish GitHub release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.1.0
+          name: Language Talk AI v0.1.0
+          body: |
+            First installable Android release.
+
+            - Gemini Korean/English/Myanmar tutor
+            - Gemini voice and push-to-talk
+            - Optional NVIDIA Nemotron reasoning
+            - Memory vault, PDF/image context, chat history, custom prompts and voices
+          files: language-talk-v0.1.0.apk
+          make_latest: true
