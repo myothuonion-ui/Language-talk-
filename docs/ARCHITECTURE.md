@@ -19,6 +19,8 @@ The app intentionally uses one Android application module while keeping package 
 5. A structured `TutorReply` is persisted, including the target-language answer, Myanmar translation, correction, explanation, and follow-up question.
 6. When auto-speak is enabled, the final target-language text is synthesized only by Gemini TTS.
 
+Gemini calls pass through a task-specific fallback router. The user-selected model is attempted first, followed by compatible known models. Authentication/authorization errors stop immediately; NVIDIA is never silently rerouted.
+
 ## Voice modes
 
 Message Chat implements push-to-talk:
@@ -33,12 +35,20 @@ This avoids sending microphone data through NVIDIA. NVIDIA is a text reasoning a
 Gemini Live implements continuous audio-to-audio conversation:
 
 - Android records mono PCM16 at 16 kHz in 100 ms chunks.
-- Chunks stream to `gemini-3.1-flash-live-preview` through the Live API WebSocket after setup completes.
+- Chunks stream to the configured Gemini Live model through the Live API WebSocket after setup completes.
+- A setup deadline, server-error parsing, and compatible-model rotation prevent the interface from remaining indefinitely in a connecting state.
+- Korean, Myanmar, and English transcription hints improve multilingual recognition.
 - Automatic voice activity detection ends turns; start-of-activity interruption provides barge-in.
 - Gemini audio streams back as 24 kHz PCM and plays with a low-latency `AudioTrack`.
 - Interim/final input and output transcriptions drive the hideable transcript.
 - Session resumption and sliding-window context compression keep long live conversations usable.
 - Completed live turns are stored in the same chat history as message turns.
+
+## Home tools
+
+Korean Name Studio requests three pronunciation-oriented Hangul candidates through Gemini structured output. The client rejects Myanmar/non-Hangul values and enforces unique animals, palettes, light patterns, and layouts. Every identity card is rendered locally with Compose Canvas, so the feature consumes no image-generation quota. A normalized English prompt is attached for external image generators.
+
+Quick Translate accepts typed text or recorded audio. Gemini returns a compact structured Myanmar meaning plus pronunciation, word breakdown, and grammar fields when useful. The Listen action routes only through Gemini TTS.
 
 ## Hybrid routing
 
@@ -60,4 +70,4 @@ Only the latest bounded chat window, enabled relevant memories, and enabled sour
 
 ## Credentials
 
-Keys are stored in a private SharedPreferences file after AES/GCM encryption with a non-exportable key created by Android Keystore. Keys are never logged, exported, backed up, or embedded in the APK source.
+Keys are stored in a private SharedPreferences file after AES/GCM encryption with a non-exportable key created by Android Keystore. Keys are never logged, exported, backed up, or embedded in the APK source. A new Gemini key is validated before the encrypted stored key is replaced; removal deletes the encrypted preference entry.

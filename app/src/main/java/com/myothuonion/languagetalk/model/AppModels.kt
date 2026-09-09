@@ -44,9 +44,51 @@ data class TutorConfig(
 
 data class LiveSessionConfig(
     val apiKey: String,
-    val model: String,
+    val models: List<String>,
     val systemInstruction: String,
     val voiceName: String
+)
+
+data class GeminiRouteStatus(
+    val task: String = "",
+    val requestedModel: String = "",
+    val activeModel: String = "",
+    val usedFallback: Boolean = false
+)
+
+data class KoreanNameCandidate(
+    val hangul: String,
+    val romanization: String,
+    val myanmarPronunciation: String,
+    val soundNotes: String,
+    val naturalnessScore: Int,
+    val vibe: String,
+    val hanjaInspiredMeaning: String,
+    val animal: String,
+    val animalSymbolism: String,
+    val primaryColor: String,
+    val secondaryColor: String,
+    val lightPattern: String,
+    val layoutStyle: String,
+    val motto: String,
+    val externalImagePrompt: String
+)
+
+data class KoreanNameResult(
+    val originalName: String,
+    val candidates: List<KoreanNameCandidate>,
+    val activeModel: String = ""
+)
+
+data class TranslationResult(
+    val detectedLanguage: String,
+    val originalText: String,
+    val myanmarMeaning: String,
+    val naturalTranslation: String,
+    val pronunciation: String,
+    val wordBreakdown: String,
+    val grammarNote: String,
+    val activeModel: String = ""
 )
 
 data class TutorReply(

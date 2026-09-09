@@ -45,6 +45,9 @@ data class LiveState(
     val userCaption: String = "",
     val aiCaption: String = "",
     val lines: List<LiveLine> = emptyList(),
+    val activeModel: String = "",
+    val fallbackUsed: Boolean = false,
+    val diagnostic: String = "AI core idle",
     val error: String? = null
 )
 
@@ -73,10 +76,16 @@ class GeminiLiveSession(
     private var socket: WebSocket? = null
     private var resumptionHandle: String? = null
     private var reconnectJob: Job? = null
+    private var setupTimeoutJob: Job? = null
+    private var modelIndex = 0
     private val stopped = AtomicBoolean(false)
 
     fun start() {
         if (socket != null || stopped.get()) return
+        if (config.models.isEmpty()) {
+            fail("Gemini Live model မသတ်မှတ်ထားပါ", reconnect = false)
+            return
+        }
         connect(resuming = false)
     }
 
@@ -85,6 +94,9 @@ class GeminiLiveSession(
             it.copy(
                 phase = if (resuming) LivePhase.RECONNECTING else LivePhase.CONNECTING,
                 connected = false,
+                activeModel = config.models[modelIndex],
+                fallbackUsed = modelIndex > 0,
+                diagnostic = if (resuming) "Restoring live context" else "Linking ${config.models[modelIndex]}",
                 error = null
             )
         }
@@ -92,6 +104,13 @@ class GeminiLiveSession(
             .url("wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${config.apiKey}")
             .build()
         socket = http.newWebSocket(request, listener)
+        setupTimeoutJob?.cancel()
+        setupTimeoutJob = scope.launch {
+            delay(10_000)
+            if (!stopped.get() && !_state.value.connected) {
+                tryNextModel("Live setup timeout: ${config.models[modelIndex]}")
+            }
+        }
     }
 
     fun setMicEnabled(enabled: Boolean) {
@@ -106,6 +125,7 @@ class GeminiLiveSession(
     fun stop() {
         if (!stopped.compareAndSet(false, true)) return
         reconnectJob?.cancel()
+        setupTimeoutJob?.cancel()
         send(buildJsonObject {
             put("realtimeInput", buildJsonObject { put("audioStreamEnd", JsonPrimitive(true)) })
         })
@@ -121,6 +141,7 @@ class GeminiLiveSession(
     private val listener = object : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
             if (webSocket !== socket || stopped.get()) return
+            _state.update { it.copy(diagnostic = "Authenticating Live session") }
             webSocket.send(setupMessage().toString())
         }
 
@@ -137,19 +158,25 @@ class GeminiLiveSession(
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
             if (webSocket !== socket || stopped.get()) return
             socket = null
-            scheduleReconnect("Live connection ပိတ်သွားသည်")
+            if (!_state.value.connected && code != 1000) {
+                tryNextModel("Live setup ပိတ်သွားသည် ($code): $reason")
+            } else scheduleReconnect("Live connection ပိတ်သွားသည် ($code)")
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             if (webSocket !== socket || stopped.get()) return
             socket = null
-            scheduleReconnect(t.message ?: "Live connection မရပါ")
+            val reason = response?.let { "Live handshake failed (${it.code})" }
+                ?: t.message ?: "Live connection မရပါ"
+            if (!_state.value.connected && response?.code !in listOf(401, 403)) {
+                tryNextModel(reason)
+            } else fail(reason, reconnect = _state.value.connected)
         }
     }
 
     private fun setupMessage(): JsonObject = buildJsonObject {
         put("setup", buildJsonObject {
-            put("model", JsonPrimitive("models/${config.model}"))
+            put("model", JsonPrimitive("models/${config.models[modelIndex]}"))
             put("generationConfig", buildJsonObject {
                 put("responseModalities", buildJsonArray { add(JsonPrimitive("AUDIO")) })
                 put("temperature", JsonPrimitive(0.7))
@@ -166,7 +193,18 @@ class GeminiLiveSession(
                     add(buildJsonObject { put("text", JsonPrimitive(config.systemInstruction)) })
                 })
             })
-            put("inputAudioTranscription", buildJsonObject { put("mode", JsonPrimitive("VERBATIM")) })
+            put("inputAudioTranscription", buildJsonObject {
+                put("mode", JsonPrimitive("VERBATIM"))
+                put("languageCodes", buildJsonArray {
+                    add(JsonPrimitive("ko-KR"))
+                    add(JsonPrimitive("my-MM"))
+                    add(JsonPrimitive("en-US"))
+                })
+                put("customVocabulary", buildJsonArray {
+                    listOf("한국어", "미얀마", "Myanmar", "Korean", "English", "EPS-TOPIK")
+                        .forEach { add(JsonPrimitive(it)) }
+                })
+            })
             put("outputAudioTranscription", buildJsonObject { })
             put("realtimeInputConfig", buildJsonObject {
                 put("activityHandling", JsonPrimitive("START_OF_ACTIVITY_INTERRUPTS"))
@@ -186,8 +224,25 @@ class GeminiLiveSession(
     }
 
     private fun handleMessage(root: JsonObject) {
+        root["error"]?.jsonObject?.let { error ->
+            val code = error["code"]?.jsonPrimitive?.contentOrNull?.toIntOrNull()
+            val message = error["message"]?.jsonPrimitive?.contentOrNull ?: "Gemini Live setup error"
+            if (!_state.value.connected && code !in listOf(401, 403)) tryNextModel(message)
+            else fail(message, reconnect = false)
+            return
+        }
         if (root["setupComplete"] != null) {
-            _state.update { it.copy(phase = LivePhase.LISTENING, connected = true, error = null) }
+            setupTimeoutJob?.cancel()
+            _state.update {
+                it.copy(
+                    phase = LivePhase.LISTENING,
+                    connected = true,
+                    activeModel = config.models[modelIndex],
+                    fallbackUsed = modelIndex > 0,
+                    diagnostic = "Voice channel ready",
+                    error = null
+                )
+            }
             startRecorderIfNeeded()
         }
         root["sessionResumptionUpdate"]?.jsonObject?.let { update ->
@@ -259,15 +314,42 @@ class GeminiLiveSession(
     private fun scheduleReconnect(reason: String) {
         if (stopped.get() || reconnectJob?.isActive == true) return
         player.interrupt()
-        _state.update { it.copy(phase = LivePhase.RECONNECTING, connected = false, error = reason) }
+        _state.update { it.copy(phase = LivePhase.RECONNECTING, connected = false, diagnostic = reason, error = null) }
         reconnectJob = scope.launch {
             delay(900)
             if (!stopped.get()) connect(resuming = resumptionHandle != null)
         }
     }
 
+    private fun tryNextModel(reason: String) {
+        setupTimeoutJob?.cancel()
+        if (modelIndex + 1 >= config.models.size) {
+            fail("$reason\nFallback Live model လည်း မရပါ", reconnect = false)
+            return
+        }
+        val oldSocket = socket
+        socket = null
+        oldSocket?.close(1000, "Trying fallback model")
+        recorder.stop()
+        player.interrupt()
+        resumptionHandle = null
+        modelIndex += 1
+        _state.update {
+            it.copy(
+                phase = LivePhase.CONNECTING,
+                connected = false,
+                activeModel = config.models[modelIndex],
+                fallbackUsed = true,
+                diagnostic = "Fallback → ${config.models[modelIndex]}",
+                error = null
+            )
+        }
+        connect(resuming = false)
+    }
+
     private fun fail(message: String, reconnect: Boolean) {
-        _state.update { it.copy(phase = LivePhase.ERROR, connected = false, error = message) }
+        setupTimeoutJob?.cancel()
+        _state.update { it.copy(phase = LivePhase.ERROR, connected = false, diagnostic = "Live core paused", error = message) }
         if (reconnect) scheduleReconnect(message)
     }
 

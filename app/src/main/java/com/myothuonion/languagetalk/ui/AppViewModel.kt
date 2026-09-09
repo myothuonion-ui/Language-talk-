@@ -12,6 +12,9 @@ import com.myothuonion.languagetalk.data.KnowledgeSourceEntity
 import com.myothuonion.languagetalk.data.MemoryEntity
 import com.myothuonion.languagetalk.data.MessageEntity
 import com.myothuonion.languagetalk.model.BrainMode
+import com.myothuonion.languagetalk.model.GeminiRouteStatus
+import com.myothuonion.languagetalk.model.KoreanNameResult
+import com.myothuonion.languagetalk.model.TranslationResult
 import com.myothuonion.languagetalk.model.TutorConfig
 import com.myothuonion.languagetalk.network.GeminiLiveSession
 import com.myothuonion.languagetalk.network.LivePhase
@@ -39,6 +42,27 @@ data class WorkState(
     val error: String? = null
 )
 
+data class CredentialState(
+    val geminiConfigured: Boolean = false,
+    val nvidiaConfigured: Boolean = false,
+    val checkingGemini: Boolean = false,
+    val geminiStatus: String = "",
+    val nvidiaStatus: String = ""
+)
+
+data class NameStudioState(
+    val isLoading: Boolean = false,
+    val result: KoreanNameResult? = null,
+    val error: String? = null
+)
+
+data class QuickTranslateState(
+    val isLoading: Boolean = false,
+    val isRecording: Boolean = false,
+    val result: TranslationResult? = null,
+    val error: String? = null
+)
+
 class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = (application as LanguageTalkApplication).repository
     private val recorder = VoiceRecorder(application)
@@ -56,6 +80,21 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val settings: StateFlow<AppSettings> = repository.settings.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings()
     )
+    val geminiRoute: StateFlow<GeminiRouteStatus> = repository.geminiRoute
+
+    private val _credentials = MutableStateFlow(
+        CredentialState(
+            geminiConfigured = repository.hasGeminiKey(),
+            nvidiaConfigured = repository.hasNvidiaKey()
+        )
+    )
+    val credentials: StateFlow<CredentialState> = _credentials
+
+    private val _nameStudio = MutableStateFlow(NameStudioState())
+    val nameStudio: StateFlow<NameStudioState> = _nameStudio
+
+    private val _quickTranslate = MutableStateFlow(QuickTranslateState())
+    val quickTranslate: StateFlow<QuickTranslateState> = _quickTranslate
 
     private val _currentChatId = MutableStateFlow<Long?>(null)
     val currentChatId: StateFlow<Long?> = _currentChatId
@@ -265,10 +304,126 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun saveSettings(value: AppSettings, geminiKey: String?, nvidiaKey: String?) {
+    fun saveSettings(value: AppSettings) {
         viewModelScope.launch {
-            runWork("Saving settings…") { repository.saveSettings(value, geminiKey, nvidiaKey) }
+            runWork("Saving settings…") { repository.saveSettings(value) }
         }
+    }
+
+    fun replaceGeminiKey(candidate: String) {
+        if (candidate.isBlank()) return
+        viewModelScope.launch {
+            _credentials.update { it.copy(checkingGemini = true, geminiStatus = "Testing new key…") }
+            try {
+                val count = repository.replaceGeminiKey(candidate)
+                _credentials.update {
+                    it.copy(geminiConfigured = true, checkingGemini = false, geminiStatus = "Valid · $count models available")
+                }
+            } catch (e: Exception) {
+                _credentials.update { it.copy(checkingGemini = false, geminiStatus = "Invalid · ${friendlyError(e)}") }
+            }
+        }
+    }
+
+    fun testGeminiKey(candidate: String?) {
+        viewModelScope.launch {
+            _credentials.update { it.copy(checkingGemini = true, geminiStatus = "Checking Gemini key…") }
+            try {
+                val count = repository.testGeminiKey(candidate)
+                _credentials.update { it.copy(checkingGemini = false, geminiStatus = "Valid · $count models available") }
+            } catch (e: Exception) {
+                _credentials.update { it.copy(checkingGemini = false, geminiStatus = "Invalid · ${friendlyError(e)}") }
+            }
+        }
+    }
+
+    fun removeGeminiKey() {
+        repository.removeGeminiKey()
+        _credentials.update { it.copy(geminiConfigured = false, geminiStatus = "Gemini key removed") }
+        stopLive()
+    }
+
+    fun replaceNvidiaKey(candidate: String) {
+        runCatching { repository.replaceNvidiaKey(candidate) }
+            .onSuccess { _credentials.update { it.copy(nvidiaConfigured = true, nvidiaStatus = "NVIDIA key saved") } }
+            .onFailure { error -> _credentials.update { it.copy(nvidiaStatus = friendlyError(error)) } }
+    }
+
+    fun removeNvidiaKey() {
+        repository.removeNvidiaKey()
+        _credentials.update { it.copy(nvidiaConfigured = false, nvidiaStatus = "NVIDIA key removed") }
+    }
+
+    fun generateKoreanNames(name: String) {
+        if (name.isBlank() || _nameStudio.value.isLoading) return
+        viewModelScope.launch {
+            _nameStudio.value = NameStudioState(isLoading = true)
+            try {
+                _nameStudio.value = NameStudioState(result = repository.createKoreanNames(name))
+            } catch (e: Exception) {
+                _nameStudio.value = NameStudioState(error = friendlyError(e))
+            }
+        }
+    }
+
+    fun translateText(text: String) {
+        if (text.isBlank() || _quickTranslate.value.isLoading) return
+        viewModelScope.launch {
+            _quickTranslate.value = QuickTranslateState(isLoading = true)
+            try {
+                _quickTranslate.value = QuickTranslateState(result = repository.quickTranslate(text))
+            } catch (e: Exception) {
+                _quickTranslate.value = QuickTranslateState(error = friendlyError(e))
+            }
+        }
+    }
+
+    fun toggleTranslateRecording() {
+        if (_quickTranslate.value.isLoading) return
+        if (!_quickTranslate.value.isRecording) {
+            try {
+                player.stop()
+                recorder.start()
+                _quickTranslate.update { it.copy(isRecording = true, error = null) }
+            } catch (e: Exception) {
+                _quickTranslate.update { it.copy(error = "Microphone စတင်၍မရပါ: ${e.message}") }
+            }
+            return
+        }
+        val audio = recorder.stop()
+        _quickTranslate.update { it.copy(isRecording = false) }
+        if (audio == null) {
+            _quickTranslate.update { it.copy(error = "အသံမရပါ။ ထပ်စမ်းပါ") }
+            return
+        }
+        viewModelScope.launch {
+            _quickTranslate.update { it.copy(isLoading = true, error = null) }
+            try {
+                _quickTranslate.value = QuickTranslateState(result = repository.quickTranslate("", audio))
+            } catch (e: Exception) {
+                _quickTranslate.value = QuickTranslateState(error = friendlyError(e))
+            }
+        }
+    }
+
+    fun speakToolText(text: String) {
+        if (text.isBlank()) return
+        viewModelScope.launch {
+            _work.update { it.copy(isSpeaking = true, status = "Generating Gemini voice…", error = null) }
+            try {
+                player.play(repository.speakToolText(text)) {
+                    _work.update { it.copy(isSpeaking = false, status = "Ready") }
+                }
+            } catch (e: Exception) {
+                _work.update { it.copy(isSpeaking = false, error = friendlyError(e), status = "Voice failed") }
+            }
+        }
+    }
+
+    fun clearNameStudio() { _nameStudio.value = NameStudioState() }
+    fun clearQuickTranslate() {
+        recorder.stopSilently()
+        _quickTranslate.value = QuickTranslateState()
     }
 
     fun hasGeminiKey() = repository.hasGeminiKey()

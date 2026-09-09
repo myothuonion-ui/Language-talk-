@@ -51,6 +51,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Send
@@ -116,6 +117,7 @@ import com.myothuonion.languagetalk.model.AppLanguage
 import com.myothuonion.languagetalk.model.BrainMode
 import com.myothuonion.languagetalk.model.CorrectionMode
 import com.myothuonion.languagetalk.model.DefaultVoicePresets
+import com.myothuonion.languagetalk.model.GeminiRouteStatus
 import com.myothuonion.languagetalk.model.TutorConfig
 import com.myothuonion.languagetalk.model.TutorRole
 import kotlinx.coroutines.launch
@@ -123,7 +125,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-private enum class Screen { HOME, NEW_CHAT, HISTORY, CHAT_HUB, MEMORY, SETTINGS, MESSAGE_CHAT, LIVE_CHAT }
+private enum class Screen {
+    HOME, NEW_CHAT, HISTORY, CHAT_HUB, MEMORY, SETTINGS, MESSAGE_CHAT, LIVE_CHAT, NAME_STUDIO, QUICK_TRANSLATE
+}
 
 @Composable
 fun LanguageTalkApp(viewModel: AppViewModel) {
@@ -135,6 +139,10 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
         val messages by viewModel.messages.collectAsState()
         val chatMemories by viewModel.chatMemories.collectAsState()
         val liveState by viewModel.liveState.collectAsState()
+        val credentials by viewModel.credentials.collectAsState()
+        val geminiRoute by viewModel.geminiRoute.collectAsState()
+        val nameStudio by viewModel.nameStudio.collectAsState()
+        val quickTranslate by viewModel.quickTranslate.collectAsState()
         val work by viewModel.work.collectAsState()
         val memories by viewModel.memories.collectAsState()
         val sources by viewModel.sources.collectAsState()
@@ -176,7 +184,9 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                             viewModel.createChat(config) { screen = Screen.MESSAGE_CHAT }
                         },
                         onOpenChat = openChat,
-                        onSettings = { screen = Screen.SETTINGS }
+                        onSettings = { screen = Screen.SETTINGS },
+                        onNameStudio = { screen = Screen.NAME_STUDIO },
+                        onQuickTranslate = { screen = Screen.QUICK_TRANSLATE }
                     )
                     Screen.NEW_CHAT -> NewChatScreen(
                         defaultBrain = settings.brainMode,
@@ -208,10 +218,15 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                     )
                     Screen.SETTINGS -> SettingsScreen(
                         settings = settings,
-                        hasGeminiKey = viewModel.hasGeminiKey(),
-                        hasNvidiaKey = viewModel.hasNvidiaKey(),
+                        credentials = credentials,
+                        geminiRoute = geminiRoute,
                         work = work,
                         onSave = viewModel::saveSettings,
+                        onReplaceGemini = viewModel::replaceGeminiKey,
+                        onTestGemini = viewModel::testGeminiKey,
+                        onRemoveGemini = viewModel::removeGeminiKey,
+                        onReplaceNvidia = viewModel::replaceNvidiaKey,
+                        onRemoveNvidia = viewModel::removeNvidiaKey,
                         onPreviewVoice = viewModel::previewVoice
                     )
                     Screen.MESSAGE_CHAT -> {
@@ -244,6 +259,18 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                             )
                         } else LoadingPane("Opening Live conversation…")
                     }
+                    Screen.NAME_STUDIO -> NameStudioScreen(
+                        state = nameStudio,
+                        onBack = { viewModel.clearNameStudio(); screen = Screen.HOME },
+                        onGenerate = viewModel::generateKoreanNames
+                    )
+                    Screen.QUICK_TRANSLATE -> QuickTranslateScreen(
+                        state = quickTranslate,
+                        onBack = { viewModel.clearQuickTranslate(); screen = Screen.HOME },
+                        onTranslate = viewModel::translateText,
+                        onMic = viewModel::toggleTranslateRecording,
+                        onListen = viewModel::speakToolText
+                    )
                 }
             }
         }
@@ -290,7 +317,9 @@ private fun HomeScreen(
     onNewChat: () -> Unit,
     onQuickStart: (TutorConfig) -> Unit,
     onOpenChat: (Long) -> Unit,
-    onSettings: () -> Unit
+    onSettings: () -> Unit,
+    onNameStudio: () -> Unit,
+    onQuickTranslate: () -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -311,6 +340,7 @@ private fun HomeScreen(
             }
         }
         item { VoiceHero(work, onNewChat) }
+        item { HomeToolCards(onNameStudio, onQuickTranslate) }
         item {
             Text("Quick practice", fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
         }
@@ -342,6 +372,55 @@ private fun HomeScreen(
             }
         }
         item { Spacer(Modifier.height(8.dp)) }
+    }
+}
+
+@Composable
+private fun HomeToolCards(onNameStudio: () -> Unit, onQuickTranslate: () -> Unit) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        HomeToolCard(
+            title = "Korean Name",
+            subtitle = "နာမည်နဲ့ identity card",
+            icon = Icons.Default.Palette,
+            accent = Color(0xFFFFB547),
+            modifier = Modifier.weight(1f),
+            onClick = onNameStudio
+        )
+        HomeToolCard(
+            title = "Quick Translate",
+            subtitle = "စာ/အသံ → မြန်မာ",
+            icon = Icons.Default.Translate,
+            accent = Mint,
+            modifier = Modifier.weight(1f),
+            onClick = onQuickTranslate
+        )
+    }
+}
+
+@Composable
+private fun HomeToolCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    accent: Color,
+    modifier: Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = modifier.height(144.dp).clickable(onClick = onClick),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(21.dp)
+    ) {
+        Column(Modifier.fillMaxSize().padding(15.dp), verticalArrangement = Arrangement.SpaceBetween) {
+            Box(
+                Modifier.size(43.dp).clip(RoundedCornerShape(14.dp)).background(accent.copy(alpha = .16f)),
+                contentAlignment = Alignment.Center
+            ) { Icon(icon, null, tint = accent) }
+            Column {
+                Text(title, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp, maxLines = 2)
+            }
+        }
     }
 }
 
@@ -970,10 +1049,15 @@ private fun MemoryCard(memory: MemoryEntity, onToggle: () -> Unit, onDelete: () 
 @Composable
 private fun SettingsScreen(
     settings: AppSettings,
-    hasGeminiKey: Boolean,
-    hasNvidiaKey: Boolean,
+    credentials: CredentialState,
+    geminiRoute: GeminiRouteStatus,
     work: WorkState,
-    onSave: (AppSettings, String?, String?) -> Unit,
+    onSave: (AppSettings) -> Unit,
+    onReplaceGemini: (String) -> Unit,
+    onTestGemini: (String?) -> Unit,
+    onRemoveGemini: () -> Unit,
+    onReplaceNvidia: (String) -> Unit,
+    onRemoveNvidia: () -> Unit,
     onPreviewVoice: (String, String, String) -> Unit
 ) {
     var displayName by remember(settings.displayName) { mutableStateOf(settings.displayName) }
@@ -987,6 +1071,8 @@ private fun SettingsScreen(
     var nvidiaModel by remember(settings.nvidiaModel) { mutableStateOf(settings.nvidiaModel) }
     var liveModel by remember(settings.liveModel) { mutableStateOf(settings.liveModel) }
     var globalBehavior by remember(settings.globalBehavior) { mutableStateOf(settings.globalBehavior) }
+    var confirmRemoveGemini by remember { mutableStateOf(false) }
+    var confirmRemoveNvidia by remember { mutableStateOf(false) }
 
     LazyColumn(
         Modifier.fillMaxSize(),
@@ -1013,20 +1099,56 @@ private fun SettingsScreen(
                     label = "Gemini API key",
                     value = geminiKey,
                     onValue = { geminiKey = it },
-                    configured = hasGeminiKey,
+                    configured = credentials.geminiConfigured,
                     required = true
                 )
+                if (credentials.geminiStatus.isNotBlank()) {
+                    Text(
+                        credentials.geminiStatus,
+                        color = if (credentials.geminiStatus.startsWith("Invalid")) Coral else Mint,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(top = 7.dp)
+                    )
+                }
+                Row(Modifier.fillMaxWidth().padding(top = 9.dp), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    OutlinedButton(
+                        onClick = { onTestGemini(geminiKey.trim().takeIf(String::isNotEmpty)) },
+                        enabled = !credentials.checkingGemini && (geminiKey.isNotBlank() || credentials.geminiConfigured),
+                        modifier = Modifier.weight(1f)
+                    ) { Text("Test") }
+                    Button(
+                        onClick = { onReplaceGemini(geminiKey) },
+                        enabled = !credentials.checkingGemini && geminiKey.isNotBlank(),
+                        modifier = Modifier.weight(1f)
+                    ) { Text(if (credentials.geminiConfigured) "Replace" else "Add key") }
+                    if (credentials.geminiConfigured) {
+                        TextButton(onClick = { confirmRemoveGemini = true }) { Text("Remove", color = Coral) }
+                    }
+                }
                 Spacer(Modifier.height(12.dp))
                 KeyField(
                     label = "NVIDIA API key",
                     value = nvidiaKey,
                     onValue = { nvidiaKey = it },
-                    configured = hasNvidiaKey,
+                    configured = credentials.nvidiaConfigured,
                     required = false
                 )
+                Row(Modifier.fillMaxWidth().padding(top = 9.dp), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                    Button(
+                        onClick = { onReplaceNvidia(nvidiaKey); nvidiaKey = "" },
+                        enabled = nvidiaKey.isNotBlank(),
+                        modifier = Modifier.weight(1f)
+                    ) { Text(if (credentials.nvidiaConfigured) "Replace NVIDIA" else "Add NVIDIA") }
+                    if (credentials.nvidiaConfigured) {
+                        TextButton(onClick = { confirmRemoveNvidia = true }) { Text("Remove", color = Coral) }
+                    }
+                }
+                if (credentials.nvidiaStatus.isNotBlank()) {
+                    Text(credentials.nvidiaStatus, color = Mint, fontSize = 12.sp)
+                }
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Key အသစ်မရိုက်ဘဲ Save လုပ်လျှင် သိမ်းထားသော key ကိုမပြောင်းပါ။ Keys ကို Android Keystore ဖြင့် encrypted သိမ်းထားသည်။",
+                    "Gemini key အသစ်ကို valid ဖြစ်မှ အဟောင်းအစားထိုးမယ်။ Keys ကို Android Keystore ဖြင့် encrypted သိမ်းထားသည်။",
                     fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -1037,7 +1159,7 @@ private fun SettingsScreen(
                     SelectableCard(mode.label, mode.description, brainMode == mode) { brainMode = mode }
                     Spacer(Modifier.height(7.dp))
                 }
-                if (brainMode != BrainMode.GEMINI_ONLY && !hasNvidiaKey && nvidiaKey.isBlank()) {
+                if (brainMode != BrainMode.GEMINI_ONLY && !credentials.nvidiaConfigured && nvidiaKey.isBlank()) {
                     Text("ဒီ mode အတွက် NVIDIA API key လိုအပ်သည်", color = Coral, fontSize = 12.sp)
                 }
             }
@@ -1105,6 +1227,14 @@ private fun SettingsScreen(
                 OutlinedTextField(liveModel, { liveModel = it }, label = { Text("Gemini Live model") }, modifier = Modifier.fillMaxWidth())
                 Spacer(Modifier.height(9.dp))
                 OutlinedTextField(nvidiaModel, { nvidiaModel = it }, label = { Text("NVIDIA reasoning model") }, modifier = Modifier.fillMaxWidth())
+                if (geminiRoute.activeModel.isNotBlank()) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        "${geminiRoute.task}: ${geminiRoute.activeModel}${if (geminiRoute.usedFallback) " · Fallback active" else ""}",
+                        color = if (geminiRoute.usedFallback) Coral else Mint,
+                        fontSize = 12.sp
+                    )
+                }
             }
         }
         item {
@@ -1121,12 +1251,8 @@ private fun SettingsScreen(
                             nvidiaModel = nvidiaModel.trim(),
                             liveModel = liveModel.trim(),
                             globalBehavior = globalBehavior.trim()
-                        ),
-                        geminiKey.trim().takeIf { it.isNotEmpty() },
-                        nvidiaKey.trim().takeIf { it.isNotEmpty() }
+                        )
                     )
-                    geminiKey = ""
-                    nvidiaKey = ""
                 },
                 modifier = Modifier.fillMaxWidth().height(54.dp),
                 shape = RoundedCornerShape(17.dp)
@@ -1137,6 +1263,33 @@ private fun SettingsScreen(
             }
         }
         item { Spacer(Modifier.height(10.dp)) }
+    }
+
+    if (confirmRemoveGemini) {
+        AlertDialog(
+            onDismissRequest = { confirmRemoveGemini = false },
+            title = { Text("Gemini key ကိုဖယ်မလား?") },
+            text = { Text("Chat, Live, Name Studio နဲ့ Translate တို့က key အသစ်မထည့်မချင်း အလုပ်မလုပ်ပါ။") },
+            confirmButton = {
+                TextButton(onClick = { onRemoveGemini(); geminiKey = ""; confirmRemoveGemini = false }) {
+                    Text("Remove", color = Coral)
+                }
+            },
+            dismissButton = { TextButton(onClick = { confirmRemoveGemini = false }) { Text("Cancel") } }
+        )
+    }
+    if (confirmRemoveNvidia) {
+        AlertDialog(
+            onDismissRequest = { confirmRemoveNvidia = false },
+            title = { Text("NVIDIA key ကိုဖယ်မလား?") },
+            text = { Text("NVIDIA brain modes ကိုသာ အသုံးမပြုနိုင်တော့ပါ။ Gemini features မထိခိုက်ပါ။") },
+            confirmButton = {
+                TextButton(onClick = { onRemoveNvidia(); nvidiaKey = ""; confirmRemoveNvidia = false }) {
+                    Text("Remove", color = Coral)
+                }
+            },
+            dismissButton = { TextButton(onClick = { confirmRemoveNvidia = false }) { Text("Cancel") } }
+        )
     }
 }
 

@@ -1,9 +1,11 @@
 package com.myothuonion.languagetalk
 
+import com.myothuonion.languagetalk.data.isGeminiFallbackEligible
 import com.myothuonion.languagetalk.model.AppLanguage
 import com.myothuonion.languagetalk.model.DefaultVoicePresets
 import com.myothuonion.languagetalk.model.TutorConfig
 import com.myothuonion.languagetalk.model.TutorReply
+import com.myothuonion.languagetalk.network.AiApiException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -32,5 +34,18 @@ class AppModelsTest {
     fun chatCanStartWithScopedMemory() {
         val config = TutorConfig(initialMemory = "My contract shift starts at 8 AM")
         assertEquals("My contract shift starts at 8 AM", config.initialMemory)
+    }
+
+    @Test
+    fun geminiFallsBackForUnavailableModelsAndQuota() {
+        assertTrue(isGeminiFallbackEligible(AiApiException("Model not found", 404)))
+        assertTrue(isGeminiFallbackEligible(AiApiException("Quota reached", 429)))
+        assertTrue(isGeminiFallbackEligible(AiApiException("Service unavailable", 503)))
+    }
+
+    @Test
+    fun geminiDoesNotHideInvalidCredentialsBehindFallback() {
+        assertTrue(!isGeminiFallbackEligible(AiApiException("Invalid API key", 401)))
+        assertTrue(!isGeminiFallbackEligible(AiApiException("Forbidden", 403)))
     }
 }

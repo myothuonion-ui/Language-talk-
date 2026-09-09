@@ -2,6 +2,9 @@ package com.myothuonion.languagetalk.network
 
 import android.util.Base64
 import com.myothuonion.languagetalk.data.MessageEntity
+import com.myothuonion.languagetalk.model.KoreanNameCandidate
+import com.myothuonion.languagetalk.model.KoreanNameResult
+import com.myothuonion.languagetalk.model.TranslationResult
 import com.myothuonion.languagetalk.model.TutorReply
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -98,6 +101,130 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient()) {
         return tutorReply(apiKey, model, systemInstruction, emptyList(), prompt)
     }
 
+    suspend fun listModels(apiKey: String): List<String> {
+        requireKey(apiKey)
+        val request = Request.Builder()
+            .url("https://generativelanguage.googleapis.com/v1beta/models?key=$apiKey&pageSize=100")
+            .get()
+            .build()
+        http.newCall(request).await().use { response ->
+            val responseBody = response.body?.string().orEmpty()
+            if (!response.isSuccessful) {
+                throw apiException(responseBody, response.code, "Gemini key check failed")
+            }
+            return json.parseToJsonElement(responseBody).jsonObject["models"]?.jsonArray
+                ?.mapNotNull { model ->
+                    model.jsonObject["name"]?.jsonPrimitive?.contentOrNull?.removePrefix("models/")
+                }.orEmpty()
+        }
+    }
+
+    suspend fun createKoreanNames(apiKey: String, model: String, originalName: String): KoreanNameResult {
+        requireKey(apiKey)
+        val prompt = """
+            Convert the Myanmar personal name below into exactly 3 useful Korean Hangul name spellings.
+            Original Myanmar name: $originalName
+
+            Mandatory rules:
+            - The `hangul` value must contain Korean Hangul only. Never copy Myanmar script into `hangul`.
+            - Preserve pronunciation rather than translating the person's identity.
+            - Explain plain, tense, and aspirated consonant differences precisely when relevant (for example 두 / 뚜 / 투).
+            - Make all 3 candidates meaningfully different and rank the most sound-faithful first.
+            - Hangul spelling alone does not guarantee a literal meaning. `hanjaInspiredMeaning` must be clearly phrased as a possible creative Hanja-inspired identity meaning, not a factual/legal translation.
+            - Use a different animal, two different HEX colors, light pattern, and layout style for every candidate.
+            - Animal must be one of: tiger, fox, crane, dragon, wolf, deer, falcon, lion, rabbit, turtle.
+            - layoutStyle must be one of: orbit, crest, diagonal.
+            - Write explanations, pronunciation and meaning in Myanmar. Keep romanization in Latin characters.
+            - `externalImagePrompt` must be an English prompt for an external image AI to create a premium vertical name card. It must require the exact Hangul spelling, animal emblem, colors, light pattern, no human portrait, and clean readable typography.
+        """.trimIndent()
+        val body = structuredRequest(prompt, koreanNameSchema(), temperature = 0.82)
+        val raw = postGenerate(apiKey, model, body)
+        val root = parseObject(raw)
+        val candidates = root["candidates"]?.jsonArray?.mapNotNull { element ->
+            runCatching {
+                val item = element.jsonObject
+                KoreanNameCandidate(
+                    hangul = item.string("hangul").replace(" ", "").trim(),
+                    romanization = item.string("romanization"),
+                    myanmarPronunciation = item.string("myanmarPronunciation"),
+                    soundNotes = item.string("soundNotes"),
+                    naturalnessScore = item["naturalnessScore"]?.jsonPrimitive?.content?.toIntOrNull()?.coerceIn(0, 100) ?: 0,
+                    vibe = item.string("vibe"),
+                    hanjaInspiredMeaning = item.string("hanjaInspiredMeaning"),
+                    animal = item.string("animal").lowercase(),
+                    animalSymbolism = item.string("animalSymbolism"),
+                    primaryColor = item.string("primaryColor"),
+                    secondaryColor = item.string("secondaryColor"),
+                    lightPattern = item.string("lightPattern"),
+                    layoutStyle = item.string("layoutStyle").lowercase(),
+                    motto = item.string("motto"),
+                    externalImagePrompt = item.string("externalImagePrompt")
+                )
+            }.getOrNull()
+        }.orEmpty().filter { HANGUL_NAME.matches(it.hangul) }
+        if (candidates.size < 3) {
+            throw AiApiException("Gemini returned an invalid Hangul name result")
+        }
+        return KoreanNameResult(
+            originalName = originalName,
+            candidates = makeThemesDistinct(candidates.sortedByDescending { it.naturalnessScore }.take(3))
+        )
+    }
+
+    suspend fun quickTranslate(
+        apiKey: String,
+        model: String,
+        text: String,
+        audio: AudioPayload? = null
+    ): TranslationResult {
+        requireKey(apiKey)
+        val instruction = """
+            Translate the supplied Korean, English, or Myanmar utterance quickly and accurately.
+            Put the direct Myanmar meaning first. Preserve the original wording.
+            For Korean, include an easy Myanmar pronunciation, useful word/particle breakdown, and one concise grammar note.
+            For English or Myanmar, leave pronunciation/grammar fields empty when they add no value.
+            Never add a greeting, follow-up question, or unrelated teaching filler.
+        """.trimIndent()
+        val parts = buildJsonArray {
+            if (audio != null) {
+                add(buildJsonObject {
+                    put("inlineData", buildJsonObject {
+                        put("mimeType", JsonPrimitive(audio.mimeType))
+                        put("data", JsonPrimitive(Base64.encodeToString(audio.bytes, Base64.NO_WRAP)))
+                    })
+                })
+                add(buildJsonObject { put("text", JsonPrimitive("$instruction\nTranscribe and translate this voice recording.")) })
+            } else {
+                add(buildJsonObject { put("text", JsonPrimitive("$instruction\nText to translate:\n$text")) })
+            }
+        }
+        val body = buildJsonObject {
+            put("contents", buildJsonArray {
+                add(buildJsonObject {
+                    put("role", JsonPrimitive("user"))
+                    put("parts", parts)
+                })
+            })
+            put("generationConfig", buildJsonObject {
+                put("temperature", JsonPrimitive(0.15))
+                put("responseMimeType", JsonPrimitive("application/json"))
+                put("responseSchema", translationSchema())
+            })
+        }
+        val root = parseObject(postGenerate(apiKey, model, body))
+        val result = TranslationResult(
+            detectedLanguage = root.string("detectedLanguage"),
+            originalText = root.string("originalText").ifBlank { text },
+            myanmarMeaning = root.string("myanmarMeaning"),
+            naturalTranslation = root.string("naturalTranslation"),
+            pronunciation = root.string("pronunciation"),
+            wordBreakdown = root.string("wordBreakdown"),
+            grammarNote = root.string("grammarNote")
+        )
+        if (result.myanmarMeaning.isBlank()) throw AiApiException("Gemini returned an empty translation")
+        return result
+    }
+
     suspend fun summarizeSource(
         apiKey: String,
         model: String,
@@ -189,11 +316,7 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient()) {
         http.newCall(request).await().use { response ->
             val responseBody = response.body?.string().orEmpty()
             if (!response.isSuccessful) {
-                val apiMessage = runCatching {
-                    json.parseToJsonElement(responseBody).jsonObject["error"]?.jsonObject
-                        ?.get("message")?.jsonPrimitive?.content
-                }.getOrNull()
-                throw AiApiException(apiMessage ?: "Gemini request failed (${response.code})", response.code)
+                throw apiException(responseBody, response.code, "Gemini request failed")
             }
             return json.parseToJsonElement(responseBody).jsonObject
         }
@@ -214,6 +337,75 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient()) {
     }
 
     private fun JsonObject.string(key: String): String = this[key]?.jsonPrimitive?.contentOrNull.orEmpty()
+
+    private fun parseObject(raw: String): JsonObject {
+        val clean = raw.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
+        return runCatching { json.parseToJsonElement(clean).jsonObject }
+            .getOrElse { throw AiApiException("Gemini returned invalid structured data") }
+    }
+
+    private fun structuredRequest(prompt: String, schema: JsonObject, temperature: Double): JsonObject = buildJsonObject {
+        put("contents", buildJsonArray {
+            add(buildJsonObject {
+                put("role", JsonPrimitive("user"))
+                put("parts", buildJsonArray { add(buildJsonObject { put("text", JsonPrimitive(prompt)) }) })
+            })
+        })
+        put("generationConfig", buildJsonObject {
+            put("temperature", JsonPrimitive(temperature))
+            put("responseMimeType", JsonPrimitive("application/json"))
+            put("responseSchema", schema)
+        })
+    }
+
+    private fun apiException(body: String, statusCode: Int, fallback: String): AiApiException {
+        val apiMessage = runCatching {
+            json.parseToJsonElement(body).jsonObject["error"]?.jsonObject
+                ?.get("message")?.jsonPrimitive?.contentOrNull
+        }.getOrNull()
+        return AiApiException(apiMessage ?: "$fallback ($statusCode)", statusCode)
+    }
+
+    private fun makeThemesDistinct(items: List<KoreanNameCandidate>): List<KoreanNameCandidate> {
+        val animals = listOf("tiger", "fox", "crane", "dragon", "wolf", "deer", "falcon", "lion", "rabbit", "turtle")
+        val layouts = listOf("orbit", "crest", "diagonal")
+        val usedAnimals = mutableSetOf<String>()
+        val usedPalettes = mutableSetOf<Set<String>>()
+        val usedPatterns = mutableSetOf<String>()
+        return items.mapIndexed { index, item ->
+            val chosenAnimal = item.animal.takeIf { it in animals && usedAnimals.add(it) }
+                ?: animals.first { usedAnimals.add(it) }
+            val requestedPalette = item.primaryColor.uppercase() to item.secondaryColor.uppercase()
+            val chosenPalette = requestedPalette.takeIf {
+                HEX_COLOR.matches(it.first) && HEX_COLOR.matches(it.second) &&
+                    it.first != it.second && usedPalettes.add(setOf(it.first, it.second))
+            } ?: DEFAULT_COLORS.first { usedPalettes.add(setOf(it.first, it.second)) }
+            val requestedPattern = item.lightPattern.trim()
+            val chosenPattern = requestedPattern.takeIf {
+                it.isNotBlank() && usedPatterns.add(it.lowercase())
+            } ?: DEFAULT_PATTERNS.first { usedPatterns.add(it.lowercase()) }
+            val layout = layouts[index % layouts.size]
+            val prompt = buildString {
+                if (item.externalImagePrompt.isNotBlank()) {
+                    append(item.externalImagePrompt.trim())
+                    append(" ")
+                }
+                append("Mandatory render specification: premium vertical 4:5 Korean identity card; ")
+                append("show the exact Hangul text '${item.hangul}' with no substitutions or extra characters; ")
+                append("use a $chosenAnimal emblem, $chosenPattern lighting, $layout composition, ")
+                append("palette ${chosenPalette.first} and ${chosenPalette.second}; ${item.vibe} atmosphere; ")
+                append("no human portrait, no watermark, no mockup, clean legible Korean typography, high-detail 4K poster.")
+            }
+            item.copy(
+                animal = chosenAnimal,
+                layoutStyle = layout,
+                primaryColor = chosenPalette.first,
+                secondaryColor = chosenPalette.second,
+                lightPattern = chosenPattern,
+                externalImagePrompt = prompt
+            )
+        }
+    }
 
     private fun replyToJson(reply: TutorReply) = buildJsonObject {
         put("reply", JsonPrimitive(reply.reply))
@@ -236,11 +428,66 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient()) {
         })
     }
 
+    private fun koreanNameSchema() = buildJsonObject {
+        put("type", JsonPrimitive("object"))
+        put("properties", buildJsonObject {
+            put("candidates", buildJsonObject {
+                put("type", JsonPrimitive("array"))
+                put("minItems", JsonPrimitive(3))
+                put("maxItems", JsonPrimitive(3))
+                put("items", buildJsonObject {
+                    put("type", JsonPrimitive("object"))
+                    put("properties", buildJsonObject {
+                        listOf(
+                            "hangul", "romanization", "myanmarPronunciation", "soundNotes", "vibe",
+                            "hanjaInspiredMeaning", "animal", "animalSymbolism", "primaryColor",
+                            "secondaryColor", "lightPattern", "layoutStyle", "motto", "externalImagePrompt"
+                        ).forEach { put(it, buildJsonObject { put("type", JsonPrimitive("string")) }) }
+                        put("naturalnessScore", buildJsonObject { put("type", JsonPrimitive("integer")) })
+                    })
+                    put("required", buildJsonArray {
+                        listOf(
+                            "hangul", "romanization", "myanmarPronunciation", "soundNotes", "naturalnessScore",
+                            "vibe", "hanjaInspiredMeaning", "animal", "animalSymbolism", "primaryColor",
+                            "secondaryColor", "lightPattern", "layoutStyle", "motto", "externalImagePrompt"
+                        ).forEach { add(JsonPrimitive(it)) }
+                    })
+                })
+            })
+        })
+        put("required", buildJsonArray { add(JsonPrimitive("candidates")) })
+    }
+
+    private fun translationSchema() = buildJsonObject {
+        put("type", JsonPrimitive("object"))
+        put("properties", buildJsonObject {
+            listOf(
+                "detectedLanguage", "originalText", "myanmarMeaning", "naturalTranslation",
+                "pronunciation", "wordBreakdown", "grammarNote"
+            ).forEach { put(it, buildJsonObject { put("type", JsonPrimitive("string")) }) }
+        })
+        put("required", buildJsonArray {
+            listOf(
+                "detectedLanguage", "originalText", "myanmarMeaning", "naturalTranslation",
+                "pronunciation", "wordBreakdown", "grammarNote"
+            ).forEach { add(JsonPrimitive(it)) }
+        })
+    }
+
     private fun requireKey(key: String) {
         if (key.isBlank()) throw AiApiException("Settings ထဲတွင် Gemini API key ထည့်ပါ")
     }
 
     companion object {
+        private val HANGUL_NAME = Regex("^[가-힣·-]+$")
+        private val HEX_COLOR = Regex("^#[0-9A-Fa-f]{6}$")
+        private val DEFAULT_COLORS = listOf(
+            "#45E0D0" to "#6548FF",
+            "#FF5D73" to "#FFB547",
+            "#66A6FF" to "#C471ED"
+        )
+        private val DEFAULT_PATTERNS = listOf("aurora orbit", "prismatic crest rays", "meteor diagonal trails")
+
         fun defaultHttpClient() = OkHttpClient.Builder()
             .connectTimeout(25, TimeUnit.SECONDS)
             .readTimeout(90, TimeUnit.SECONDS)

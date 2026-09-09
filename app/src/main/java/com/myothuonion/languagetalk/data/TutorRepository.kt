@@ -2,16 +2,21 @@ package com.myothuonion.languagetalk.data
 
 import com.myothuonion.languagetalk.model.AppLanguage
 import com.myothuonion.languagetalk.model.BrainMode
+import com.myothuonion.languagetalk.model.GeminiRouteStatus
+import com.myothuonion.languagetalk.model.KoreanNameResult
 import com.myothuonion.languagetalk.model.MessageRole
 import com.myothuonion.languagetalk.model.LiveSessionConfig
+import com.myothuonion.languagetalk.model.TranslationResult
 import com.myothuonion.languagetalk.model.TutorConfig
 import com.myothuonion.languagetalk.model.TutorReply
 import com.myothuonion.languagetalk.network.AudioPayload
+import com.myothuonion.languagetalk.network.AiApiException
 import com.myothuonion.languagetalk.network.GeminiClient
 import com.myothuonion.languagetalk.network.NvidiaClient
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.MutableStateFlow
 
 class TutorRepository(
     private val dao: LanguageTalkDao,
@@ -24,6 +29,7 @@ class TutorRepository(
     val memories = dao.observeGlobalMemories()
     val sources = dao.observeKnowledgeSources()
     val settings = settingsStore.settings
+    val geminiRoute = MutableStateFlow(GeminiRouteStatus())
 
     fun messages(chatId: Long) = dao.observeMessages(chatId)
     fun chatMemories(chatId: Long) = dao.observeChatMemories(chatId)
@@ -68,22 +74,18 @@ class TutorRepository(
 
         val mode = runCatching { BrainMode.valueOf(chat.brainMode) }.getOrDefault(appSettings.brainMode)
         val reply = when (mode) {
-            BrainMode.GEMINI_ONLY -> gemini.tutorReply(
-                secrets.geminiApiKey, appSettings.geminiModel, system, history, effectiveText, audio
+            BrainMode.GEMINI_ONLY -> geminiTutor(
+                appSettings.geminiModel, system, history, effectiveText, audio
             )
 
             BrainMode.NVIDIA_BRAIN -> {
                 if (audio != null) {
-                    val draft = gemini.tutorReply(
-                        secrets.geminiApiKey, appSettings.geminiModel, system, history, effectiveText, audio
-                    )
+                    val draft = geminiTutor(appSettings.geminiModel, system, history, effectiveText, audio)
                     val checked = nvidia.review(
                         secrets.nvidiaApiKey, appSettings.nvidiaModel, system, history,
                         "The learner sent a voice message.", draft.spokenText
                     )
-                    gemini.finalizeWithReview(
-                        secrets.geminiApiKey, appSettings.geminiModel, system, effectiveText, draft, checked
-                    )
+                    geminiFinalize(appSettings.geminiModel, system, effectiveText, draft, checked)
                 } else {
                     val raw = nvidia.review(
                         secrets.nvidiaApiKey, appSettings.nvidiaModel, system, history, effectiveText
@@ -93,24 +95,18 @@ class TutorRepository(
             }
 
             BrainMode.HYBRID_AUTO -> {
-                val draft = gemini.tutorReply(
-                    secrets.geminiApiKey, appSettings.geminiModel, system, history, effectiveText, audio
-                )
+                val draft = geminiTutor(appSettings.geminiModel, system, history, effectiveText, audio)
                 if (shouldVerifyWithNvidia(chat, effectiveText) && secrets.nvidiaApiKey.isNotBlank()) {
                     val review = nvidia.review(
                         secrets.nvidiaApiKey, appSettings.nvidiaModel, system, history, effectiveText, draft.spokenText
                     )
-                    gemini.finalizeWithReview(
-                        secrets.geminiApiKey, appSettings.geminiModel, system, effectiveText, draft, review
-                    )
+                    geminiFinalize(appSettings.geminiModel, system, effectiveText, draft, review)
                 } else draft
             }
 
             BrainMode.BEST_QUALITY -> coroutineScope {
                 val geminiDraft = async {
-                    gemini.tutorReply(
-                        secrets.geminiApiKey, appSettings.geminiModel, system, history, effectiveText, audio
-                    )
+                    geminiTutor(appSettings.geminiModel, system, history, effectiveText, audio)
                 }
                 val nvidiaDraft = async {
                     nvidia.review(
@@ -118,10 +114,7 @@ class TutorRepository(
                     )
                 }
                 val draft = geminiDraft.await()
-                gemini.finalizeWithReview(
-                    secrets.geminiApiKey, appSettings.geminiModel, system,
-                    effectiveText, draft, nvidiaDraft.await()
-                )
+                geminiFinalize(appSettings.geminiModel, system, effectiveText, draft, nvidiaDraft.await())
             }
         }
 
@@ -142,26 +135,20 @@ class TutorRepository(
     suspend fun synthesize(chatId: Long, text: String): AudioPayload {
         val chat = dao.getChat(chatId) ?: error("Chat not found")
         val settings = settingsStore.settings.first()
-        return gemini.synthesize(
-            secrets.geminiApiKey,
-            settings.geminiTtsModel,
-            text,
-            chat.voiceName,
-            chat.voiceStyle
-        )
+        return geminiSpeech(settings.geminiTtsModel, text, chat.voiceName, chat.voiceStyle)
     }
 
     suspend fun previewVoice(voice: String, style: String, text: String): AudioPayload {
         val settings = settingsStore.settings.first()
-        return gemini.synthesize(secrets.geminiApiKey, settings.geminiTtsModel, text, voice, style)
+        return geminiSpeech(settings.geminiTtsModel, text, voice, style)
     }
 
     suspend fun analyzeAndAddSource(name: String, mimeType: String, uri: String, bytes: ByteArray) {
         require(bytes.size <= 14 * 1024 * 1024) { "File size must be 14 MB or less" }
         val settings = settingsStore.settings.first()
-        val summary = gemini.summarizeSource(
-            secrets.geminiApiKey, settings.geminiModel, name, mimeType, bytes
-        )
+        val summary = withGeminiFallback("Document", settings.geminiModel, textModels(settings.geminiModel)) { model ->
+            gemini.summarizeSource(secrets.geminiApiKey, model, name, mimeType, bytes)
+        }.value
         dao.insertKnowledgeSource(
             KnowledgeSourceEntity(name = name, mimeType = mimeType, uri = uri, summary = summary)
         )
@@ -197,7 +184,7 @@ class TutorRepository(
         if (secrets.geminiApiKey.isBlank()) error("Settings ထဲတွင် Gemini API key ထည့်ပါ")
         return LiveSessionConfig(
             apiKey = secrets.geminiApiKey,
-            model = appSettings.liveModel,
+            models = liveModels(appSettings.liveModel),
             systemInstruction = instruction,
             voiceName = chat.voiceName
         )
@@ -213,6 +200,62 @@ class TutorRepository(
         dao.touchChat(chatId)
     }
 
+    suspend fun createKoreanNames(name: String): KoreanNameResult {
+        require(name.isNotBlank()) { "မြန်မာနာမည်ထည့်ပါ" }
+        val appSettings = settingsStore.settings.first()
+        val routed = withGeminiFallback(
+            task = "Korean Name Studio",
+            requested = appSettings.geminiModel,
+            candidates = textModels(appSettings.geminiModel)
+        ) { model -> gemini.createKoreanNames(secrets.geminiApiKey, model, name.trim()) }
+        return routed.value.copy(activeModel = routed.model)
+    }
+
+    suspend fun quickTranslate(text: String, audio: AudioPayload? = null): TranslationResult {
+        require(text.isNotBlank() || audio != null) { "ဘာသာပြန်မယ့် စာသား သို့မဟုတ် အသံထည့်ပါ" }
+        val appSettings = settingsStore.settings.first()
+        val routed = withGeminiFallback(
+            task = "Quick Translate",
+            requested = appSettings.geminiModel,
+            candidates = textModels(appSettings.geminiModel)
+        ) { model -> gemini.quickTranslate(secrets.geminiApiKey, model, text.trim(), audio) }
+        return routed.value.copy(activeModel = routed.model)
+    }
+
+    suspend fun speakToolText(text: String): AudioPayload {
+        val appSettings = settingsStore.settings.first()
+        return geminiSpeech(
+            requested = appSettings.geminiTtsModel,
+            text = text,
+            voice = "Kore",
+            style = "Clear, calm Korean and Myanmar language tutor voice."
+        )
+    }
+
+    suspend fun replaceGeminiKey(candidate: String): Int {
+        val clean = candidate.trim()
+        require(clean.isNotBlank()) { "Gemini API key ထည့်ပါ" }
+        val models = gemini.listModels(clean)
+        require(models.isNotEmpty()) { "ဒီ Gemini key မှာ အသုံးပြုနိုင်တဲ့ model မတွေ့ပါ" }
+        secrets.geminiApiKey = clean
+        return models.size
+    }
+
+    suspend fun testGeminiKey(candidate: String? = null): Int {
+        val key = candidate?.trim()?.takeIf { it.isNotEmpty() } ?: secrets.geminiApiKey
+        require(key.isNotBlank()) { "Gemini API key ထည့်ပါ" }
+        return gemini.listModels(key).size
+    }
+
+    fun removeGeminiKey() { secrets.geminiApiKey = "" }
+
+    fun replaceNvidiaKey(candidate: String) {
+        require(candidate.isNotBlank()) { "NVIDIA API key ထည့်ပါ" }
+        secrets.nvidiaApiKey = candidate.trim()
+    }
+
+    fun removeNvidiaKey() { secrets.nvidiaApiKey = "" }
+
     suspend fun toggleMemory(memory: MemoryEntity) = dao.updateMemory(memory.copy(enabled = !memory.enabled))
     suspend fun deleteMemory(memory: MemoryEntity) = dao.deleteMemory(memory)
     suspend fun toggleSource(source: KnowledgeSourceEntity) = dao.updateKnowledgeSource(source.copy(enabled = !source.enabled))
@@ -222,14 +265,89 @@ class TutorRepository(
         dao.deleteChat(chatId)
     }
 
-    suspend fun saveSettings(settings: AppSettings, geminiKey: String?, nvidiaKey: String?) {
+    suspend fun saveSettings(settings: AppSettings) {
         settingsStore.update { settings }
-        geminiKey?.let { secrets.geminiApiKey = it.trim() }
-        nvidiaKey?.let { secrets.nvidiaApiKey = it.trim() }
     }
 
     fun hasGeminiKey() = secrets.geminiApiKey.isNotBlank()
     fun hasNvidiaKey() = secrets.nvidiaApiKey.isNotBlank()
+
+    private suspend fun geminiTutor(
+        requested: String,
+        system: String,
+        history: List<MessageEntity>,
+        text: String,
+        audio: AudioPayload?
+    ): TutorReply = withGeminiFallback("Message Chat", requested, textModels(requested)) { model ->
+        gemini.tutorReply(secrets.geminiApiKey, model, system, history, text, audio)
+    }.value
+
+    private suspend fun geminiFinalize(
+        requested: String,
+        system: String,
+        text: String,
+        draft: TutorReply,
+        review: String
+    ): TutorReply = withGeminiFallback("Final answer", requested, textModels(requested)) { model ->
+        gemini.finalizeWithReview(secrets.geminiApiKey, model, system, text, draft, review)
+    }.value
+
+    private suspend fun geminiSpeech(
+        requested: String,
+        text: String,
+        voice: String,
+        style: String
+    ): AudioPayload = withGeminiFallback("Gemini voice", requested, ttsModels(requested)) { model ->
+        gemini.synthesize(secrets.geminiApiKey, model, text, voice, style)
+    }.value
+
+    private suspend fun <T> withGeminiFallback(
+        task: String,
+        requested: String,
+        candidates: List<String>,
+        call: suspend (String) -> T
+    ): Routed<T> {
+        var lastFailure: Throwable? = null
+        candidates.distinct().forEachIndexed { index, model ->
+            try {
+                val value = call(model)
+                geminiRoute.value = GeminiRouteStatus(
+                    task = task,
+                    requestedModel = requested,
+                    activeModel = model,
+                    usedFallback = index > 0
+                )
+                return Routed(value, model)
+            } catch (failure: Throwable) {
+                lastFailure = failure
+                if (!isGeminiFallbackEligible(failure) || index == candidates.lastIndex) throw failure
+            }
+        }
+        throw lastFailure ?: AiApiException("Gemini model မရပါ")
+    }
+
+    private fun textModels(requested: String) = listOf(
+        requested,
+        "gemini-3.8-flash",
+        "gemini-3.7-flash",
+        "gemini-3.6-flash",
+        "gemini-3.5-flash",
+        "gemini-2.5-flash"
+    ).filter(String::isNotBlank).distinct()
+
+    private fun ttsModels(requested: String) = listOf(
+        requested,
+        "gemini-3.1-flash-tts-preview",
+        "gemini-2.5-flash-preview-tts"
+    ).filter(String::isNotBlank).distinct()
+
+    private fun liveModels(requested: String) = listOf(
+        requested,
+        "gemini-3.1-flash-live-preview",
+        "gemini-2.5-flash-native-audio-preview-12-2025"
+    ).filter(String::isNotBlank).distinct()
+
+    private data class Routed<T>(val value: T, val model: String)
 
     private fun shouldVerifyWithNvidia(chat: ChatEntity, text: String): Boolean {
         val marker = "${chat.topic} $text".lowercase()
@@ -264,4 +382,15 @@ class TutorRepository(
             sources.take(15).forEach { appendLine("- [${it.name}] ${it.summary}") }
         }
     }
+}
+
+internal fun isGeminiFallbackEligible(error: Throwable): Boolean {
+    val api = error as? AiApiException ?: return false
+    if (api.statusCode == 401 || api.statusCode == 403) return false
+    if (api.statusCode == 404 || api.statusCode == 429 || (api.statusCode ?: 0) >= 500) return true
+    val message = api.message.orEmpty().lowercase()
+    return api.statusCode == null || listOf(
+        "model", "not found", "not supported", "unavailable", "quota",
+        "invalid hangul", "invalid structured", "empty translation", "no audio"
+    ).any(message::contains)
 }
