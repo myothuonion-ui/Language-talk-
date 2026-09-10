@@ -5,6 +5,7 @@ import com.myothuonion.languagetalk.model.AppLanguage
 import com.myothuonion.languagetalk.model.DefaultVoicePresets
 import com.myothuonion.languagetalk.model.TutorConfig
 import com.myothuonion.languagetalk.model.TutorReply
+import com.myothuonion.languagetalk.model.knownKoreanNameResult
 import com.myothuonion.languagetalk.network.AiApiException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -47,5 +48,13 @@ class AppModelsTest {
     fun geminiDoesNotHideInvalidCredentialsBehindFallback() {
         assertTrue(!isGeminiFallbackEligible(AiApiException("Invalid API key", 401)))
         assertTrue(!isGeminiFallbackEligible(AiApiException("Forbidden", 403)))
+    }
+
+    @Test
+    fun myoMinThuHasInstantVerifiedKoreanPronunciationChoices() {
+        val result = knownKoreanNameResult("မျိုးမင်းသူ")
+        assertEquals(listOf("묘민뚜", "묘민투", "묘민두"), result?.candidates?.map { it.hangul })
+        assertEquals(3, result?.candidates?.map { it.animal }?.distinct()?.size)
+        assertTrue(result?.candidates?.all { it.externalImagePrompt.contains(it.hangul) } == true)
     }
 }

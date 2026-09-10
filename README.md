@@ -5,14 +5,14 @@ Premium Android language tutor for natural Korean and English practice. It combi
 ## What works
 
 - Korean, English, or mixed-language tutor chats
-- Hands-free Gemini Live audio-to-audio conversations with barge-in (speak while the AI is talking)
-- Futuristic A.R.I.A Live Core HUD with Listening / Processing / Speaking states and a transcript that can be shown or hidden
-- Live setup timeout, visible diagnostics, multilingual speech hints, reconnection, and Gemini Live model fallback
+- Hands-free voice conversation: speak naturally without a Send button
+- Clean single-orb Live interface with Listening / Understanding / Speaking states and a hideable transcript
+- Minimal Gemini Live setup plus automatic reliable voice recovery using local voice activity detection, Gemini understanding, and Gemini TTS
 - Message Chat for typed messages and push-to-talk voice messages
-- Gemini 3.8 Flash reasoning and Gemini 3.1 Flash TTS
+- User-selected Gemini reasoning and TTS models with stable model fallback
 - Gemini model auto-fallback for Message Chat, tools, TTS, documents, and Live
 - Gemini key add, test, atomic replace, and remove controls (an invalid new key never overwrites a working key)
-- Korean Name Studio: validates Hangul-only output and produces three sound-oriented Korean spellings
+- Korean Name Studio: instant verified `묘민뚜 / 묘민투 / 묘민두` results for Myo Min Thu, plus bounded Gemini routing for other names
 - Three quota-free local Canvas identity cards with guaranteed-distinct palette, animal, light pattern, and layout
 - A copyable English prompt on each name card for use in external image generators
 - Quick Translate for typed or spoken Korean/English/Myanmar into Myanmar meaning, pronunciation, words, and grammar
@@ -54,7 +54,7 @@ NVIDIA is optional. The complete app continues to work with only a Gemini key.
 
 Gemini first uses the model entered in Settings. If that Gemini model is unavailable, unsupported, rate-limited, or returns an invalid structured/audio result, the app moves through the current compatible fallback chain and shows the active model. Invalid credentials never trigger fallback. NVIDIA always uses exactly the configured model and has no automatic fallback.
 
-Gemini Live starts with `gemini-3.1-flash-live-preview` by default and can fall back to `gemini-2.5-flash-native-audio-preview-12-2025`. All non-live speech output uses Gemini TTS only.
+Gemini Live starts with the model selected in Settings and rotates through compatible Live models. If no Live socket establishes in time, the app changes automatically to its hands-free reliable mode: local voice activity detection records each utterance, Gemini transcribes and answers, and the selected Gemini TTS voice speaks the result. All non-live speech output uses Gemini TTS only.
 
 ## Development
 
@@ -65,7 +65,7 @@ Requirements:
 - Android SDK 35
 - Gradle 8.10.2
 
-The GitHub workflow installs the required Gradle version, generates a wrapper for the CI job, runs unit tests and lint, builds an installable debug APK, uploads it as a workflow artifact, and publishes it to the `v0.3.0` release.
+The GitHub workflow installs the required Gradle version, generates a wrapper for the CI job, runs unit tests and lint, builds an installable debug APK, uploads it as a workflow artifact, and publishes it to the `v0.4.0` release.
 
 ```bash
 gradle wrapper --gradle-version 8.10.2

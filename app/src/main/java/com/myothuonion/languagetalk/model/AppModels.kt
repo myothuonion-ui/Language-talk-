@@ -93,6 +93,7 @@ data class TranslationResult(
 
 data class TutorReply(
     val reply: String,
+    val heardText: String = "",
     val translation: String = "",
     val correction: String = "",
     val explanation: String = "",

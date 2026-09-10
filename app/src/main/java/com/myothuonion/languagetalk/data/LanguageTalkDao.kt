@@ -40,6 +40,9 @@ interface LanguageTalkDao {
     @Insert
     suspend fun insertMessage(message: MessageEntity): Long
 
+    @Query("UPDATE messages SET content = :content WHERE id = :messageId")
+    suspend fun updateMessageContent(messageId: Long, content: String)
+
     @Query("SELECT * FROM memories WHERE scopeChatId IS NULL ORDER BY updatedAt DESC")
     fun observeGlobalMemories(): Flow<List<MemoryEntity>>
 

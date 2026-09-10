@@ -45,13 +45,13 @@ jobs:
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug --stacktrace
 
       - name: Prepare APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.3.0.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.4.0.apk
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: language-talk-v0.3.0-apk
-          path: language-talk-v0.3.0.apk
+          name: language-talk-v0.4.0-apk
+          path: language-talk-v0.4.0.apk
           if-no-files-found: error
           retention-days: 90
 
@@ -59,15 +59,17 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.3.0
-          name: Language Talk AI v0.3.0
+          tag_name: v0.4.0
+          name: Language Talk AI v0.4.0
           body: |
-            Gemini resilience, Live Core, Korean Name Studio, and Quick Translate release.
+            Reliability and clean Live Voice release.
 
             - Atomic Gemini API key add, test, replace, and remove controls
             - Automatic Gemini model fallback for text, TTS, and Live (NVIDIA remains exact-model only)
-            - Gemini Live continuous audio with setup diagnostics, multilingual transcription hints, and reconnect/fallback recovery
-            - Futuristic A.R.I.A Live Core HUD with hideable transcript and no phone-call UI
+            - Minimal Gemini Live setup with automatic hands-free REST + Gemini TTS recovery
+            - Local voice activity detection: speak normally without tapping Send
+            - Clean single-orb Live UI with hideable transcript and no phone-call controls
+            - Instant verified Myo Min Thu Korean-name result and bounded model attempts for other names
             - Message Chat and Live Chat modes
             - Global and per-chat behavior / memory
             - Korean Name Studio with Hangul-only validation and three sound-faithful candidates
@@ -77,5 +79,5 @@ jobs:
             - Gemini TTS voice output and push-to-talk message mode
             - Optional NVIDIA Nemotron reasoning
             - Memory vault, PDF/image context, chat history, custom prompts and voices
-          files: language-talk-v0.3.0.apk
+          files: language-talk-v0.4.0.apk
           make_latest: true

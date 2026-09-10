@@ -17,6 +17,7 @@ import com.myothuonion.languagetalk.model.KoreanNameResult
 import com.myothuonion.languagetalk.model.TranslationResult
 import com.myothuonion.languagetalk.model.TutorConfig
 import com.myothuonion.languagetalk.network.GeminiLiveSession
+import com.myothuonion.languagetalk.network.HandsFreeRestSession
 import com.myothuonion.languagetalk.network.LivePhase
 import com.myothuonion.languagetalk.network.LiveState
 import com.myothuonion.languagetalk.util.GeminiAudioPlayer
@@ -110,6 +111,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _liveState = MutableStateFlow(LiveState())
     val liveState: StateFlow<LiveState> = _liveState
     private var liveSession: GeminiLiveSession? = null
+    private var reliableLiveSession: HandsFreeRestSession? = null
     private var liveCollector: Job? = null
 
     fun openChat(id: Long) { _currentChatId.value = id }
@@ -239,16 +241,20 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun startLive(chatId: Long) {
-        if (liveSession != null && _currentChatId.value == chatId) return
+        if ((liveSession != null || reliableLiveSession != null) && _currentChatId.value == chatId) return
         stopLive()
         _currentChatId.value = chatId
         _liveState.value = LiveState(phase = LivePhase.CONNECTING)
         viewModelScope.launch {
             try {
                 val config = repository.liveSessionConfig(chatId)
-                val session = GeminiLiveSession(config) { user, ai ->
-                    repository.saveLiveTurn(chatId, user, ai)
-                }
+                val session = GeminiLiveSession(
+                    config = config,
+                    onTurnComplete = { user, ai -> repository.saveLiveTurn(chatId, user, ai) },
+                    onTerminalFailure = { reason ->
+                        viewModelScope.launch { startReliableLive(chatId, reason) }
+                    }
+                )
                 liveSession = session
                 liveCollector = launch {
                     session.state.collect { state -> _liveState.value = state }
@@ -261,8 +267,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun toggleLiveMic() {
-        val session = liveSession ?: return
-        session.setMicEnabled(!liveState.value.micEnabled)
+        val enabled = !liveState.value.micEnabled
+        liveSession?.setMicEnabled(enabled)
+        reliableLiveSession?.setMicEnabled(enabled)
     }
 
     fun stopLive() {
@@ -270,7 +277,34 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         liveCollector = null
         liveSession?.stop()
         liveSession = null
+        reliableLiveSession?.stop()
+        reliableLiveSession = null
         _liveState.value = LiveState()
+    }
+
+    private fun startReliableLive(chatId: Long, reason: String) {
+        if (_currentChatId.value != chatId || reliableLiveSession != null) return
+        liveCollector?.cancel()
+        liveSession?.stop()
+        liveSession = null
+        val session = HandsFreeRestSession(getApplication()) { audio ->
+            repository.handsFreeTurn(chatId, audio)
+        }
+        reliableLiveSession = session
+        _liveState.value = LiveState(
+            phase = LivePhase.CONNECTING,
+            fallbackUsed = true,
+            activeModel = "Gemini reliable voice",
+            diagnostic = "Switching voice mode"
+        )
+        liveCollector = viewModelScope.launch {
+            session.state.collect { state ->
+                _liveState.value = state.copy(
+                    diagnostic = if (state.phase == LivePhase.CONNECTING) reason else state.diagnostic
+                )
+            }
+        }
+        session.start()
     }
 
     fun toggleMemory(item: MemoryEntity) = viewModelScope.launch { repository.toggleMemory(item) }
@@ -448,6 +482,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             message.contains("401") || message.contains("403") -> "API key သို့မဟုတ် model access ကိုစစ်ပါ"
             message.contains("429") || message.contains("quota", ignoreCase = true) -> "API limit ပြည့်နေသည်။ ခဏစောင့်ပြီးပြန်စမ်းပါ"
             message.contains("Unable to resolve host", ignoreCase = true) -> "Internet connection ကိုစစ်ပါ"
+            message.contains("timed out", ignoreCase = true) || message.contains("timeout", ignoreCase = true) ->
+                "Gemini က အချိန်မီမဖြေပါ။ fallback model နဲ့ ထပ်စမ်းပါ"
             else -> message.ifBlank { "မသိသောအမှားဖြစ်နေသည်" }
         }
     }

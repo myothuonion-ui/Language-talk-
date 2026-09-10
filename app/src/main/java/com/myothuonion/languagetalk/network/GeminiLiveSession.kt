@@ -53,7 +53,8 @@ data class LiveState(
 
 class GeminiLiveSession(
     private val config: LiveSessionConfig,
-    private val onTurnComplete: suspend (userText: String, aiText: String) -> Unit
+    private val onTurnComplete: suspend (userText: String, aiText: String) -> Unit,
+    private val onTerminalFailure: (reason: String) -> Unit = {}
 ) {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -74,11 +75,11 @@ class GeminiLiveSession(
     val state: StateFlow<LiveState> = _state
 
     private var socket: WebSocket? = null
-    private var resumptionHandle: String? = null
     private var reconnectJob: Job? = null
     private var setupTimeoutJob: Job? = null
     private var modelIndex = 0
     private val stopped = AtomicBoolean(false)
+    private val terminalFallbackStarted = AtomicBoolean(false)
 
     fun start() {
         if (socket != null || stopped.get()) return
@@ -106,7 +107,7 @@ class GeminiLiveSession(
         socket = http.newWebSocket(request, listener)
         setupTimeoutJob?.cancel()
         setupTimeoutJob = scope.launch {
-            delay(10_000)
+            delay(5_500)
             if (!stopped.get() && !_state.value.connected) {
                 tryNextModel("Live setup timeout: ${config.models[modelIndex]}")
             }
@@ -177,49 +178,16 @@ class GeminiLiveSession(
     private fun setupMessage(): JsonObject = buildJsonObject {
         put("setup", buildJsonObject {
             put("model", JsonPrimitive("models/${config.models[modelIndex]}"))
-            put("generationConfig", buildJsonObject {
-                put("responseModalities", buildJsonArray { add(JsonPrimitive("AUDIO")) })
-                put("temperature", JsonPrimitive(0.7))
-                put("speechConfig", buildJsonObject {
-                    put("voiceConfig", buildJsonObject {
-                        put("prebuiltVoiceConfig", buildJsonObject {
-                            put("voiceName", JsonPrimitive(config.voiceName))
-                        })
-                    })
-                })
-            })
+            // Keep setup identical to the current raw WebSocket guide. Custom voice is
+            // retained by the reliable REST/TTS path if this low-latency socket cannot open.
+            put("responseModalities", buildJsonArray { add(JsonPrimitive("AUDIO")) })
             put("systemInstruction", buildJsonObject {
                 put("parts", buildJsonArray {
                     add(buildJsonObject { put("text", JsonPrimitive(config.systemInstruction)) })
                 })
             })
-            put("inputAudioTranscription", buildJsonObject {
-                put("mode", JsonPrimitive("VERBATIM"))
-                put("languageCodes", buildJsonArray {
-                    add(JsonPrimitive("ko-KR"))
-                    add(JsonPrimitive("my-MM"))
-                    add(JsonPrimitive("en-US"))
-                })
-                put("customVocabulary", buildJsonArray {
-                    listOf("한국어", "미얀마", "Myanmar", "Korean", "English", "EPS-TOPIK")
-                        .forEach { add(JsonPrimitive(it)) }
-                })
-            })
+            put("inputAudioTranscription", buildJsonObject { })
             put("outputAudioTranscription", buildJsonObject { })
-            put("realtimeInputConfig", buildJsonObject {
-                put("activityHandling", JsonPrimitive("START_OF_ACTIVITY_INTERRUPTS"))
-                put("automaticActivityDetection", buildJsonObject {
-                    put("disabled", JsonPrimitive(false))
-                    put("prefixPaddingMs", JsonPrimitive(40))
-                    put("silenceDurationMs", JsonPrimitive(650))
-                })
-            })
-            put("contextWindowCompression", buildJsonObject {
-                put("slidingWindow", buildJsonObject { put("targetTokens", JsonPrimitive(16_000)) })
-            })
-            put("sessionResumption", buildJsonObject {
-                resumptionHandle?.let { put("handle", JsonPrimitive(it)) }
-            })
         })
     }
 
@@ -244,11 +212,6 @@ class GeminiLiveSession(
                 )
             }
             startRecorderIfNeeded()
-        }
-        root["sessionResumptionUpdate"]?.jsonObject?.let { update ->
-            if (update["resumable"]?.jsonPrimitive?.content == "true") {
-                resumptionHandle = update["newHandle"]?.jsonPrimitive?.contentOrNull ?: resumptionHandle
-            }
         }
         if (root["goAway"] != null) {
             socket?.close(1001, "Server requested reconnect")
@@ -317,14 +280,23 @@ class GeminiLiveSession(
         _state.update { it.copy(phase = LivePhase.RECONNECTING, connected = false, diagnostic = reason, error = null) }
         reconnectJob = scope.launch {
             delay(900)
-            if (!stopped.get()) connect(resuming = resumptionHandle != null)
+            if (!stopped.get()) connect(resuming = false)
         }
     }
 
     private fun tryNextModel(reason: String) {
         setupTimeoutJob?.cancel()
         if (modelIndex + 1 >= config.models.size) {
-            fail("$reason\nFallback Live model လည်း မရပါ", reconnect = false)
+            val message = "$reason\nLive socket မရသဖြင့် reliable voice mode သို့ပြောင်းနေသည်"
+            _state.update {
+                it.copy(
+                    phase = LivePhase.RECONNECTING,
+                    connected = false,
+                    diagnostic = "Switching voice mode",
+                    error = null
+                )
+            }
+            if (terminalFallbackStarted.compareAndSet(false, true)) onTerminalFailure(message)
             return
         }
         val oldSocket = socket
@@ -332,7 +304,6 @@ class GeminiLiveSession(
         oldSocket?.close(1000, "Trying fallback model")
         recorder.stop()
         player.interrupt()
-        resumptionHandle = null
         modelIndex += 1
         _state.update {
             it.copy(

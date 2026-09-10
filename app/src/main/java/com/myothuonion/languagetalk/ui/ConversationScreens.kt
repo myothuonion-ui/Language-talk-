@@ -368,98 +368,98 @@ internal fun LiveChatScreen(
         onBack()
     }
 
-    Box(Modifier.fillMaxSize().background(Color(0xFF030A0F))) {
-        JarvisBackdrop(state)
+    Box(
+        Modifier.fillMaxSize().background(
+            Brush.radialGradient(
+                colors = listOf(Color(0xFF101832), Color(0xFF070A12), Color(0xFF030409)),
+                radius = 1200f
+            )
+        )
+    ) {
+        LiveAmbientGlow(state)
         Column(Modifier.fillMaxSize().statusBarsPadding()) {
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 6.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { onStop(); onBack() }) { Icon(Icons.Default.ArrowBack, "Back", tint = Color.White) }
-                Column(Modifier.weight(1f)) {
-                    Text("A.R.I.A // LIVE CORE", color = Mint, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 1.8.sp)
-                    Text(chat.title, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                IconButton(onClick = { onStop(); onBack() }) {
+                    Icon(Icons.Default.ArrowBack, "Back", tint = Color.White)
+                }
+                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(chat.title, color = Color.White, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(7.dp).clip(CircleShape).background(phaseColor(state.phase)))
+                        Box(Modifier.size(6.dp).clip(CircleShape).background(phaseColor(state.phase)))
                         Spacer(Modifier.width(6.dp))
-                        Text(state.diagnostic.uppercase(), color = Color.White.copy(alpha = .55f), fontSize = 9.sp, maxLines = 1)
+                        Text(
+                            if (state.fallbackUsed) "AUTO VOICE" else "LIVE VOICE",
+                            color = Color.White.copy(alpha = .46f),
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.1.sp
+                        )
                     }
                 }
-                IconButton(onClick = { captionsVisible = !captionsVisible }) {
-                    Icon(if (captionsVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, "Show or hide transcript", tint = Color.White)
+                IconButton(onClick = onCustomize) {
+                    Icon(Icons.Default.Tune, "Behavior and memory", tint = Color.White.copy(alpha = .82f))
                 }
-                IconButton(onClick = onCustomize) { Icon(Icons.Default.Tune, "Customize", tint = Color.White) }
             }
 
             Column(
-                Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp),
+                Modifier.weight(1f).fillMaxWidth().padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HudChip("MEMORY", "LINKED", Mint, Modifier.weight(1f))
-                    HudChip("VOICE", "KO · MY · EN", Color(0xFF66BFFF), Modifier.weight(1f))
-                    HudChip("MODE", if (state.fallbackUsed) "FALLBACK" else "PRIMARY", VioletLight, Modifier.weight(1f))
-                }
-                Spacer(Modifier.height(8.dp))
-                JarvisCore(state)
-                Spacer(Modifier.height(10.dp))
-                Text(phaseLabel(state), color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Black, letterSpacing = 1.2.sp)
+                PremiumVoiceOrb(state)
+                Spacer(Modifier.height(30.dp))
+                Text(
+                    phaseLabel(state),
+                    color = Color.White,
+                    fontSize = 27.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center
+                )
                 Text(
                     phaseHint(state),
-                    color = Color.White.copy(alpha = .58f),
+                    color = Color.White.copy(alpha = .5f),
                     textAlign = TextAlign.Center,
                     fontSize = 13.sp,
-                    modifier = Modifier.padding(top = 4.dp)
+                    lineHeight = 20.sp,
+                    modifier = Modifier.padding(top = 7.dp)
                 )
-                if (state.activeModel.isNotBlank()) {
-                    Text(
-                        (if (state.fallbackUsed) "AUTO FALLBACK · " else "MODEL · ") + state.activeModel,
-                        color = if (state.fallbackUsed) Color(0xFFFFC857) else Mint.copy(alpha = .7f),
-                        fontSize = 9.sp,
-                        letterSpacing = .8.sp,
-                        modifier = Modifier.padding(top = 5.dp)
-                    )
-                }
+
                 AnimatedVisibility(captionsVisible && (state.aiCaption.isNotBlank() || state.userCaption.isNotBlank())) {
+                    val isAi = state.aiCaption.isNotBlank()
                     Column(
-                        Modifier.fillMaxWidth().padding(top = 11.dp)
-                            .clip(RoundedCornerShape(17.dp))
-                            .background(Color(0xFF071A22).copy(alpha = .84f))
-                            .border(1.dp, phaseColor(state.phase).copy(alpha = .3f), RoundedCornerShape(17.dp))
-                            .padding(horizontal = 15.dp, vertical = 10.dp),
+                        Modifier.fillMaxWidth().padding(top = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        if (state.aiCaption.isNotBlank()) {
-                            Text("AI", color = Mint, fontWeight = FontWeight.Bold, fontSize = 10.sp, letterSpacing = 1.2.sp)
-                            Text(
-                                state.aiCaption,
-                                color = Color.White,
-                                textAlign = TextAlign.Center,
-                                fontSize = 17.sp,
-                                lineHeight = 24.sp,
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        } else if (state.userCaption.isNotBlank()) {
-                            Text("YOU", color = VioletLight, fontWeight = FontWeight.Bold, fontSize = 10.sp, letterSpacing = 1.2.sp)
-                            Text(
-                                state.userCaption,
-                                color = Color.White.copy(alpha = .82f),
-                                textAlign = TextAlign.Center,
-                                fontSize = 17.sp,
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
+                        Text(
+                            if (isAi) "AI" else "YOU",
+                            color = if (isAi) Mint else VioletLight,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp
+                        )
+                        Text(
+                            if (isAi) state.aiCaption else state.userCaption,
+                            color = Color.White.copy(alpha = .9f),
+                            textAlign = TextAlign.Center,
+                            fontSize = 17.sp,
+                            lineHeight = 25.sp,
+                            maxLines = 4,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 5.dp)
+                        )
                     }
                 }
+
                 if (permissionDenied || state.phase == LivePhase.ERROR) {
                     Text(
                         state.error ?: "Live Chat အတွက် microphone permission လိုအပ်ပါတယ်",
                         color = Coral,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 10.dp)
+                        fontSize = 13.sp,
+                        modifier = Modifier.padding(top = 20.dp)
                     )
                     OutlinedButton(
                         onClick = {
@@ -468,91 +468,63 @@ internal fun LiveChatScreen(
                                 onStart()
                             } else permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                         },
-                        modifier = Modifier.padding(top = 8.dp)
-                    ) { Text("Try again") }
+                        modifier = Modifier.padding(top = 10.dp),
+                        shape = RoundedCornerShape(30.dp)
+                    ) { Text("ပြန်ချိတ်မယ်") }
                 }
             }
 
             AnimatedVisibility(captionsVisible && state.lines.isNotEmpty()) {
-                LiveTranscript(state.lines)
+                CleanTranscript(state.lines)
             }
-            HudControlDeck(
-                micEnabled = state.micEnabled,
+            LiveControls(
+                state = state,
                 captionsVisible = captionsVisible,
-                micAvailable = state.phase !in listOf(LivePhase.DISCONNECTED, LivePhase.CONNECTING, LivePhase.RECONNECTING, LivePhase.ERROR),
                 onToggleMic = onToggleMic,
                 onToggleCaptions = { captionsVisible = !captionsVisible },
-                onCustomize = onCustomize,
-                onExit = { onStop(); onBack() }
+                onCustomize = onCustomize
             )
         }
     }
 }
 
 @Composable
-private fun JarvisBackdrop(state: LiveState) {
-    val infinite = rememberInfiniteTransition(label = "hud-backdrop")
-    val scan by infinite.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(3900), RepeatMode.Restart),
-        label = "hud-scan"
+private fun LiveAmbientGlow(state: LiveState) {
+    val infinite = rememberInfiniteTransition(label = "ambient")
+    val drift by infinite.animateFloat(
+        initialValue = -.12f,
+        targetValue = .12f,
+        animationSpec = infiniteRepeatable(tween(5200), RepeatMode.Reverse),
+        label = "drift"
     )
     Canvas(Modifier.fillMaxSize()) {
-        val grid = size.width / 9f
-        var x = 0f
-        while (x <= size.width) {
-            drawLine(Mint.copy(alpha = .035f), Offset(x, 0f), Offset(x, size.height), 1f)
-            x += grid
-        }
-        var y = 0f
-        while (y <= size.height) {
-            drawLine(Color(0xFF66BFFF).copy(alpha = .03f), Offset(0f, y), Offset(size.width, y), 1f)
-            y += grid
-        }
-        val core = Offset(size.width / 2f, size.height * .43f)
-        repeat(5) { index ->
-            drawCircle(
-                phaseColor(state.phase).copy(alpha = .045f + index * .009f),
-                radius = size.minDimension * (.24f + index * .09f),
-                center = core,
-                style = Stroke(1.2f)
-            )
-        }
-        val scanY = size.height * scan
-        drawLine(Mint.copy(alpha = .32f), Offset(0f, scanY), Offset(size.width, scanY), 1.4f)
-        drawRect(
-            Brush.verticalGradient(listOf(Color.Transparent, Mint.copy(alpha = .045f))),
-            topLeft = Offset(0f, (scanY - 70f).coerceAtLeast(0f)),
-            size = androidx.compose.ui.geometry.Size(size.width, 70f)
+        val color = phaseColor(state.phase)
+        drawCircle(
+            brush = Brush.radialGradient(listOf(color.copy(alpha = .12f), Color.Transparent)),
+            radius = size.minDimension * .7f,
+            center = Offset(size.width * (.5f + drift), size.height * .4f)
         )
+        repeat(13) { index ->
+            val x = size.width * ((index * 73 % 97) / 97f)
+            val y = size.height * ((index * 41 % 89) / 89f)
+            drawCircle(Color.White.copy(alpha = .04f + (index % 3) * .015f), 1.2f + index % 2, Offset(x, y))
+        }
     }
 }
 
 @Composable
-private fun HudChip(label: String, value: String, color: Color, modifier: Modifier = Modifier) {
-    Column(
-        modifier.clip(RoundedCornerShape(8.dp)).background(Color(0xFF07151D).copy(alpha = .78f))
-            .border(1.dp, color.copy(alpha = .28f), RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 6.dp)
-    ) {
-        Text(label, color = Color.White.copy(alpha = .36f), fontSize = 7.sp, fontWeight = FontWeight.Bold, letterSpacing = .9.sp)
-        Text(value, color = color, fontSize = 9.sp, fontWeight = FontWeight.Black, maxLines = 1)
-    }
-}
-
-@Composable
-private fun JarvisCore(state: LiveState) {
+private fun PremiumVoiceOrb(state: LiveState) {
     val infinite = rememberInfiniteTransition(label = "live-orb")
     val pulse by infinite.animateFloat(
-        initialValue = .96f,
-        targetValue = 1.07f,
-        animationSpec = infiniteRepeatable(tween(1100), RepeatMode.Reverse),
+        initialValue = .97f,
+        targetValue = 1.035f,
+        animationSpec = infiniteRepeatable(tween(1450), RepeatMode.Reverse),
         label = "pulse"
     )
     val rotation by infinite.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
-        animationSpec = infiniteRepeatable(tween(7800), RepeatMode.Restart),
+        animationSpec = infiniteRepeatable(tween(10500), RepeatMode.Restart),
         label = "rotation"
     )
     val rawEnergy = when (state.phase) {
@@ -563,65 +535,43 @@ private fun JarvisCore(state: LiveState) {
     }
     val energy by animateFloatAsState(rawEnergy.coerceIn(.05f, 1f), tween(110), label = "energy")
     val color = phaseColor(state.phase)
-    Box(Modifier.size(232.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(248.dp), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.size(242.dp).graphicsLayer {
+                scaleX = pulse + energy * .05f
+                scaleY = pulse + energy * .05f
+            }.clip(CircleShape).background(
+                Brush.radialGradient(listOf(color.copy(alpha = .23f), color.copy(alpha = .05f), Color.Transparent))
+            )
+        )
         Canvas(Modifier.fillMaxSize().graphicsLayer { rotationZ = rotation }) {
-            val r = size.minDimension * .47f
-            drawCircle(color.copy(alpha = .25f), r, style = Stroke(2f))
-            drawCircle(color.copy(alpha = .12f), r * .84f, style = Stroke(1.2f))
-            repeat(3) { index ->
-                drawArc(
-                    color.copy(alpha = .7f - index * .15f),
-                    startAngle = index * 111f,
-                    sweepAngle = 49f + index * 16f,
-                    useCenter = false,
-                    topLeft = Offset(center.x - r + index * 9f, center.y - r + index * 9f),
-                    size = androidx.compose.ui.geometry.Size((r - index * 9f) * 2f, (r - index * 9f) * 2f),
-                    style = Stroke(4f - index * .7f)
-                )
-            }
-            repeat(16) { index ->
-                val angle = Math.toRadians(index * 22.5)
-                val inner = r * .88f
-                val outer = if (index % 4 == 0) r * 1.02f else r * .96f
-                drawLine(
-                    color.copy(alpha = if (index % 4 == 0) .62f else .25f),
-                    Offset(center.x + kotlin.math.cos(angle).toFloat() * inner, center.y + kotlin.math.sin(angle).toFloat() * inner),
-                    Offset(center.x + kotlin.math.cos(angle).toFloat() * outer, center.y + kotlin.math.sin(angle).toFloat() * outer),
-                    if (index % 4 == 0) 3f else 1.5f
-                )
-            }
+            val r = size.minDimension * .465f
+            drawCircle(color.copy(alpha = .12f), r, style = Stroke(1.5f))
+            drawArc(color.copy(alpha = .72f), 205f, 92f, false, Offset(center.x - r, center.y - r), androidx.compose.ui.geometry.Size(r * 2, r * 2), style = Stroke(3.5f))
+            drawArc(Color.White.copy(alpha = .32f), 24f, 42f, false, Offset(center.x - r * .86f, center.y - r * .86f), androidx.compose.ui.geometry.Size(r * 1.72f, r * 1.72f), style = Stroke(2f))
         }
         Box(
-            Modifier.size(205.dp).graphicsLayer {
-                scaleX = pulse + energy * .09f
-                scaleY = pulse + energy * .09f
-                alpha = .2f + energy * .3f
-            }.clip(CircleShape).background(Brush.radialGradient(listOf(color.copy(alpha = .62f), Color.Transparent)))
+            Modifier.size(184.dp).graphicsLayer { rotationZ = -rotation * .32f }
+                .clip(CircleShape)
+                .background(Brush.sweepGradient(listOf(color.copy(alpha = .18f), color, VioletLight, color.copy(alpha = .18f))))
+                .padding(2.dp).clip(CircleShape).background(Color(0xFF080C16))
         )
         Box(
-            Modifier.size(171.dp).graphicsLayer { rotationZ = -rotation * .62f }
-                .clip(CircleShape)
-                .background(Brush.sweepGradient(listOf(color.copy(alpha = .12f), color, Violet, color.copy(alpha = .1f))))
-                .padding(3.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF041015))
-        )
-        Box(
-            Modifier.size(134.dp).graphicsLayer {
-                scaleX = 1f + energy * .12f
-                scaleY = 1f + energy * .12f
+            Modifier.size(152.dp).graphicsLayer {
+                scaleX = 1f + energy * .08f
+                scaleY = 1f + energy * .08f
             }.clip(CircleShape)
-                .background(Brush.radialGradient(listOf(Color.White.copy(alpha = .3f), color.copy(alpha = .84f), Color(0xFF15426A).copy(alpha = .7f), Color(0xFF041015))))
-                .border(1.dp, Color.White.copy(alpha = .25f), CircleShape),
+                .background(Brush.radialGradient(listOf(Color.White.copy(alpha = .3f), color.copy(alpha = .82f), Violet.copy(alpha = .5f), Color(0xFF0A0D18))))
+                .border(1.dp, Color.White.copy(alpha = .2f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             if (state.phase == LivePhase.THINKING) {
-                Icon(Icons.Default.AutoAwesome, null, tint = Color.White, modifier = Modifier.size(48.dp))
+                Icon(Icons.Default.AutoAwesome, null, tint = Color.White, modifier = Modifier.size(42.dp))
             } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
                     listOf(.58f, .92f, 1.2f, .92f, .58f).forEachIndexed { index, size ->
                         Box(
-                            Modifier.width(6.dp).height((29f * size * (.55f + energy * .6f)).dp)
+                            Modifier.width(5.dp).height((28f * size * (.55f + energy * .6f)).dp)
                                 .clip(CircleShape)
                                 .background(Color.White.copy(alpha = if (index == 2) 1f else .78f))
                         )
@@ -633,97 +583,77 @@ private fun JarvisCore(state: LiveState) {
 }
 
 @Composable
-private fun HudControlDeck(
-    micEnabled: Boolean,
+private fun LiveControls(
+    state: LiveState,
     captionsVisible: Boolean,
-    micAvailable: Boolean,
     onToggleMic: () -> Unit,
     onToggleCaptions: () -> Unit,
-    onCustomize: () -> Unit,
-    onExit: () -> Unit
+    onCustomize: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF07151D).copy(alpha = .94f)),
-        shape = RoundedCornerShape(17.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Mint.copy(alpha = .22f))
+    val micAvailable = state.phase !in listOf(
+        LivePhase.DISCONNECTED, LivePhase.CONNECTING, LivePhase.RECONNECTING, LivePhase.ERROR
+    )
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 46.dp, vertical = 17.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-            verticalAlignment = Alignment.CenterVertically
+        IconButton(
+            onClick = onToggleCaptions,
+            modifier = Modifier.size(48.dp).clip(CircleShape).background(Color.White.copy(alpha = .07f))
         ) {
-            HudAction(
-                icon = if (micEnabled) Icons.Default.Mic else Icons.Default.MicOff,
-                label = if (micEnabled) "MIC ON" else "MUTED",
-                active = micEnabled,
-                enabled = micAvailable,
-                onClick = onToggleMic,
-                modifier = Modifier.weight(1f)
+            Icon(
+                if (captionsVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                "Show or hide transcript",
+                tint = Color.White.copy(alpha = .75f)
             )
-            HudAction(
-                icon = if (captionsVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                label = "TEXT",
-                active = captionsVisible,
-                onClick = onToggleCaptions,
-                modifier = Modifier.weight(1f)
+        }
+        IconButton(
+            onClick = onToggleMic,
+            enabled = micAvailable,
+            modifier = Modifier.size(70.dp).clip(CircleShape).background(
+                if (state.micEnabled) Brush.linearGradient(listOf(Mint, Color(0xFF4E8CFF)))
+                else Brush.linearGradient(listOf(Color(0xFF343744), Color(0xFF20222B)))
             )
-            HudAction(Icons.Default.Tune, "PROFILE", false, onClick = onCustomize, modifier = Modifier.weight(1f))
-            TextButton(onClick = onExit) {
-                Text("EXIT", color = Coral, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
-            }
+        ) {
+            Icon(
+                if (state.micEnabled) Icons.Default.Mic else Icons.Default.MicOff,
+                "Microphone",
+                tint = Color.White,
+                modifier = Modifier.size(30.dp)
+            )
+        }
+        IconButton(
+            onClick = onCustomize,
+            modifier = Modifier.size(48.dp).clip(CircleShape).background(Color.White.copy(alpha = .07f))
+        ) {
+            Icon(Icons.Default.Tune, "Behavior and memory", tint = Color.White.copy(alpha = .75f))
         }
     }
 }
 
 @Composable
-private fun HudAction(
-    icon: ImageVector,
-    label: String,
-    active: Boolean,
-    enabled: Boolean = true,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val color = if (active) Mint else Color.White.copy(alpha = .6f)
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier.height(43.dp),
-        enabled = enabled,
-        contentPadding = PaddingValues(horizontal = 4.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha = .3f)),
-        shape = RoundedCornerShape(10.dp)
-    ) {
-        Icon(icon, null, tint = color, modifier = Modifier.size(15.dp))
-        Spacer(Modifier.width(4.dp))
-        Text(label, color = color, fontSize = 8.sp, fontWeight = FontWeight.Black)
-    }
-}
-
-@Composable
-private fun LiveTranscript(lines: List<LiveLine>) {
+private fun CleanTranscript(lines: List<LiveLine>) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF171423).copy(alpha = .94f)),
-        shape = RoundedCornerShape(22.dp)
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = .055f)),
+        shape = RoundedCornerShape(24.dp)
     ) {
-        Column(Modifier.padding(horizontal = 14.dp, vertical = 11.dp)) {
-            Text("LIVE TRANSCRIPT", color = Color.White.copy(alpha = .45f), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
             LazyColumn(
-                modifier = Modifier.fillMaxWidth().heightIn(max = 150.dp),
-                contentPadding = PaddingValues(top = 7.dp),
-                verticalArrangement = Arrangement.spacedBy(7.dp)
+                modifier = Modifier.fillMaxWidth().heightIn(max = 120.dp),
+                verticalArrangement = Arrangement.spacedBy(9.dp)
             ) {
-                items(lines.takeLast(8)) { line ->
+                items(lines.takeLast(4)) { line ->
                     Row {
                         Text(
-                            if (line.speaker == LiveSpeaker.AI) "AI" else "YOU",
+                            if (line.speaker == LiveSpeaker.AI) "AI" else "You",
                             color = if (line.speaker == LiveSpeaker.AI) Mint else VioletLight,
-                            fontSize = 10.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.width(34.dp)
+                            modifier = Modifier.width(38.dp)
                         )
-                        Text(line.text, color = Color.White.copy(alpha = .84f), fontSize = 13.sp, lineHeight = 18.sp)
+                        Text(line.text, color = Color.White.copy(alpha = .76f), fontSize = 13.sp, lineHeight = 19.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -741,20 +671,20 @@ private fun phaseColor(phase: LivePhase): Color = when (phase) {
 }
 
 private fun phaseLabel(state: LiveState): String = when (state.phase) {
-    LivePhase.CONNECTING -> "INITIALIZING CORE"
-    LivePhase.RECONNECTING -> "RESTORING LINK"
-    LivePhase.LISTENING -> if (state.micEnabled) "VOICE LINK ACTIVE" else "MICROPHONE MUTED"
-    LivePhase.THINKING -> "PROCESSING LANGUAGE"
-    LivePhase.SPEAKING -> "RESPONSE STREAMING"
-    LivePhase.ERROR -> "CORE PAUSED"
-    LivePhase.DISCONNECTED -> "LIVE CORE READY"
+    LivePhase.CONNECTING -> "အသံချိတ်ဆက်နေတယ်"
+    LivePhase.RECONNECTING -> "အသံစနစ်ပြောင်းနေတယ်"
+    LivePhase.LISTENING -> if (state.micEnabled) "နားထောင်နေတယ်" else "Mic ပိတ်ထားတယ်"
+    LivePhase.THINKING -> "နားလည်နေတယ်"
+    LivePhase.SPEAKING -> "ပြန်ပြောနေတယ်"
+    LivePhase.ERROR -> "ခဏရပ်သွားတယ်"
+    LivePhase.DISCONNECTED -> "စကားပြောဖို့ အဆင်သင့်"
 }
 
 private fun phaseHint(state: LiveState): String = when (state.phase) {
-    LivePhase.LISTENING -> if (state.micEnabled) "စကားပြောလိုက်ပါ · AI ပြောနေချိန်မှာလည်း ဝင်ပြောဖြတ်နိုင်ပါတယ်" else "Mic ကိုဖွင့်ပြီး ဆက်ပြောပါ"
-    LivePhase.THINKING -> "မင်းပြောတာကို နားလည်ပြီး အဖြေစဉ်းစားနေပါတယ်"
-    LivePhase.SPEAKING -> "Gemini က တိုက်ရိုက်ပြန်ပြောနေပါတယ်"
-    LivePhase.CONNECTING, LivePhase.RECONNECTING -> "Gemini Live voice channel နဲ့ model fallback ကိုစစ်နေပါတယ်"
-    LivePhase.ERROR -> "Connection နဲ့ API settings ကိုစစ်ပြီး ပြန်စမ်းပါ"
-    LivePhase.DISCONNECTED -> "Hands-free conversation စတင်ရန် အဆင်သင့်ပါ"
+    LivePhase.LISTENING -> if (state.micEnabled) "ပို့စရာမလိုဘူး—ပုံမှန်အတိုင်း စပြောလိုက်ပါ" else "Mic ကိုဖွင့်ပြီး ဆက်ပြောပါ"
+    LivePhase.THINKING -> "မင်းပြောတဲ့စကားကို စာဖမ်းပြီး အဖြေပြင်နေတယ်"
+    LivePhase.SPEAKING -> "Gemini voice နဲ့ အသံပြန်ပြောနေတယ်"
+    LivePhase.CONNECTING, LivePhase.RECONNECTING -> "အလုပ်လုပ်တဲ့ voice mode ကို အလိုအလျောက်ရွေးနေတယ်"
+    LivePhase.ERROR -> "အောက်က ပြန်ချိတ်မယ်ကို နှိပ်ပါ"
+    LivePhase.DISCONNECTED -> "Hands-free စကားပြောဖို့ အဆင်သင့်"
 }

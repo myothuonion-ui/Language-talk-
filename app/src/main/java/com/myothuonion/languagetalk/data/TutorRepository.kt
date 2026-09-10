@@ -9,14 +9,18 @@ import com.myothuonion.languagetalk.model.LiveSessionConfig
 import com.myothuonion.languagetalk.model.TranslationResult
 import com.myothuonion.languagetalk.model.TutorConfig
 import com.myothuonion.languagetalk.model.TutorReply
+import com.myothuonion.languagetalk.model.knownKoreanNameResult
 import com.myothuonion.languagetalk.network.AudioPayload
 import com.myothuonion.languagetalk.network.AiApiException
 import com.myothuonion.languagetalk.network.GeminiClient
+import com.myothuonion.languagetalk.network.HandsFreeTurn
 import com.myothuonion.languagetalk.network.NvidiaClient
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 
 class TutorRepository(
     private val dao: LanguageTalkDao,
@@ -64,7 +68,7 @@ class TutorRepository(
         val system = buildSystemInstruction(chat, memories, sources, appSettings.explanationLanguage, appSettings.globalBehavior)
         val effectiveText = userText.ifBlank { "This is my voice message." }
 
-        dao.insertMessage(
+        val userMessageId = dao.insertMessage(
             MessageEntity(
                 chatId = chatId,
                 role = MessageRole.USER.name,
@@ -118,6 +122,10 @@ class TutorRepository(
             }
         }
 
+        if (audio != null && reply.heardText.isNotBlank()) {
+            dao.updateMessageContent(userMessageId, reply.heardText.trim())
+        }
+
         dao.insertMessage(
             MessageEntity(
                 chatId = chatId,
@@ -136,6 +144,16 @@ class TutorRepository(
         val chat = dao.getChat(chatId) ?: error("Chat not found")
         val settings = settingsStore.settings.first()
         return geminiSpeech(settings.geminiTtsModel, text, chat.voiceName, chat.voiceStyle)
+    }
+
+    suspend fun handsFreeTurn(chatId: Long, audio: AudioPayload): HandsFreeTurn {
+        val reply = sendMessage(chatId, "", audio)
+        val speech = synthesize(chatId, reply.spokenText)
+        return HandsFreeTurn(
+            heardText = reply.heardText.ifBlank { "Voice message" },
+            replyText = reply.spokenText,
+            speech = speech
+        )
     }
 
     suspend fun previewVoice(voice: String, style: String, text: String): AudioPayload {
@@ -202,12 +220,23 @@ class TutorRepository(
 
     suspend fun createKoreanNames(name: String): KoreanNameResult {
         require(name.isNotBlank()) { "မြန်မာနာမည်ထည့်ပါ" }
+        knownKoreanNameResult(name.trim())?.let { return it }
         val appSettings = settingsStore.settings.first()
-        val routed = withGeminiFallback(
-            task = "Korean Name Studio",
-            requested = appSettings.geminiModel,
-            candidates = textModels(appSettings.geminiModel)
-        ) { model -> gemini.createKoreanNames(secrets.geminiApiKey, model, name.trim()) }
+        val routed = withTimeout(40_000) {
+            withGeminiFallback(
+                task = "Korean Name Studio",
+                requested = appSettings.geminiModel,
+                candidates = nameModels(appSettings.geminiModel)
+            ) { model ->
+                try {
+                    withTimeout(16_000) {
+                        gemini.createKoreanNames(secrets.geminiApiKey, model, name.trim())
+                    }
+                } catch (_: TimeoutCancellationException) {
+                    throw AiApiException("Gemini name model timed out", 504)
+                }
+            }
+        }
         return routed.value.copy(activeModel = routed.model)
     }
 
@@ -329,9 +358,6 @@ class TutorRepository(
     private fun textModels(requested: String) = listOf(
         requested,
         "gemini-3.8-flash",
-        "gemini-3.7-flash",
-        "gemini-3.6-flash",
-        "gemini-3.5-flash",
         "gemini-2.5-flash"
     ).filter(String::isNotBlank).distinct()
 
@@ -339,6 +365,12 @@ class TutorRepository(
         requested,
         "gemini-3.1-flash-tts-preview",
         "gemini-2.5-flash-preview-tts"
+    ).filter(String::isNotBlank).distinct()
+
+    private fun nameModels(requested: String) = listOf(
+        requested,
+        "gemini-3.8-flash",
+        "gemini-2.5-flash"
     ).filter(String::isNotBlank).distinct()
 
     private fun liveModels(requested: String) = listOf(
