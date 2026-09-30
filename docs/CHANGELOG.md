@@ -10,5 +10,6 @@
 - Adds voice recordings, replay/deletion and portable JSON backup/restore. Backups include recordings and context, exclude API keys, and merge into existing data.
 - Reorganizes Home, Practice, Review, My Context and Settings. Live displays the current sentence, stage, phrase count and a 30-minute session timer.
 - Adds JVM regressions, an Android v2-to-v3 migration test, recording/backup restoration test and emulator screenshots of the main screens.
+- Adds a Windows legacy backup helper because the published v0.4.0 APK uses a different debug certificate. Save context before reinstalling; API key settings are excluded.
 
 Live provider calls are not exercised by credential-free CI. Pronunciation feedback uses actual audio and is qualitative; no fabricated numerical pronunciation score is shown.

@@ -15,6 +15,8 @@ class LiveProtocolTest {
         val generation = setup["generationConfig"]!!.jsonObject
         assertEquals("AUDIO", generation["responseModalities"]!!.jsonArray.single().jsonPrimitive.content)
         assertEquals("Charon", generation["speechConfig"]!!.jsonObject["voiceConfig"]!!.jsonObject["prebuiltVoiceConfig"]!!.jsonObject["voiceName"]!!.jsonPrimitive.content)
+        val declaration = setup["tools"]!!.jsonArray.single().jsonObject["functionDeclarations"]!!.jsonArray.single().jsonObject
+        assertEquals("BLOCKING", declaration["behavior"]!!.jsonPrimitive.content)
     }
     @Test fun answerPauseAndInterruptionAreConfigured() {
         val input = LiveProtocol.setup(config, "test-model")["setup"]!!.jsonObject["realtimeInputConfig"]!!.jsonObject

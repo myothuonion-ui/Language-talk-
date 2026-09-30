@@ -34,6 +34,7 @@ object LiveProtocol {
                     put("functionDeclarations", buildJsonArray {
                         add(buildJsonObject {
                             put("name", JsonPrimitive("update_learning_progress"))
+                            put("behavior", JsonPrimitive("BLOCKING"))
                             put("description", JsonPrimitive("Record ONE learner assessment, return the authoritative next lesson step. Never score pronunciation from text alone."))
                             put("parameters", buildJsonObject {
                                 put("type", JsonPrimitive("OBJECT"))

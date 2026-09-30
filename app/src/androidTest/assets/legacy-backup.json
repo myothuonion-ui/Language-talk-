@@ -1,0 +1,66 @@
+{
+  "format": "language-talk-backup",
+  "version": 1,
+  "chats": [
+    {
+      "id": 1,
+      "title": "အရင်သင်ခန်းစာ",
+      "language": "KOREAN",
+      "topic": "Factory",
+      "level": "Beginner",
+      "tutorRole": "TEACHER",
+      "correctionMode": "AFTER_REPLY",
+      "customPrompt": "",
+      "voiceName": "Kore",
+      "voiceStyle": "Calm",
+      "brainMode": "GEMINI_ONLY",
+      "createdAt": 1,
+      "updatedAt": 1,
+      "summary": "Old notes",
+      "archived": false,
+      "pinned": true
+    }
+  ],
+  "messages": [
+    {
+      "id": 1,
+      "chatId": 1,
+      "role": "USER",
+      "content": "안녕하세요.",
+      "translation": "",
+      "correction": "",
+      "explanation": "",
+      "createdAt": 1,
+      "audioPath": ""
+    }
+  ],
+  "memories": [
+    {
+      "id": 1,
+      "title": "Shift",
+      "content": "Day shift",
+      "category": "Personal",
+      "scopeChatId": 1,
+      "enabled": true,
+      "createdAt": 1,
+      "updatedAt": 1
+    }
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "name": "Old document",
+      "mimeType": "text/plain",
+      "uri": "",
+      "summary": "Saved summary",
+      "enabled": true,
+      "createdAt": 1
+    }
+  ],
+  "progress": [],
+  "reviews": [],
+  "audio": [],
+  "preferences": {
+    "profile": "I am a Myanmar-speaking learner living in Korea. I need practical Korean for factory work and daily life. I have 30 minutes a day. Explain briefly in Myanmar when needed."
+  }
+}

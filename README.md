@@ -47,7 +47,7 @@ Quick Translate handles typed/spoken Korean, English and Myanmar. Korean Name St
 
 ## Install and development
 
-Android 8.0 or newer. Install the APK from Releases and enter your own API key. Database v3 includes migrations from previous app databases and does not reset existing chats. This project distributes debug APKs; installations signed with a different previous debug certificate need a compatible signing key or backup/reinstall.
+Android 8.0 or newer. Install the APK from Releases and enter your own API key. **The published v0.4.0 APK uses a different signing certificate, so save your old chats before uninstalling it.** Use the Windows backup helper provided in v0.5.0 Releases, then restore its JSON in My Context. See [Upgrade instructions](docs/UPGRADING.md). Database v3 includes migrations from previous app databases and does not reset existing chats when the signing key matches.
 
 Requirements: JDK 17, Android SDK 35, Gradle 8.10.2.
 

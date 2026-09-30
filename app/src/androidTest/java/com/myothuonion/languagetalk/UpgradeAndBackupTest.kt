@@ -16,7 +16,25 @@ import java.io.File
 class UpgradeAndBackupTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
-    @Test fun openingAnExistingV2DatabasePreservesChatsAndMemories() = runBlocking {
+    @Test fun legacyHelperJsonRestoresThePreviousDatabaseFields() = runBlocking<Unit> {
+        val testContext = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().context
+        val backup = testContext.assets.open("legacy-backup.json").use { it.readBytes() }
+        val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
+        val recordings = File(context.cacheDir, "legacy-json-test")
+        try {
+            assertEquals(1, BackupStore(db, SettingsStore(context), recordings).restore(backup))
+            val chat = db.dao().allChats().single()
+            assertEquals("အရင်သင်ခန်းစာ", chat.title)
+            assertEquals("GUIDED", chat.practiceMode)
+            assertTrue(chat.pinned)
+            assertEquals("안녕하세요.", db.dao().allMessages().single().content)
+            assertEquals(chat.id, db.dao().allMemories().single().scopeChatId)
+            assertEquals("Saved summary", db.dao().allSources().single().summary)
+            assertEquals("", db.dao().allSources().single().uri)
+        } finally { db.close(); recordings.deleteRecursively() }
+    }
+
+    @Test fun openingAnExistingV2DatabasePreservesChatsAndMemories() = runBlocking<Unit> {
         context.deleteDatabase("upgrade-test.db")
         val path = context.getDatabasePath("upgrade-test.db")
         path.parentFile?.mkdirs()
@@ -43,7 +61,7 @@ class UpgradeAndBackupTest {
         context.deleteDatabase("upgrade-test.db")
     }
 
-    @Test fun portableBackupRestoresRecordingsAndRemapsChatScopes() = runBlocking {
+    @Test fun portableBackupRestoresRecordingsAndRemapsChatScopes() = runBlocking<Unit> {
         val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).build()
         val directory = File(context.cacheDir, "backup-recordings-test").apply { mkdirs() }
         try {

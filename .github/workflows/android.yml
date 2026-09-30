@@ -32,6 +32,8 @@ jobs:
           gradle-version: '8.10.2'
       - name: Generate Gradle wrapper
         run: gradle wrapper --gradle-version 8.10.2
+      - name: Check legacy backup conversion
+        run: python3 -m unittest discover -s tools -p 'test_*.py' -v
       - name: Unit tests, lint, APK, and device-test compilation
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest --stacktrace
       - name: Prepare APK
@@ -73,10 +75,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          script: ./gradlew connectedDebugAndroidTest --stacktrace
-      - name: Collect screen captures
-        if: always()
-        run: adb pull /sdcard/Android/data/com.myothuonion.languagetalk/files/screenshots ui-screenshots || true
+          script: bash tools/run-device-tests.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -86,14 +85,42 @@ jobs:
             app/build/outputs/androidTest-results
             ui-screenshots
 
+  windows-backup:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test backup helper
+        run: python -m unittest discover -s tools -p 'test_*.py' -v
+      - name: Fetch official Android Platform Tools
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://dl.google.com/android/repository/platform-tools-latest-windows.zip -OutFile platform-tools.zip
+          Expand-Archive platform-tools.zip -DestinationPath bundled-tools
+      - name: Package Windows backup helper
+        run: |
+          python -m pip install pyinstaller==6.16.0
+          python -m PyInstaller --onefile --windowed --name language-talk-legacy-backup-windows --add-data "bundled-tools/platform-tools;platform-tools" tools/backup_legacy_context.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: language-talk-legacy-backup-windows
+          path: dist/language-talk-legacy-backup-windows.exe
+          if-no-files-found: error
+
   publish:
-    needs: [build, device-tests]
+    needs: [build, device-tests, windows-backup]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: language-talk-v0.5.0-apk
+      - uses: actions/download-artifact@v4
+        with:
+          name: language-talk-legacy-backup-windows
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: v0.5.0
@@ -111,9 +138,14 @@ jobs:
             - Editable personal profile, global/chat memories, and learning notes
             - Portable backup/restore including recordings; API keys excluded
             - Home, Practice, Review, My Context, and Settings
-            - Preserves v0.4.0 chats through a database migration
+            - Database migration and a Windows helper to save v0.4.0 chats before reinstalling
             - Unit tests, lint, APK build, migration/restore tests, and emulator screen checks
 
-            Install the APK below. Live provider calls require your own API keys.
-          files: language-talk-v0.5.0.apk
+            IMPORTANT: v0.4.0 and this APK have different signing certificates. Save your old chats before uninstalling. The Windows backup helper below does not delete phone data.
+            Upgrade instructions: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/UPGRADING.md
+
+            Install the APK below. Live provider calls require your own API keys and microphone testing on your device.
+          files: |
+            language-talk-v0.5.0.apk
+            language-talk-legacy-backup-windows.exe
           make_latest: true
