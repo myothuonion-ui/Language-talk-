@@ -157,10 +157,14 @@ def export_phone(destination: Path, serial: str | None = None) -> dict:
         serial = devices[0]
     elif serial not in devices:
         raise ValueError("The selected phone is not connected and authorized.")
+    run_adb(adb, ["shell", "run-as", PACKAGE, "id"], serial)
     run_adb(adb, ["shell", "am", "force-stop", PACKAGE], serial)
     # Shared preferences (including encrypted keys) are deliberately not requested.
     archive = run_adb(adb, ["exec-out", "run-as", PACKAGE, "tar", "-c", "-f", "-", "databases", "files"], serial)
-    backup = convert_archive(archive)
+    try:
+        backup = convert_archive(archive)
+    except tarfile.ReadError as failure:
+        raise ValueError("Phone data could not be read. Keep the old app installed and use the debuggable APK from this repository.") from failure
     data = encode_backup(backup)
     # Avoid leaving a partial backup if the write fails.
     with tempfile.NamedTemporaryFile(dir=destination.parent, suffix=".tmp", delete=False) as file:
