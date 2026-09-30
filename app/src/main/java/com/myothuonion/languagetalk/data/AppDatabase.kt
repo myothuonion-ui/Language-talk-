@@ -8,8 +8,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [ChatEntity::class, MessageEntity::class, MemoryEntity::class, KnowledgeSourceEntity::class],
-    version = 2,
+    entities = [ChatEntity::class, MessageEntity::class, MemoryEntity::class, KnowledgeSourceEntity::class, LearningProgressEntity::class, ReviewItemEntity::class],
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -19,11 +19,25 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile private var instance: AppDatabase? = null
 
         fun get(context: Context): AppDatabase = instance ?: synchronized(this) {
-            instance ?: Room.databaseBuilder(
-                context.applicationContext,
-                AppDatabase::class.java,
-                "language-talk.db"
-            ).addMigrations(MIGRATION_1_2).build().also { instance = it }
+            instance ?: open(context, "language-talk.db").also { instance = it }
+        }
+
+        fun open(context: Context, name: String): AppDatabase = Room.databaseBuilder(
+            context.applicationContext, AppDatabase::class.java, name
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE chats ADD COLUMN practiceMode TEXT NOT NULL DEFAULT 'GUIDED'")
+                database.execSQL("ALTER TABLE chats ADD COLUMN speakingPace TEXT NOT NULL DEFAULT 'SLOW'")
+                database.execSQL("ALTER TABLE chats ADD COLUMN silenceMs INTEGER NOT NULL DEFAULT 2000")
+                database.execSQL("ALTER TABLE chats ADD COLUMN speakCorrections INTEGER NOT NULL DEFAULT 1")
+                database.execSQL("ALTER TABLE messages ADD COLUMN audioPath TEXT NOT NULL DEFAULT ''")
+                database.execSQL("ALTER TABLE messages ADD COLUMN audioMimeType TEXT NOT NULL DEFAULT ''")
+                database.execSQL("CREATE TABLE IF NOT EXISTS learning_progress (chatId INTEGER NOT NULL PRIMARY KEY, goal TEXT NOT NULL, stage TEXT NOT NULL, targetSentence TEXT NOT NULL, completed INTEGER NOT NULL, summary TEXT NOT NULL, lastCorrection TEXT NOT NULL, updatedAt INTEGER NOT NULL, FOREIGN KEY(chatId) REFERENCES chats(id) ON DELETE CASCADE)")
+                database.execSQL("CREATE TABLE IF NOT EXISTS review_items (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, chatId INTEGER NOT NULL, sentence TEXT NOT NULL, correction TEXT NOT NULL, dueAt INTEGER NOT NULL, successes INTEGER NOT NULL, updatedAt INTEGER NOT NULL, FOREIGN KEY(chatId) REFERENCES chats(id) ON DELETE CASCADE)")
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_review_items_chatId_sentence ON review_items(chatId, sentence)")
+            }
         }
 
         private val MIGRATION_1_2 = object : Migration(1, 2) {

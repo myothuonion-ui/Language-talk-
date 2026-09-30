@@ -11,6 +11,10 @@ import com.myothuonion.languagetalk.data.ChatEntity
 import com.myothuonion.languagetalk.data.KnowledgeSourceEntity
 import com.myothuonion.languagetalk.data.MemoryEntity
 import com.myothuonion.languagetalk.data.MessageEntity
+import com.myothuonion.languagetalk.data.LearningProgressEntity
+import com.myothuonion.languagetalk.data.ReviewItemEntity
+import com.myothuonion.languagetalk.data.BackupCodec
+import com.myothuonion.languagetalk.model.PracticeMode
 import com.myothuonion.languagetalk.model.BrainMode
 import com.myothuonion.languagetalk.model.GeminiRouteStatus
 import com.myothuonion.languagetalk.model.KoreanNameResult
@@ -75,6 +79,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val memories: StateFlow<List<MemoryEntity>> = repository.memories.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList()
     )
+    val allMemories = repository.allMemories.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val recordings = repository.recordings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val progress: StateFlow<List<LearningProgressEntity>> = repository.progress.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val reviews: StateFlow<List<ReviewItemEntity>> = repository.reviews.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
     val sources: StateFlow<List<KnowledgeSourceEntity>> = repository.sources.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList()
     )
@@ -141,7 +151,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val reply = repository.sendMessage(id, text.trim())
                 _work.update { it.copy(status = "Answer ready") }
-                if (settings.value.autoSpeak) speak(id, reply.spokenText)
+                if (settings.value.autoSpeak) speak(id, reply.speech(chats.value.firstOrNull { it.id == id }?.speakCorrections ?: true))
             } catch (e: Exception) {
                 _work.update { it.copy(error = friendlyError(e), status = "Request failed") }
             } finally {
@@ -173,7 +183,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 try {
                     val reply = repository.sendMessage(id, "", audio)
                     _work.update { it.copy(status = "Speaking…") }
-                    speak(id, reply.spokenText)
+                    speak(id, reply.speech(chats.value.firstOrNull { it.id == id }?.speakCorrections ?: true))
                 } catch (e: Exception) {
                     _work.update { it.copy(error = friendlyError(e), status = "Voice request failed") }
                 } finally {
@@ -220,7 +230,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun addMemory(title: String, content: String) {
         if (title.isBlank() || content.isBlank()) return
-        viewModelScope.launch { runWork("Saving memory…") { repository.addMemory(title.trim(), content.trim()) } }
+        viewModelScope.launch { runWork("Saving memory…") { repository.addMemory(title.trim(), content.trim()); refreshLiveContext() } }
     }
 
     fun addChatMemory(title: String, content: String) {
@@ -228,7 +238,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         if (title.isBlank() || content.isBlank()) return
         viewModelScope.launch {
             runWork("Saving chat memory…") {
-                repository.addMemory(title.trim(), content.trim(), "Chat", id)
+                repository.addMemory(title.trim(), content.trim(), "Chat", id); refreshLiveContext()
             }
         }
     }
@@ -236,7 +246,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun updateChatBehavior(behavior: String) {
         val id = _currentChatId.value ?: return
         viewModelScope.launch {
-            runWork("Saving chat behavior…") { repository.updateChatBehavior(id, behavior) }
+            runWork("Saving chat behavior…") {
+                repository.updateChatBehavior(id, behavior)
+                if (_liveState.value.connected) { stopLive(); startLive(id) }
+            }
         }
     }
 
@@ -247,10 +260,15 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _liveState.value = LiveState(phase = LivePhase.CONNECTING)
         viewModelScope.launch {
             try {
+                if (repository.prefersReliableVoice(chatId)) {
+                    startReliableLive(chatId, "Using your selected brain mode with Gemini voice")
+                    return@launch
+                }
                 val config = repository.liveSessionConfig(chatId)
                 val session = GeminiLiveSession(
                     config = config,
-                    onTurnComplete = { user, ai -> repository.saveLiveTurn(chatId, user, ai) },
+                    onTurnComplete = { user, ai, audio -> repository.saveLiveTurn(chatId, user, ai, audio) },
+                    onLearningTool = { args -> repository.handleLiveTool(chatId, args) },
                     onTerminalFailure = { reason ->
                         viewModelScope.launch { startReliableLive(chatId, reason) }
                     }
@@ -287,7 +305,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         liveCollector?.cancel()
         liveSession?.stop()
         liveSession = null
-        val session = HandsFreeRestSession(getApplication()) { audio ->
+        val session = HandsFreeRestSession(getApplication(),
+            silenceMs = chats.value.firstOrNull { it.id == chatId }?.silenceMs ?: 2000,
+            opening = { repository.openingTurn(chatId) }) { audio ->
             repository.handsFreeTurn(chatId, audio)
         }
         reliableLiveSession = session
@@ -307,11 +327,89 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         session.start()
     }
 
-    fun toggleMemory(item: MemoryEntity) = viewModelScope.launch { repository.toggleMemory(item) }
-    fun deleteMemory(item: MemoryEntity) = viewModelScope.launch { repository.deleteMemory(item) }
-    fun toggleSource(item: KnowledgeSourceEntity) = viewModelScope.launch { repository.toggleSource(item) }
-    fun deleteSource(item: KnowledgeSourceEntity) = viewModelScope.launch { repository.deleteSource(item) }
-    fun deleteChat(id: Long) = viewModelScope.launch { repository.deleteChat(id) }
+    fun updatePractice(chat: ChatEntity, mode: PracticeMode, goal: String, voice: String, style: String,
+        pace: String, silenceMs: Int, speakCorrections: Boolean, restart: Boolean) {
+        val resumeLive = liveState.value.connected && currentChatId.value == chat.id
+        if (resumeLive) stopLive()
+        viewModelScope.launch {
+            runWork("Saving practice settings…") {
+                repository.updatePractice(chat.id, mode, goal, voice, style, pace, silenceMs, speakCorrections, restart)
+                if (resumeLive) startLive(chat.id)
+            }
+        }
+    }
+
+    fun updateLearningNotes(item: LearningProgressEntity, notes: String, correction: String) = viewModelScope.launch {
+        runWork("Updating learning notes…") {
+            repository.updateLearningNotes(item, notes, correction)
+            if (_liveState.value.connected && currentChatId.value == item.chatId) { stopLive(); startLive(item.chatId) }
+        }
+    }
+
+    fun updateMemory(memory: MemoryEntity, title: String, content: String) = viewModelScope.launch {
+        runWork("Saving context…") { repository.updateMemory(memory, title, content); refreshLiveContext() }
+    }
+
+    fun beginReview(item: ReviewItemEntity, onReady: () -> Unit) = viewModelScope.launch {
+        runWork("Opening review…") { repository.beginReview(item); _currentChatId.value = item.chatId; onReady() }
+    }
+
+    fun playRecording(message: MessageEntity) = viewModelScope.launch {
+        runWork("Playing your recording…") {
+            val audio = withContext(Dispatchers.IO) { repository.recording(message) } ?: error("Recording is no longer available")
+            player.play(audio) {}
+        }
+    }
+
+    fun exportBackup(uri: Uri) = viewModelScope.launch {
+        runWork("Exporting context and recordings…") {
+            withContext(Dispatchers.IO) {
+                val bytes = repository.backup.export()
+                getApplication<Application>().contentResolver.openOutputStream(uri)?.use { it.write(bytes) }
+                    ?: error("Cannot write the selected file")
+            }
+            _work.update { it.copy(status = "Backup saved; API keys are excluded") }
+        }
+    }
+
+    fun importBackup(uri: Uri) {
+        closeChat()
+        viewModelScope.launch {
+            runWork("Restoring backup…") {
+                val count = withContext(Dispatchers.IO) {
+                    val bytes = getApplication<Application>().contentResolver.openInputStream(uri)?.use { input ->
+                        val data = java.io.ByteArrayOutputStream()
+                        val buffer = ByteArray(8192)
+                        while (true) {
+                            val read = input.read(buffer)
+                            if (read < 0) break
+                            require(data.size() + read <= BackupCodec.MAX_BYTES) { "Backup must be 32 MB or less" }
+                            data.write(buffer, 0, read)
+                        }
+                        data.toByteArray()
+                    } ?: error("Cannot read the selected file")
+                    repository.backup.restore(bytes)
+                }
+                _work.update { it.copy(status = "Restored $count conversations; existing conversations kept") }
+            }
+        }
+    }
+
+    fun toggleMemory(item: MemoryEntity) = viewModelScope.launch { repository.toggleMemory(item); refreshLiveContext() }
+    fun deleteMemory(item: MemoryEntity) = viewModelScope.launch { repository.deleteMemory(item); refreshLiveContext() }
+    fun toggleSource(item: KnowledgeSourceEntity) = viewModelScope.launch { repository.toggleSource(item); refreshLiveContext() }
+    fun deleteSource(item: KnowledgeSourceEntity) = viewModelScope.launch { repository.deleteSource(item); refreshLiveContext() }
+    fun deleteChat(id: Long) = viewModelScope.launch {
+        if (currentChatId.value == id) closeChat()
+        repository.deleteChat(id)
+    }
+
+    private fun refreshLiveContext() {
+        val id = currentChatId.value
+        if (id != null && liveState.value.connected) { stopLive(); startLive(id) }
+    }
+
+    fun deleteRecording(message: MessageEntity) = viewModelScope.launch { repository.deleteRecording(message) }
 
     fun importSource(uri: Uri) {
         val resolver = getApplication<Application>().contentResolver
@@ -340,7 +438,10 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     fun saveSettings(value: AppSettings) {
         viewModelScope.launch {
-            runWork("Saving settings…") { repository.saveSettings(value) }
+            runWork("Saving settings…") {
+                repository.saveSettings(value)
+                refreshLiveContext()
+            }
         }
     }
 

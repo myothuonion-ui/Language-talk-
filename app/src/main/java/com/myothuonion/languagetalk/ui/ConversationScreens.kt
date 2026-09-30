@@ -90,6 +90,10 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.myothuonion.languagetalk.data.ChatEntity
 import com.myothuonion.languagetalk.data.MemoryEntity
+import com.myothuonion.languagetalk.data.LearningProgressEntity
+import com.myothuonion.languagetalk.model.PracticeMode
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.mutableIntStateOf
 import com.myothuonion.languagetalk.network.LiveLine
 import com.myothuonion.languagetalk.network.LivePhase
 import com.myothuonion.languagetalk.network.LiveSpeaker
@@ -246,11 +250,24 @@ internal fun ChatProfileDialog(
     chat: ChatEntity,
     memories: List<MemoryEntity>,
     onDismiss: () -> Unit,
+    onDeleteChat: () -> Unit,
     onSaveBehavior: (String) -> Unit,
+    onSavePractice: (PracticeMode, String, String, String, String, Int, Boolean, Boolean) -> Unit,
+    onPreviewVoice: (String, String, String) -> Unit,
+    onEditMemory: (MemoryEntity, String, String) -> Unit,
     onAddMemory: (String, String) -> Unit,
     onToggleMemory: (MemoryEntity) -> Unit,
     onDeleteMemory: (MemoryEntity) -> Unit
 ) {
+    var mode by remember(chat.id, chat.practiceMode) { mutableStateOf(runCatching { PracticeMode.valueOf(chat.practiceMode) }.getOrDefault(PracticeMode.GUIDED)) }
+    var goal by remember(chat.id, chat.topic) { mutableStateOf(chat.topic) }
+    var voice by remember(chat.id, chat.voiceName) { mutableStateOf(chat.voiceName) }
+    var style by remember(chat.id, chat.voiceStyle) { mutableStateOf(chat.voiceStyle) }
+    var pace by remember(chat.id, chat.speakingPace) { mutableStateOf(chat.speakingPace) }
+    var silence by remember(chat.id, chat.silenceMs) { mutableStateOf(chat.silenceMs) }
+    var corrections by remember(chat.id, chat.speakCorrections) { mutableStateOf(chat.speakCorrections) }
+    var deleteConfirmation by remember { mutableStateOf(false) }
+    var editing by remember { mutableStateOf<MemoryEntity?>(null) }
     var behavior by remember(chat.id, chat.customPrompt) { mutableStateOf(chat.customPrompt) }
     var memoryTitle by remember(chat.id) { mutableStateOf("") }
     var memoryContent by remember(chat.id) { mutableStateOf("") }
@@ -268,6 +285,13 @@ internal fun ChatProfileDialog(
                     color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 12.sp
                 )
+                PracticeChoices(mode) { mode = it }
+                OutlinedTextField(goal, { goal = it }, label = { Text("Current goal") }, modifier = Modifier.fillMaxWidth())
+                VoiceEditor(voice, style, pace, silence, corrections, { voice = it }, { style = it },
+                    { pace = it }, { silence = it }, { corrections = it },
+                    onPreview = { onPreviewVoice(voice, "$style Speak at ${pace.lowercase()} pace.", "다시 한 번 설명해 주시겠어요?") })
+                Button({ onSavePractice(mode, goal, voice, style, pace, silence, corrections, false) }, modifier = Modifier.fillMaxWidth()) { Text("Apply practice & voice") }
+                TextButton({ onSavePractice(mode, goal, voice, style, pace, silence, corrections, true) }) { Text("Start this goal again") }
                 OutlinedTextField(
                     behavior,
                     { behavior = it },
@@ -279,6 +303,7 @@ internal fun ChatProfileDialog(
                 Button(onClick = { onSaveBehavior(behavior) }, modifier = Modifier.fillMaxWidth()) {
                     Text("Save behaviour")
                 }
+                TextButton({ deleteConfirmation = true }) { Text("Delete this conversation", color = Coral) }
                 HorizontalDivider(Modifier.padding(vertical = 4.dp))
                 Text("ဒီ Chat ရဲ့ Memory", fontWeight = FontWeight.Bold)
                 OutlinedTextField(
@@ -320,6 +345,7 @@ internal fun ChatProfileDialog(
                                     fontSize = 12.sp,
                                     color = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                                TextButton(onClick = { editing = memory }) { Text("Edit", fontSize = 11.sp) }
                                 TextButton(onClick = { onDeleteMemory(memory) }, contentPadding = PaddingValues(0.dp)) {
                                     Text("Delete", color = Coral, fontSize = 11.sp)
                                 }
@@ -335,12 +361,22 @@ internal fun ChatProfileDialog(
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text("Done") } }
     )
+    if (deleteConfirmation) AlertDialog(onDismissRequest = { deleteConfirmation = false }, title = { Text("Delete conversation?") },
+        text = { Text("Messages, learning progress and recordings in this chat will be deleted.") },
+        confirmButton = { TextButton({ deleteConfirmation = false; onDeleteChat() }) { Text("Delete", color = Coral) } },
+        dismissButton = { TextButton({ deleteConfirmation = false }) { Text("Cancel") } })
+    editing?.let { item ->
+        MemoryEditDialog(item.title, item.content, { editing = null }) { title, content ->
+            onEditMemory(item, title, content); editing = null
+        }
+    }
 }
 
 @Composable
 internal fun LiveChatScreen(
     chat: ChatEntity,
     state: LiveState,
+    progress: LearningProgressEntity?,
     onStart: () -> Unit,
     onToggleMic: () -> Unit,
     onStop: () -> Unit,
@@ -349,6 +385,11 @@ internal fun LiveChatScreen(
 ) {
     val context = LocalContext.current
     var permissionDenied by rememberSaveable(chat.id) { mutableStateOf(false) }
+    var elapsedSeconds by rememberSaveable(chat.id) { mutableIntStateOf(0) }
+    LaunchedEffect(chat.id, state.connected) {
+        while (state.connected && elapsedSeconds < 1800) { delay(1000); elapsedSeconds++ }
+        if (elapsedSeconds >= 1800) onStop()
+    }
     var captionsVisible by rememberSaveable(chat.id) { mutableStateOf(true) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         permissionDenied = !granted
@@ -409,6 +450,14 @@ internal fun LiveChatScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                Text("${chat.practiceMode.replace('_', ' ')} · ${elapsedSeconds / 60}:${(elapsedSeconds % 60).toString().padStart(2, '0')} / 30:00",
+                    color = Mint, fontSize = 12.sp)
+                progress?.let { item ->
+                    Text("${item.stage} · ${item.completed}/5", color = Color.White.copy(alpha = .65f), fontSize = 12.sp)
+                    if (item.targetSentence.isNotBlank()) Text(item.targetSentence, color = Color.White, fontSize = 18.sp,
+                        textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp))
+                }
+                if (elapsedSeconds >= 1800) Text("ဒီနေ့ မိနစ် ၃၀ ပြည့်ပြီ။ Review မှာ ပြန်ကြည့်နိုင်တယ်။", color = Mint, fontSize = 13.sp)
                 PremiumVoiceOrb(state)
                 Spacer(Modifier.height(30.dp))
                 Text(

@@ -29,6 +29,8 @@ data class HandsFreeTurn(
  */
 class HandsFreeRestSession(
     context: Context,
+    private val silenceMs: Int = 2000,
+    private val opening: (suspend () -> HandsFreeTurn)? = null,
     private val onTurn: suspend (AudioPayload) -> HandsFreeTurn
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -65,6 +67,16 @@ class HandsFreeRestSession(
             )
         }
         startRecorder()
+        opening?.let { begin ->
+            processing.set(true)
+            _state.update { it.copy(phase = LivePhase.THINKING) }
+            scope.launch {
+                try { playTurn(begin()) } catch (failure: Exception) {
+                    processing.set(false)
+                    _state.update { it.copy(phase = LivePhase.ERROR, error = failure.message) }
+                }
+            }
+        }
     }
 
     fun setMicEnabled(enabled: Boolean) {
@@ -97,7 +109,7 @@ class HandsFreeRestSession(
     }
 
     private fun startRecorder() {
-        if (stopped.get() || processing.get() || !_state.value.micEnabled || recorder.isRunning) return
+        if (stopped.get() || (processing.get() && _state.value.phase != LivePhase.SPEAKING) || !_state.value.micEnabled || recorder.isRunning) return
         runCatching {
             recorder.start(::onAudioChunk)
         }.onFailure { failure ->
@@ -113,7 +125,26 @@ class HandsFreeRestSession(
     }
 
     private fun onAudioChunk(bytes: ByteArray, level: Float) {
-        if (stopped.get() || processing.get() || !_state.value.micEnabled) return
+        if (stopped.get() || !_state.value.micEnabled) return
+        if (processing.get()) {
+            if (_state.value.phase != LivePhase.SPEAKING) return
+            val interruptThreshold = maxOf(.075f, noiseFloor * 4f)
+            synchronized(captureLock) {
+                preRoll.addLast(bytes)
+                while (preRoll.size > 4) preRoll.removeFirst()
+                loudChunkCount = if (level >= interruptThreshold) loudChunkCount + 1 else 0
+                if (loudChunkCount < 3) return
+                player.stop()
+                processing.set(false)
+                speechDetected = true
+                speechChunks.clear()
+                speechChunks.addAll(preRoll)
+                preRoll.clear()
+                lastVoiceAt = System.currentTimeMillis()
+                _state.update { it.copy(phase = LivePhase.LISTENING, outputLevel = 0f, diagnostic = "Listening to your interruption") }
+            }
+            return
+        }
         _state.update { it.copy(inputLevel = level) }
         val now = System.currentTimeMillis()
         var completedSpeech: ByteArray? = null
@@ -135,8 +166,8 @@ class HandsFreeRestSession(
             } else {
                 speechChunks += bytes
                 if (level >= threshold * .82f) lastVoiceAt = now
-                val endedBySilence = now - lastVoiceAt >= 850 && speechChunks.size >= 7
-                val endedByLimit = speechChunks.size >= 180
+                val endedBySilence = now - lastVoiceAt >= silenceMs.coerceIn(800, 4000) && speechChunks.size >= 7
+                val endedByLimit = speechChunks.size >= 600
                 if (endedBySilence || endedByLimit) {
                     completedSpeech = joinChunks(speechChunks)
                     speechChunks.clear()
@@ -150,7 +181,6 @@ class HandsFreeRestSession(
 
         completedSpeech?.let { pcm ->
             scope.launch {
-                recorder.stop()
                 processTurn(pcm)
             }
         }
@@ -168,25 +198,7 @@ class HandsFreeRestSession(
         }
         try {
             val turn = onTurn(AudioPayload(pcm16Wav(pcm), "audio/wav"))
-            val newLines = buildList {
-                addAll(_state.value.lines)
-                if (turn.heardText.isNotBlank()) add(LiveLine(LiveSpeaker.USER, turn.heardText))
-                if (turn.replyText.isNotBlank()) add(LiveLine(LiveSpeaker.AI, turn.replyText))
-            }.takeLast(40)
-            _state.update {
-                it.copy(
-                    phase = LivePhase.SPEAKING,
-                    userCaption = turn.heardText,
-                    aiCaption = turn.replyText,
-                    lines = newLines,
-                    outputLevel = .48f,
-                    diagnostic = "Speaking",
-                    error = null
-                )
-            }
-            player.play(turn.speech) {
-                scope.launch { resumeListening() }
-            }
+            playTurn(turn)
         } catch (failure: Throwable) {
             processing.set(false)
             _state.update {
@@ -200,6 +212,20 @@ class HandsFreeRestSession(
                 )
             }
         }
+    }
+
+    private fun playTurn(turn: HandsFreeTurn) {
+        if (stopped.get()) return
+        val newLines = buildList {
+            addAll(_state.value.lines)
+            if (turn.heardText.isNotBlank()) add(LiveLine(LiveSpeaker.USER, turn.heardText))
+            if (turn.replyText.isNotBlank()) add(LiveLine(LiveSpeaker.AI, turn.replyText))
+        }.takeLast(40)
+        resetCapture()
+        _state.update { it.copy(phase = LivePhase.SPEAKING, userCaption = turn.heardText, aiCaption = turn.replyText,
+            lines = newLines, outputLevel = .48f, diagnostic = "Speaking", error = null) }
+        startRecorder()
+        player.play(turn.speech) { scope.launch { resumeListening() } }
     }
 
     private fun resumeListening() {

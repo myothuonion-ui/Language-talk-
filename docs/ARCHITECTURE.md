@@ -1,71 +1,27 @@
 # Architecture
 
-## Modules
+## Tutor state
 
-The app intentionally uses one Android application module while keeping package boundaries clear:
+`PracticeEngine` owns the deterministic INTRO → REPEAT → APPLY → REVIEW transitions. A successful repeat is distinct from independent use. Retry, uncertain audio and voice commands never count as mastery. Guided state is persisted separately from personal facts. Roleplay/Free Talk keep their conversation mode rather than enforcing repetition steps.
 
-- `ui` — Compose screens, theme, and `AppViewModel`
-- `data` — Room persistence, encrypted secrets, settings, and provider routing
-- `network` — Gemini/NVIDIA REST clients and the Gemini Live WebSocket session
-- `model` — tutor, voice, language, correction, and brain-mode contracts
-- `util` — microphone recording and Gemini PCM/encoded-audio playback
+The REST tutor sends structured assessment fields to `TutorRepository`, which saves progress, bounded notes and due review items. Native Live calls `update_learning_progress`; the app returns the authoritative next state before the tutor gives feedback. The model supplies qualitative assessment, while the application owns progression and limits.
 
-## Conversation path
+## Voice
 
-1. The learner starts a chat with a target language, level, topic, role, correction policy, voice, brain mode, and optional custom prompt.
-2. The app retrieves recent messages, enabled global memory, matching per-chat memory, and enabled knowledge summaries.
-3. `TutorRepository` builds a bounded system instruction so irrelevant history is not resent indefinitely.
-4. The selected brain mode routes the request to Gemini, NVIDIA, or both.
-5. A structured `TutorReply` is persisted, including the target-language answer, Myanmar translation, correction, explanation, and follow-up question.
-6. When auto-speak is enabled, the final target-language text is synthesized only by Gemini TTS.
+`LiveProtocol` builds the raw WebSocket setup: generationConfig/voice, answer-silence configuration, interruption, transcription, resumption and context compression. Completed conversation turns are stored locally. Reconnects use the latest server resumption handle, or replay bounded recent turns as conversation content. Native Live uses Gemini; selected NVIDIA modes use the structured REST/TTS transport.
 
-Gemini calls pass through a task-specific fallback router. The user-selected model is attempted first, followed by compatible known models. Authentication/authorization errors stop immediately; NVIDIA is never silently rerouted.
+Reliable voice records local VAD utterances without Send, applies the same repository tutor path and plays Gemini TTS. Microphone capture continues during playback for barge-in with device echo cancellation. No NVIDIA speech provider or silent NVIDIA fallback is used.
 
-## Voice modes
+## Context and persistence
 
-Message Chat implements push-to-talk:
+Room database v3 stores chats, messages, memories, knowledge sources, learning_progress and review_items. Migration 1→2 preserves scoped memory; migration 2→3 adds practice/voice/recording fields and learning tables without destructive migration.
 
-- Android records AAC audio in an MPEG-4 container.
-- The audio is sent inline to Gemini with the current tutor context.
-- Gemini understands the utterance and returns a structured lesson response.
-- Gemini TTS returns audio, which is played through `AudioTrack` for raw 16-bit PCM or `MediaPlayer` for encoded formats.
+`ContextSelector` excludes other-chat and disabled memories, prioritizes scoped context and ranks matching source summaries. Real personal facts need an explicit remember request and matching transcript evidence; verbatim evidence is saved instead of an unverified model paraphrase. Roleplay facts are excluded. Learning notes and raw audio each have separate controls. Recording filenames are generated inside app-private storage; external backup paths are never trusted.
 
-This avoids sending microphone data through NVIDIA. NVIDIA is a text reasoning and verification provider only.
+`BackupStore` exports public preference fields and the learning database, including bounded recording data. It never reads SecretStore. Restore validates format, IDs and references before writing, uses a database transaction, remaps chat IDs, cleans up staged recordings on rollback, and merges without deleting current data. Original imported documents are not embedded; their analyzed summaries are portable.
 
-Live Voice has two automatic transports:
+## Interface and validation
 
-- Android records mono PCM16 at 16 kHz in 100 ms chunks.
-- The primary transport streams chunks to the configured Gemini Live model after a minimal official WebSocket setup.
-- A setup deadline, server-error parsing, and compatible-model rotation prevent the interface from remaining indefinitely in a connecting state.
-- Gemini audio streams back as 24 kHz PCM and plays with a low-latency `AudioTrack`.
-- Interim/final input and output transcriptions drive the hideable transcript.
-- If all Live models fail to establish, local adaptive voice activity detection automatically captures a complete utterance, wraps PCM as WAV, sends it through the normal Gemini tutor path, and speaks the result through Gemini TTS. The learner still does not tap Send.
-- Completed live turns are stored in the same chat history as message turns.
+Home focuses on continuing a lesson. Practice retains typed and hands-free modes. Review shows due phrases and recordings. My Context exposes all stored facts/notes, profile and backup controls. Voice presets are editable defaults plus per-chat overrides; changes refresh active sessions.
 
-## Home tools
-
-Korean Name Studio returns the verified pronunciation set for Myo Min Thu locally and instantly. Other names request only compact pronunciation-oriented Hangul fields through Gemini structured output with strict per-model deadlines and fallback. The client rejects Myanmar/non-Hangul values and assigns unique animals, palettes, light patterns, and layouts locally. Every identity card is rendered with Compose Canvas, so the feature consumes no image-generation quota. A normalized English prompt is attached for external image generators.
-
-Quick Translate accepts typed text or recorded audio. Gemini returns a compact structured Myanmar meaning plus pronunciation, word breakdown, and grammar fields when useful. The Listen action routes only through Gemini TTS.
-
-## Hybrid routing
-
-- **Gemini Only:** one reasoning request.
-- **Hybrid Auto:** Gemini first; Nemotron verification is used for long text and grammar, contract, law, or explanation-oriented prompts when an NVIDIA key is configured.
-- **Best Quality:** Gemini and Nemotron run concurrently. Gemini receives both drafts and creates the final structured lesson.
-- **NVIDIA Brain:** Nemotron produces text. Audio input still passes through Gemini for multimodal understanding. All output speech remains Gemini TTS.
-
-## Persistence
-
-Room tables:
-
-- `chats`
-- `messages`
-- `memories` (`scopeChatId = null` for global memory; a chat ID for per-chat memory)
-- `knowledge_sources`
-
-Only the latest bounded chat window, enabled relevant memories, and enabled source summaries are placed in a model request. Global behavior is followed first, then the selected chat's behavior. The learner can disable or delete every memory source.
-
-## Credentials
-
-Keys are stored in a private SharedPreferences file after AES/GCM encryption with a non-exportable key created by Android Keystore. Keys are never logged, exported, backed up, or embedded in the APK source. A new Gemini key is validated before the encrypted stored key is replaced; removal deletes the encrypted preference entry.
+JVM tests exercise progression, scoped retrieval, memory evidence, backup validation, Live protocol configuration and audio headers. Android tests verify v2 database upgrade, scoped backup/recording restoration and the rendered main screens. Live provider calls and real microphone behavior require user keys and hardware and are not claimed as CI-tested.

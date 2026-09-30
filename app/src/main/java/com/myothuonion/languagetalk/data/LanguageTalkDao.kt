@@ -10,6 +10,48 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LanguageTalkDao {
+    @Query("SELECT * FROM memories ORDER BY updatedAt DESC")
+    fun observeAllMemories(): Flow<List<MemoryEntity>>
+    @Query("SELECT * FROM messages WHERE audioPath != '' ORDER BY createdAt DESC LIMIT 40")
+    fun observeRecordings(): Flow<List<MessageEntity>>
+    @Query("DELETE FROM review_items WHERE chatId = :chatId")
+    suspend fun clearReviews(chatId: Long)
+
+    @Query("SELECT * FROM learning_progress ORDER BY updatedAt DESC")
+    fun observeProgress(): Flow<List<LearningProgressEntity>>
+
+    @Query("SELECT * FROM learning_progress WHERE chatId = :chatId")
+    suspend fun getProgress(chatId: Long): LearningProgressEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveProgress(progress: LearningProgressEntity)
+
+    @Query("SELECT * FROM review_items ORDER BY dueAt ASC")
+    fun observeReviews(): Flow<List<ReviewItemEntity>>
+
+    @Query("SELECT * FROM review_items WHERE chatId = :chatId AND sentence = :sentence LIMIT 1")
+    suspend fun getReview(chatId: Long, sentence: String): ReviewItemEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveReview(review: ReviewItemEntity)
+
+    @Query("SELECT * FROM chats")
+    suspend fun allChats(): List<ChatEntity>
+    @Query("SELECT * FROM messages")
+    suspend fun allMessages(): List<MessageEntity>
+    @Query("SELECT * FROM memories")
+    suspend fun allMemories(): List<MemoryEntity>
+    @Query("SELECT * FROM knowledge_sources")
+    suspend fun allSources(): List<KnowledgeSourceEntity>
+    @Query("SELECT * FROM learning_progress")
+    suspend fun allProgress(): List<LearningProgressEntity>
+    @Query("SELECT * FROM review_items")
+    suspend fun allReviews(): List<ReviewItemEntity>
+    @Query("UPDATE messages SET audioPath = '', audioMimeType = '' WHERE id = :messageId")
+    suspend fun clearRecording(messageId: Long)
+    @Query("SELECT * FROM messages WHERE chatId = :chatId AND audioPath != ''")
+    suspend fun recordingsForChat(chatId: Long): List<MessageEntity>
+
     @Query("SELECT * FROM chats WHERE archived = 0 ORDER BY pinned DESC, updatedAt DESC")
     fun observeChats(): Flow<List<ChatEntity>>
 

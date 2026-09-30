@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'codex/**']
   workflow_dispatch:
 
 permissions:
@@ -16,68 +16,102 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
+      - uses: android-actions/setup-android@v3
       - name: Install SDK packages
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
-
       - name: Generate Gradle wrapper
         run: gradle wrapper --gradle-version 8.10.2
-
-      - name: Test, lint, and build
-        run: ./gradlew testDebugUnitTest lintDebug assembleDebug --stacktrace
-
+      - name: Unit tests, lint, APK, and device-test compilation
+        run: ./gradlew testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest --stacktrace
       - name: Prepare APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.4.0.apk
-
-      - name: Upload workflow artifact
-        uses: actions/upload-artifact@v4
+        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.5.0.apk
+      - uses: actions/upload-artifact@v4
         with:
-          name: language-talk-v0.4.0-apk
-          path: language-talk-v0.4.0.apk
+          name: language-talk-v0.5.0-apk
+          path: language-talk-v0.5.0.apk
           if-no-files-found: error
           retention-days: 90
-
-      - name: Publish GitHub release
-        if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@v2
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          tag_name: v0.4.0
-          name: Language Talk AI v0.4.0
-          body: |
-            Reliability and clean Live Voice release.
+          name: build-test-reports
+          path: |
+            app/build/reports/tests
+            app/build/reports/lint-results-debug.html
 
-            - Atomic Gemini API key add, test, replace, and remove controls
-            - Automatic Gemini model fallback for text, TTS, and Live (NVIDIA remains exact-model only)
-            - Minimal Gemini Live setup with automatic hands-free REST + Gemini TTS recovery
-            - Local voice activity detection: speak normally without tapping Send
-            - Clean single-orb Live UI with hideable transcript and no phone-call controls
-            - Instant verified Myo Min Thu Korean-name result and bounded model attempts for other names
-            - Message Chat and Live Chat modes
-            - Global and per-chat behavior / memory
-            - Korean Name Studio with Hangul-only validation and three sound-faithful candidates
-            - Unique local Canvas identity cards: distinct palette, animal, light pattern, and layout
-            - Copyable external image-AI prompt on every Korean name card
-            - Quick typed/voice translation to Myanmar with pronunciation and grammar details
-            - Gemini TTS voice output and push-to-talk message mode
-            - Optional NVIDIA Nemotron reasoning
-            - Memory vault, PDF/image context, chat history, custom prompts and voices
-          files: language-talk-v0.4.0.apk
+  device-tests:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - run: gradle wrapper --gradle-version 8.10.2
+      - name: Enable KVM
+        run: sudo chmod 666 /dev/kvm
+      - name: Test upgrade, restore, and screens on Android
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          script: ./gradlew connectedDebugAndroidTest --stacktrace
+      - name: Collect screen captures
+        if: always()
+        run: adb pull /sdcard/Android/data/com.myothuonion.languagetalk/files/screenshots ui-screenshots || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: device-tests-and-screenshots
+          path: |
+            app/build/reports/androidTests
+            app/build/outputs/androidTest-results
+            ui-screenshots
+
+  publish:
+    needs: [build, device-tests]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: language-talk-v0.5.0-apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.5.0
+          name: Language Talk AI v0.5.0
+          body: |
+            Personal Korean voice practice and learning memory.
+
+            - Guided Practice, Roleplay, and Free Talk
+            - Repeat a phrase, then use it independently before moving on
+            - Persistent lesson steps, learning notes, and spaced review
+            - Saved custom voice presets, Slow/Natural pace, configurable answer pauses
+            - Native Live voice configuration, interruption, and session resumption
+            - Selected NVIDIA brain modes use Gemini TTS hands-free conversation
+            - Voice recordings, replay, and deletion
+            - Editable personal profile, global/chat memories, and learning notes
+            - Portable backup/restore including recordings; API keys excluded
+            - Home, Practice, Review, My Context, and Settings
+            - Preserves v0.4.0 chats through a database migration
+            - Unit tests, lint, APK build, migration/restore tests, and emulator screen checks
+
+            Install the APK below. Live provider calls require your own API keys.
+          files: language-talk-v0.5.0.apk
           make_latest: true

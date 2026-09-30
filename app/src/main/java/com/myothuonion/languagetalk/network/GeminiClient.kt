@@ -333,7 +333,14 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient()) {
                 translation = obj.string("translation"),
                 correction = obj.string("correction"),
                 explanation = obj.string("explanation"),
-                followUpQuestion = obj.string("followUpQuestion")
+                followUpQuestion = obj.string("followUpQuestion"),
+                targetSentence = obj.string("targetSentence"),
+                assessment = obj.string("assessment"),
+                lessonNote = obj.string("lessonNote"),
+                voiceCommand = obj.string("voiceCommand"),
+                memoryFact = obj.string("memoryFact"),
+                memoryEvidence = obj.string("memoryEvidence"),
+                speechText = obj.string("speechText")
             )
         }.getOrElse { TutorReply(reply = raw) }
     }
@@ -375,17 +382,24 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient()) {
         put("correction", JsonPrimitive(reply.correction))
         put("explanation", JsonPrimitive(reply.explanation))
         put("followUpQuestion", JsonPrimitive(reply.followUpQuestion))
+        put("targetSentence", JsonPrimitive(reply.targetSentence))
+        put("assessment", JsonPrimitive(reply.assessment))
+        put("lessonNote", JsonPrimitive(reply.lessonNote))
+        put("voiceCommand", JsonPrimitive(reply.voiceCommand))
+        put("memoryFact", JsonPrimitive(reply.memoryFact))
+        put("memoryEvidence", JsonPrimitive(reply.memoryEvidence))
+        put("speechText", JsonPrimitive(reply.speechText))
     }
 
     private fun tutorReplySchema() = buildJsonObject {
         put("type", JsonPrimitive("object"))
         put("properties", buildJsonObject {
-            listOf("reply", "heardText", "translation", "correction", "explanation", "followUpQuestion").forEach { key ->
+            listOf("reply", "heardText", "translation", "correction", "explanation", "followUpQuestion", "targetSentence", "assessment", "lessonNote", "voiceCommand", "memoryFact", "memoryEvidence", "speechText").forEach { key ->
                 put(key, buildJsonObject { put("type", JsonPrimitive("string")) })
             }
         })
         put("required", buildJsonArray {
-            listOf("reply", "heardText", "translation", "correction", "explanation", "followUpQuestion")
+            listOf("reply", "heardText", "translation", "correction", "explanation", "followUpQuestion", "targetSentence", "assessment", "lessonNote", "voiceCommand", "memoryFact", "memoryEvidence", "speechText")
                 .forEach { add(JsonPrimitive(it)) }
         })
     }

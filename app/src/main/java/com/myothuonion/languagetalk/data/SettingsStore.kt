@@ -17,10 +17,18 @@ data class AppSettings(
     val explanationLanguage: String = "မြန်မာ",
     val brainMode: BrainMode = BrainMode.GEMINI_ONLY,
     val geminiModel: String = "gemini-3.8-flash",
-    val geminiTtsModel: String = "gemini-3.1-flash-tts-preview",
+    val geminiTtsModel: String = "gemini-3.8-flash-tts",
     val nvidiaModel: String = "nvidia/nemotron-3-ultra-550b-a55b",
-    val liveModel: String = "gemini-3.1-flash-live-preview",
+    val liveModel: String = "gemini-3.8-live",
     val globalBehavior: String = DEFAULT_GLOBAL_BEHAVIOR,
+    val learnerProfile: String = DEFAULT_LEARNER_PROFILE,
+    val autoLearningMemory: Boolean = true,
+    val recordPractice: Boolean = true,
+    val defaultVoiceName: String = "Kore",
+    val defaultVoiceStyle: String = "Warm, clear tutor. Short sentences and patient pauses.",
+    val defaultPace: String = "SLOW",
+    val defaultSilenceMs: Int = 2000,
+    val defaultSpeakCorrections: Boolean = true,
     val autoSpeak: Boolean = true,
     val darkTheme: Boolean = true
 )
@@ -33,10 +41,18 @@ class SettingsStore(private val context: Context) {
             brainMode = runCatching { BrainMode.valueOf(prefs[BRAIN_MODE] ?: "") }
                 .getOrDefault(BrainMode.GEMINI_ONLY),
             geminiModel = prefs[GEMINI_MODEL] ?: "gemini-3.8-flash",
-            geminiTtsModel = prefs[GEMINI_TTS_MODEL] ?: "gemini-3.1-flash-tts-preview",
+            geminiTtsModel = prefs[GEMINI_TTS_MODEL] ?: "gemini-3.8-flash-tts",
             nvidiaModel = prefs[NVIDIA_MODEL] ?: "nvidia/nemotron-3-ultra-550b-a55b",
-            liveModel = prefs[LIVE_MODEL] ?: "gemini-3.1-flash-live-preview",
+            liveModel = prefs[LIVE_MODEL] ?: "gemini-3.8-live",
             globalBehavior = prefs[GLOBAL_BEHAVIOR] ?: DEFAULT_GLOBAL_BEHAVIOR,
+            learnerProfile = prefs[LEARNER_PROFILE] ?: DEFAULT_LEARNER_PROFILE,
+            autoLearningMemory = prefs[AUTO_LEARNING_MEMORY] ?: true,
+            recordPractice = prefs[RECORD_PRACTICE] ?: true,
+            defaultVoiceName = prefs[DEFAULT_VOICE_NAME] ?: "Kore",
+            defaultVoiceStyle = prefs[DEFAULT_VOICE_STYLE] ?: "Warm, clear tutor. Short sentences and patient pauses.",
+            defaultPace = prefs[DEFAULT_PACE] ?: "SLOW",
+            defaultSilenceMs = (prefs[DEFAULT_SILENCE_MS]?.toIntOrNull() ?: 2000).coerceIn(800, 4000),
+            defaultSpeakCorrections = prefs[DEFAULT_SPEAK_CORRECTIONS] ?: true,
             autoSpeak = prefs[AUTO_SPEAK] ?: true,
             darkTheme = prefs[DARK_THEME] ?: true
         )
@@ -53,12 +69,28 @@ class SettingsStore(private val context: Context) {
             prefs[NVIDIA_MODEL] = value.nvidiaModel
             prefs[LIVE_MODEL] = value.liveModel
             prefs[GLOBAL_BEHAVIOR] = value.globalBehavior
+            prefs[LEARNER_PROFILE] = value.learnerProfile.take(4000)
+            prefs[AUTO_LEARNING_MEMORY] = value.autoLearningMemory
+            prefs[RECORD_PRACTICE] = value.recordPractice
+            prefs[DEFAULT_VOICE_NAME] = value.defaultVoiceName
+            prefs[DEFAULT_VOICE_STYLE] = value.defaultVoiceStyle.take(1000)
+            prefs[DEFAULT_PACE] = value.defaultPace
+            prefs[DEFAULT_SILENCE_MS] = value.defaultSilenceMs.coerceIn(800, 4000).toString()
+            prefs[DEFAULT_SPEAK_CORRECTIONS] = value.defaultSpeakCorrections
             prefs[AUTO_SPEAK] = value.autoSpeak
             prefs[DARK_THEME] = value.darkTheme
         }
     }
 
     companion object {
+        private val LEARNER_PROFILE = stringPreferencesKey("learner_profile")
+        private val AUTO_LEARNING_MEMORY = booleanPreferencesKey("auto_learning_memory")
+        private val RECORD_PRACTICE = booleanPreferencesKey("record_practice")
+        private val DEFAULT_VOICE_NAME = stringPreferencesKey("default_voice_name")
+        private val DEFAULT_VOICE_STYLE = stringPreferencesKey("default_voice_style")
+        private val DEFAULT_PACE = stringPreferencesKey("default_pace")
+        private val DEFAULT_SILENCE_MS = stringPreferencesKey("default_silence_ms")
+        private val DEFAULT_SPEAK_CORRECTIONS = booleanPreferencesKey("default_speak_corrections")
         private val DISPLAY_NAME = stringPreferencesKey("display_name")
         private val EXPLANATION_LANGUAGE = stringPreferencesKey("explanation_language")
         private val BRAIN_MODE = stringPreferencesKey("brain_mode")
@@ -77,3 +109,6 @@ If I speak or write in Korean, answer in Korean first. Stay directly on the topi
 When teaching a Korean sentence, show the natural Korean sentence first, then explain its meaning clearly in Myanmar.
 Correct grammar, particles, tense, honorifics, politeness, spelling, pronunciation, meaning, and naturalness only when useful.
 Keep the conversation moving by asking one short relevant question when appropriate."""
+
+
+const val DEFAULT_LEARNER_PROFILE = """I am a Myanmar-speaking learner living in Korea. I need practical Korean for factory work, coworkers, team leaders, greetings, manners, safety, dormitory life, shops and food ordering. I have 30 minutes a day. Focus on understanding and speaking, about five useful phrases per session. Explain briefly in Myanmar when needed. Do not assume my employer, shift, or exact language ability."""

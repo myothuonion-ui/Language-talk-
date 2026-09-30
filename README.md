@@ -1,88 +1,62 @@
-# Language Talk AI
+# Language Talk AI v0.5.0
 
-Premium Android language tutor for natural Korean and English practice. It combines Gemini Live hands-free conversation, Gemini voice, Korean Name Studio, Quick Translate, multimodal document understanding, persistent scoped memory, chat history, and optional NVIDIA Nemotron verification.
+An Android Korean/English voice tutor with an editable personal profile, persistent learning state, guided speaking practice and Gemini voice output.
 
-## What works
+[Download the APK](https://github.com/myothuonion-ui/Language-talk-/releases/latest) · [Changes](docs/CHANGELOG.md)
 
-- Korean, English, or mixed-language tutor chats
-- Hands-free voice conversation: speak naturally without a Send button
-- Clean single-orb Live interface with Listening / Understanding / Speaking states and a hideable transcript
-- Minimal Gemini Live setup plus automatic reliable voice recovery using local voice activity detection, Gemini understanding, and Gemini TTS
-- Message Chat for typed messages and push-to-talk voice messages
-- User-selected Gemini reasoning and TTS models with stable model fallback
-- Gemini model auto-fallback for Message Chat, tools, TTS, documents, and Live
-- Gemini key add, test, atomic replace, and remove controls (an invalid new key never overwrites a working key)
-- Korean Name Studio: instant verified `묘민뚜 / 묘민투 / 묘민두` results for Myo Min Thu, plus bounded Gemini routing for other names
-- Three quota-free local Canvas identity cards with guaranteed-distinct palette, animal, light pattern, and layout
-- A copyable English prompt on each name card for use in external image generators
-- Quick Translate for typed or spoken Korean/English/Myanmar into Myanmar meaning, pronunciation, words, and grammar
-- Optional Hybrid Auto, Best Quality, and NVIDIA Brain modes
-- NVIDIA Nemotron 3 Ultra text reasoning/verification
-- Global behavior and memory shared across every conversation
-- Per-chat topic, level, tutor role, correction mode, behavior, memory, brain mode, and voice
-- Gemini voice presets for Korean, English, and EPS listening style
-- Persistent chats and messages with Room
-- Editable personal memories
-- Image, PDF, and text document import into the context vault
-- Local encrypted API-key storage backed by Android Keystore
-- Dark/light premium Jetpack Compose UI
+## Practice
 
-## Install
+- **Guided Practice:** introduce one useful sentence, repeat it, then use it independently in a new situation. Move forward only after the independent attempt. Five useful phrases lead to review.
+- **Roleplay:** practice with a coworker, manager, friend or other chosen character while staying in the selected situation.
+- **Free Talk:** follow your chosen topic and correction preference.
 
-Download the latest APK from [Releases](https://github.com/myothuonion-ui/Language-talk-/releases/latest), allow installation from your browser or file manager, and install it on Android 8.0 or newer.
+Home continues the most recent lesson. Practice offers Message Chat and hands-free Live. Review contains due phrases and saved recordings. My Context holds your profile, memories, documents, learning notes and backup controls.
 
-On first launch:
+The initial editable profile focuses on Myanmar explanations and practical Korean for factory work and daily life, within 30 minutes a day. Change it to your own needs in My Context. Employer, shift and proficiency are not assumed.
 
-1. Open **Settings**.
-2. Paste a Gemini API key and tap **Add key** (or **Replace** when changing it). Use **Test** to verify it and **Remove** to delete it.
-3. Optionally paste an NVIDIA API key to unlock hybrid brain modes.
-4. Keep **Gemini Only** for the fastest and simplest setup.
-5. Open **Chat**, then choose **Message Chat** or **Gemini Live**.
+## Voice and controls
 
-API keys are never committed to the repository. They are entered by the user and encrypted at rest with a non-exportable Android Keystore key.
+Settings can save a default Gemini voice name, natural-language style, Slow/Natural pace, 0.8–4 second answer pause and spoken-correction preference. New lessons inherit those defaults. Each existing lesson has its own settings under Customize, including its goal and practice mode. Apply changes to restart an active voice session with the new configuration.
 
-## AI routing
+Voice commands include repeat, speak slowly, normal speed, explain in Myanmar and stay on this topic, including Korean/Myanmar equivalents. These commands do not advance lesson progress. Native Live passes the selected voice, supports barge-in and session resumption. Its lesson tool records one assessment per completed learner turn. Reliable REST/TTS voice uses local VAD and supports interruption; behavior depends on device echo cancellation and ambient noise.
 
-| Mode | Reasoning | Speech output |
-|---|---|---|
-| Gemini Only | Gemini 3.8 Flash | Gemini 3.1 Flash TTS |
-| Hybrid Auto | Gemini; Nemotron checks complex text | Gemini TTS |
-| Best Quality | Gemini + Nemotron; Gemini composes final | Gemini TTS |
-| NVIDIA Brain | Nemotron text reasoning | Gemini TTS |
+The transcript can be hidden. Live shows the current sentence, practice stage, completed phrase count and a 30-minute session timer. Audio is used for qualitative pronunciation feedback; text-only requests never claim to assess pronunciation.
 
-NVIDIA is optional. The complete app continues to work with only a Gemini key.
+## Memory and recordings
 
-Gemini first uses the model entered in Settings. If that Gemini model is unavailable, unsupported, rate-limited, or returns an invalid structured/audio result, the app moves through the current compatible fallback chain and shows the active model. Invalid credentials never trigger fallback. NVIDIA always uses exactly the configured model and has no automatic fallback.
+Room stores chats, messages, scoped memories, source summaries, lesson progress and review items. Context selection prioritizes the current chat's memories and relevant documents rather than sending every document on every request.
 
-Gemini Live starts with the model selected in Settings and rotates through compatible Live models. If no Live socket establishes in time, the app changes automatically to its hands-free reliable mode: local voice activity detection records each utterance, Gemini transcribes and answers, and the selected Gemini TTS voice speaks the result. All non-live speech output uses Gemini TTS only.
+Learning notes and recordings each have an off switch. Disabling automatic learning notes stops new notes and review entries; minimal lesson navigation state remains so guided practice can continue. Personal facts are remembered only after an explicit remember request with matching verbatim evidence, and never from roleplay. All memories and learning notes are visible, editable and removable. Recordings remain inside the app and can be replayed or deleted.
 
-## Development
+**Export** creates a portable JSON backup of conversations, memories, source summaries, progress, reviews, preferences and recordings. API keys and original imported documents are excluded. **Restore** validates the format and chat references, remaps IDs and adds restored conversations without deleting existing ones. The backup limit is 32 MB; delete old recordings to reduce its size.
 
-Requirements:
+## Providers
 
-- Android Studio Ladybug or newer
-- JDK 17
-- Android SDK 35
-- Gradle 8.10.2
+Enter your Gemini key in Settings; add/test/replace/remove controls are available. NVIDIA is optional. Keys are encrypted locally using Android Keystore and are not committed or exported.
 
-The GitHub workflow installs the required Gradle version, generates a wrapper for the CI job, runs unit tests and lint, builds an installable debug APK, uploads it as a workflow artifact, and publishes it to the `v0.4.0` release.
+- **Gemini Only:** native Live with learning tools, or structured Gemini REST + Gemini TTS recovery.
+- **Hybrid Auto:** Gemini tutoring with configured NVIDIA verification when useful.
+- **Best Quality:** Gemini and configured NVIDIA review, then Gemini final structured response.
+- **NVIDIA Brain:** configured NVIDIA reasoning with Gemini multimodal understanding/final formatting and Gemini speech.
+
+NVIDIA-enabled voice sessions use the REST/TTS path so the selected brain mode is honored. Gemini uses compatible fallbacks; NVIDIA stays on the exact configured model. Provider model names are editable. New defaults use Gemini 3.8 Flash, Live and Flash TTS; existing saved model preferences are retained.
+
+## Other tools
+
+Quick Translate handles typed/spoken Korean, English and Myanmar. Korean Name Studio preserves the verified Myo Min Thu name spellings and local identity cards. Photo, PDF and text imports produce bounded summaries for practice context.
+
+## Install and development
+
+Android 8.0 or newer. Install the APK from Releases and enter your own API key. Database v3 includes migrations from previous app databases and does not reset existing chats. This project distributes debug APKs; installations signed with a different previous debug certificate need a compatible signing key or backup/reinstall.
+
+Requirements: JDK 17, Android SDK 35, Gradle 8.10.2.
 
 ```bash
 gradle wrapper --gradle-version 8.10.2
-./gradlew testDebugUnitTest lintDebug assembleDebug
+./gradlew testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest
+./gradlew connectedDebugAndroidTest
 ```
 
-## Privacy and safety
+GitHub Actions runs unit tests, lint, APK compilation and Android emulator migration, backup restoration and screen checks before publishing v0.5.0. CI does not make real Gemini/NVIDIA calls because no personal API keys are supplied. Microphone quality, pronunciation judgments and provider availability require device testing.
 
-- Personal memories and chat history are stored locally in Room.
-- API keys are encrypted locally with Android Keystore.
-- Identity-card animals and effects are drawn locally with Compose Canvas; Korean Name Studio does not call an image-generation model or consume image quota.
-- Imported files are sent to Gemini only when the user imports them for analysis; a compact summary is stored locally for retrieval.
-- Removing a memory or knowledge source removes it from future prompt context.
-- This personal-client architecture sends API requests directly over HTTPS. For a public multi-user deployment, replace direct permanent keys with a backend and Gemini Live ephemeral tokens.
-
-See [Architecture](docs/ARCHITECTURE.md) for implementation details.
-
-## License
-
-Private/personal project. No third-party voice may be cloned without the speaker's consent.
+See [Architecture](docs/ARCHITECTURE.md).

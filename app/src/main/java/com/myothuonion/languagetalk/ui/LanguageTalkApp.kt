@@ -107,6 +107,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.testTag
 import androidx.core.content.ContextCompat
 import com.myothuonion.languagetalk.data.AppSettings
 import com.myothuonion.languagetalk.data.ChatEntity
@@ -120,6 +121,7 @@ import com.myothuonion.languagetalk.model.DefaultVoicePresets
 import com.myothuonion.languagetalk.model.GeminiRouteStatus
 import com.myothuonion.languagetalk.model.TutorConfig
 import com.myothuonion.languagetalk.model.TutorRole
+import com.myothuonion.languagetalk.model.PracticeMode
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -138,6 +140,10 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
         val currentId by viewModel.currentChatId.collectAsState()
         val messages by viewModel.messages.collectAsState()
         val chatMemories by viewModel.chatMemories.collectAsState()
+        val progress by viewModel.progress.collectAsState()
+        val reviews by viewModel.reviews.collectAsState()
+        val recordings by viewModel.recordings.collectAsState()
+        val allMemories by viewModel.allMemories.collectAsState()
         val liveState by viewModel.liveState.collectAsState()
         val credentials by viewModel.credentials.collectAsState()
         val geminiRoute by viewModel.geminiRoute.collectAsState()
@@ -176,24 +182,23 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
         ) { padding ->
             Box(Modifier.fillMaxSize().padding(padding)) {
                 when (screen) {
-                    Screen.HOME -> HomeScreen(
-                        chats = chats,
-                        work = work,
-                        onNewChat = { screen = Screen.NEW_CHAT },
-                        onQuickStart = { config ->
-                            viewModel.createChat(config) { screen = Screen.MESSAGE_CHAT }
-                        },
-                        onOpenChat = openChat,
-                        onSettings = { screen = Screen.SETTINGS },
-                        onNameStudio = { screen = Screen.NAME_STUDIO },
-                        onQuickTranslate = { screen = Screen.QUICK_TRANSLATE }
-                    )
+                    Screen.HOME -> LearningHomeScreen(settings, chats, progress, reviews,
+                        onContinue = openLiveChat, onNew = { screen = Screen.NEW_CHAT },
+                        onQuick = { config ->
+                            viewModel.createChat(config.copy(brainMode = settings.brainMode, voiceName = settings.defaultVoiceName,
+                                voiceStyle = settings.defaultVoiceStyle, speakingPace = settings.defaultPace,
+                                silenceMs = settings.defaultSilenceMs, speakCorrections = settings.defaultSpeakCorrections)) { screen = Screen.LIVE_CHAT }
+                        }, onReview = { screen = Screen.HISTORY },
+                        onTranslate = { screen = Screen.QUICK_TRANSLATE }, onNames = { screen = Screen.NAME_STUDIO })
                     Screen.NEW_CHAT -> NewChatScreen(
-                        defaultBrain = settings.brainMode,
+                        defaults = settings,
                         onBack = { screen = Screen.HOME },
-                        onStart = { config -> viewModel.createChat(config) { screen = Screen.MESSAGE_CHAT } }
+                        onStart = { config -> viewModel.createChat(config) { screen = Screen.LIVE_CHAT } }
                     )
-                    Screen.HISTORY -> HistoryScreen(chats, openChat, viewModel::deleteChat)
+                    Screen.HISTORY -> ReviewScreen(reviews, recordings,
+                        onReview = { item -> viewModel.beginReview(item) { screen = Screen.LIVE_CHAT } },
+                        onSpeak = { item -> viewModel.speak(item.chatId, item.sentence) },
+                        onRecording = viewModel::playRecording, onStop = viewModel::stopSpeaking, onDeleteRecording = viewModel::deleteRecording)
                     Screen.CHAT_HUB -> ChatHubScreen(
                         chats = chats,
                         onNewChat = { screen = Screen.NEW_CHAT },
@@ -207,15 +212,13 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                         },
                         onCustomize = { id -> viewModel.openChat(id); profileChatId = id }
                     )
-                    Screen.MEMORY -> MemoryScreen(
-                        memories, sources, work,
-                        viewModel::addMemory,
-                        viewModel::toggleMemory,
-                        viewModel::deleteMemory,
-                        viewModel::toggleSource,
-                        viewModel::deleteSource,
-                        viewModel::importSource
-                    )
+                    Screen.MEMORY -> ContextScreen(settings, allMemories, progress, sources, work,
+                        onSaveSettings = viewModel::saveSettings, onAdd = viewModel::addMemory,
+                        onEdit = viewModel::updateMemory, onToggle = viewModel::toggleMemory,
+                        onDelete = viewModel::deleteMemory, onNotes = viewModel::updateLearningNotes,
+                        onExport = viewModel::exportBackup, onRestore = viewModel::importBackup,
+                        onImportSource = viewModel::importSource, onToggleSource = viewModel::toggleSource,
+                        onDeleteSource = viewModel::deleteSource)
                     Screen.SETTINGS -> SettingsScreen(
                         settings = settings,
                         credentials = credentials,
@@ -251,6 +254,7 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                             LiveChatScreen(
                                 chat = chat,
                                 state = liveState,
+                                progress = progress.firstOrNull { it.chatId == chat.id },
                                 onStart = { viewModel.startLive(chat.id) },
                                 onToggleMic = viewModel::toggleLiveMic,
                                 onStop = viewModel::stopLive,
@@ -280,7 +284,13 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                     chat = chat,
                     memories = chatMemories,
                     onDismiss = { profileChatId = null },
+                    onDeleteChat = { viewModel.deleteChat(chat.id); profileChatId = null; screen = Screen.CHAT_HUB },
                     onSaveBehavior = viewModel::updateChatBehavior,
+                    onSavePractice = { mode, goal, voice, style, pace, silence, corrections, restart ->
+                        viewModel.updatePractice(chat, mode, goal, voice, style, pace, silence, corrections, restart)
+                    },
+                    onPreviewVoice = viewModel::previewVoice,
+                    onEditMemory = viewModel::updateMemory,
                     onAddMemory = viewModel::addChatMemory,
                     onToggleMemory = viewModel::toggleMemory,
                     onDeleteMemory = viewModel::deleteMemory
@@ -295,9 +305,9 @@ private fun AppBottomBar(screen: Screen, onSelect: (Screen) -> Unit) {
     NavigationBar(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f)) {
         listOf(
             Triple(Screen.HOME, Icons.Default.Home, "Home"),
-            Triple(Screen.HISTORY, Icons.Default.History, "History"),
-            Triple(Screen.CHAT_HUB, Icons.Default.ChatBubbleOutline, "Chat"),
-            Triple(Screen.MEMORY, Icons.Default.AutoAwesome, "Memory"),
+            Triple(Screen.HISTORY, Icons.Default.History, "Review"),
+            Triple(Screen.CHAT_HUB, Icons.Default.ChatBubbleOutline, "Practice"),
+            Triple(Screen.MEMORY, Icons.Default.AutoAwesome, "My Context"),
             Triple(Screen.SETTINGS, Icons.Default.Settings, "Settings")
         ).forEach { (target, icon, label) ->
             NavigationBarItem(
@@ -486,7 +496,7 @@ private fun QuickModeCard(title: String, subtitle: String, icon: ImageVector, ac
 }
 
 @Composable
-private fun NewChatScreen(defaultBrain: BrainMode, onBack: () -> Unit, onStart: (TutorConfig) -> Unit) {
+private fun NewChatScreen(defaults: AppSettings, onBack: () -> Unit, onStart: (TutorConfig) -> Unit) {
     var language by rememberSaveable { mutableStateOf(AppLanguage.KOREAN) }
     var level by rememberSaveable { mutableStateOf("Beginner") }
     var topic by rememberSaveable { mutableStateOf("နေ့စဉ်စကားပြော") }
@@ -494,15 +504,21 @@ private fun NewChatScreen(defaultBrain: BrainMode, onBack: () -> Unit, onStart: 
     var correction by rememberSaveable { mutableStateOf(CorrectionMode.AFTER_REPLY) }
     var prompt by rememberSaveable { mutableStateOf("") }
     var initialMemory by rememberSaveable { mutableStateOf("") }
-    var brain by rememberSaveable { mutableStateOf(defaultBrain) }
-    var voiceIndex by rememberSaveable { mutableStateOf(0) }
+    var brain by rememberSaveable { mutableStateOf(defaults.brainMode) }
+    var practiceMode by rememberSaveable { mutableStateOf(PracticeMode.GUIDED) }
+    var voice by rememberSaveable { mutableStateOf(defaults.defaultVoiceName) }
+    var voiceStyle by rememberSaveable { mutableStateOf(defaults.defaultVoiceStyle) }
+    var pace by rememberSaveable { mutableStateOf(defaults.defaultPace) }
+    var silence by rememberSaveable { mutableStateOf(defaults.defaultSilenceMs) }
+    var speakCorrections by rememberSaveable { mutableStateOf(defaults.defaultSpeakCorrections) }
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
-        AppTopBar("New conversation", onBack)
+        AppTopBar("New practice goal", onBack)
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
+            PracticeChoices(practiceMode) { practiceMode = it }
             SettingSection("ဘာသာစကား") {
                 ChoiceRow(AppLanguage.entries.toList(), language, { it.label }) { language = it }
             }
@@ -526,19 +542,8 @@ private fun NewChatScreen(defaultBrain: BrainMode, onBack: () -> Unit, onStart: 
                     Spacer(Modifier.height(7.dp))
                 }
             }
-            SettingSection("Gemini voice") {
-                DefaultVoicePresets.forEachIndexed { index, preset ->
-                    FilterChip(
-                        selected = index == voiceIndex,
-                        onClick = { voiceIndex = index },
-                        label = { Text(preset.name) },
-                        leadingIcon = if (index == voiceIndex) {
-                            { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
-                        } else null,
-                        modifier = Modifier.padding(end = 5.dp)
-                    )
-                }
-            }
+            VoiceEditor(voice, voiceStyle, pace, silence, speakCorrections,
+                { voice = it }, { voiceStyle = it }, { pace = it }, { silence = it }, { speakCorrections = it })
             OutlinedTextField(
                 value = prompt, onValueChange = { prompt = it },
                 label = { Text("ဒီ Chat ရဲ့ Behaviour") },
@@ -556,7 +561,6 @@ private fun NewChatScreen(defaultBrain: BrainMode, onBack: () -> Unit, onStart: 
             )
             Button(
                 onClick = {
-                    val voice = DefaultVoicePresets[voiceIndex]
                     onStart(
                         TutorConfig(
                             language = language,
@@ -565,8 +569,12 @@ private fun NewChatScreen(defaultBrain: BrainMode, onBack: () -> Unit, onStart: 
                             role = role,
                             correctionMode = correction,
                             customPrompt = prompt,
-                            voiceName = voice.voice,
-                            voiceStyle = voice.style,
+                            voiceName = voice,
+                            voiceStyle = voiceStyle,
+                            practiceMode = practiceMode,
+                            speakingPace = pace,
+                            silenceMs = silence,
+                            speakCorrections = speakCorrections,
                             brainMode = brain,
                             initialMemory = initialMemory
                         )
@@ -577,7 +585,7 @@ private fun NewChatScreen(defaultBrain: BrainMode, onBack: () -> Unit, onStart: 
             ) {
                 Icon(Icons.Default.AutoAwesome, null)
                 Spacer(Modifier.width(9.dp))
-                Text("Start conversation", fontWeight = FontWeight.Bold)
+                Text("Start Live practice", fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(20.dp))
         }
@@ -1071,11 +1079,16 @@ private fun SettingsScreen(
     var nvidiaModel by remember(settings.nvidiaModel) { mutableStateOf(settings.nvidiaModel) }
     var liveModel by remember(settings.liveModel) { mutableStateOf(settings.liveModel) }
     var globalBehavior by remember(settings.globalBehavior) { mutableStateOf(settings.globalBehavior) }
+    var defaultVoice by remember(settings.defaultVoiceName) { mutableStateOf(settings.defaultVoiceName) }
+    var defaultStyle by remember(settings.defaultVoiceStyle) { mutableStateOf(settings.defaultVoiceStyle) }
+    var defaultPace by remember(settings.defaultPace) { mutableStateOf(settings.defaultPace) }
+    var defaultSilence by remember(settings.defaultSilenceMs) { mutableStateOf(settings.defaultSilenceMs) }
+    var defaultCorrections by remember(settings.defaultSpeakCorrections) { mutableStateOf(settings.defaultSpeakCorrections) }
     var confirmRemoveGemini by remember { mutableStateOf(false) }
     var confirmRemoveNvidia by remember { mutableStateOf(false) }
 
     LazyColumn(
-        Modifier.fillMaxSize(),
+        Modifier.fillMaxSize().testTag("settings-list"),
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
@@ -1182,33 +1195,12 @@ private fun SettingsScreen(
             }
         }
         item {
-            SettingsCard("Gemini voices") {
-                DefaultVoicePresets.forEach { preset ->
-                    Row(
-                        Modifier.fillMaxWidth().clickable {
-                            onPreviewVoice(preset.voice, preset.style, preset.previewText)
-                        }.padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            Modifier.size(40.dp).clip(CircleShape).background(Violet.copy(alpha = .16f)),
-                            contentAlignment = Alignment.Center
-                        ) { Icon(Icons.Default.VolumeUp, null, tint = VioletLight) }
-                        Spacer(Modifier.width(11.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(preset.name, fontWeight = FontWeight.Medium)
-                            Text(preset.voice, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Icon(Icons.Default.PlayArrow, "Preview", tint = Mint)
-                    }
-                }
-                if (work.isSpeaking) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                        Spacer(Modifier.width(8.dp))
-                        Text(work.status, fontSize = 12.sp)
-                    }
-                }
+            SettingsCard("My default voice preset") {
+                VoiceEditor(defaultVoice, defaultStyle, defaultPace, defaultSilence, defaultCorrections,
+                    { defaultVoice = it }, { defaultStyle = it }, { defaultPace = it },
+                    { defaultSilence = it }, { defaultCorrections = it },
+                    onPreview = { onPreviewVoice(defaultVoice, "$defaultStyle Speak at ${defaultPace.lowercase()} pace.", "다시 한 번 설명해 주시겠어요?") })
+                Text("Save settings to use this preset for new lessons. Existing lessons have their own voice settings.", fontSize = 12.sp)
             }
         }
         item {
@@ -1250,7 +1242,12 @@ private fun SettingsScreen(
                             geminiTtsModel = ttsModel.trim(),
                             nvidiaModel = nvidiaModel.trim(),
                             liveModel = liveModel.trim(),
-                            globalBehavior = globalBehavior.trim()
+                            globalBehavior = globalBehavior.trim(),
+                            defaultVoiceName = defaultVoice.trim(),
+                            defaultVoiceStyle = defaultStyle.trim(),
+                            defaultPace = defaultPace,
+                            defaultSilenceMs = defaultSilence,
+                            defaultSpeakCorrections = defaultCorrections
                         )
                     )
                 },

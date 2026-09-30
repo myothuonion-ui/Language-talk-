@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.myothuonion.languagetalk.util.pcm16Wave
+import java.util.ArrayDeque
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -53,7 +55,8 @@ data class LiveState(
 
 class GeminiLiveSession(
     private val config: LiveSessionConfig,
-    private val onTurnComplete: suspend (userText: String, aiText: String) -> Unit,
+    private val onTurnComplete: suspend (userText: String, aiText: String, audio: AudioPayload?) -> Unit,
+    private val onLearningTool: suspend (JsonObject) -> JsonObject,
     private val onTerminalFailure: (reason: String) -> Unit = {}
 ) {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
@@ -78,6 +81,14 @@ class GeminiLiveSession(
     private var reconnectJob: Job? = null
     private var setupTimeoutJob: Job? = null
     private var modelIndex = 0
+    private var sessionHandle: String? = null
+    private var reconnectCount = 0
+    private var latestLesson = ""
+    private val continuation = config.initialTurns.toMutableList()
+    private val audioLock = Any()
+    private val capturedAudio = ArrayDeque<ByteArray>()
+    private var finalizing: Job? = null
+    private var toolsInTurn = 0
     private val stopped = AtomicBoolean(false)
     private val terminalFallbackStarted = AtomicBoolean(false)
 
@@ -175,21 +186,7 @@ class GeminiLiveSession(
         }
     }
 
-    private fun setupMessage(): JsonObject = buildJsonObject {
-        put("setup", buildJsonObject {
-            put("model", JsonPrimitive("models/${config.models[modelIndex]}"))
-            // Keep setup identical to the current raw WebSocket guide. Custom voice is
-            // retained by the reliable REST/TTS path if this low-latency socket cannot open.
-            put("responseModalities", buildJsonArray { add(JsonPrimitive("AUDIO")) })
-            put("systemInstruction", buildJsonObject {
-                put("parts", buildJsonArray {
-                    add(buildJsonObject { put("text", JsonPrimitive(config.systemInstruction)) })
-                })
-            })
-            put("inputAudioTranscription", buildJsonObject { })
-            put("outputAudioTranscription", buildJsonObject { })
-        })
-    }
+    private fun setupMessage(): JsonObject = LiveProtocol.setup(config, config.models[modelIndex], sessionHandle)
 
     private fun handleMessage(root: JsonObject) {
         root["error"]?.jsonObject?.let { error ->
@@ -198,6 +195,35 @@ class GeminiLiveSession(
             if (!_state.value.connected && code !in listOf(401, 403)) tryNextModel(message)
             else fail(message, reconnect = false)
             return
+        }
+        root["sessionResumptionUpdate"]?.jsonObject?.let { update ->
+            if (update["resumable"]?.jsonPrimitive?.content == "true") {
+                sessionHandle = update["newHandle"]?.jsonPrimitive?.contentOrNull ?: sessionHandle
+            }
+        }
+        root["toolCall"]?.jsonObject?.get("functionCalls")?.jsonArray?.let { calls ->
+            val connectedSocket = socket
+            scope.launch {
+                val responses = buildJsonArray {
+                    calls.forEach { raw ->
+                        val call = raw.jsonObject
+                        val name = call["name"]?.jsonPrimitive?.contentOrNull.orEmpty()
+                        val response = if (name == "update_learning_progress" && toolsInTurn++ == 0) {
+                            runCatching { onLearningTool(call["args"]?.jsonObject ?: buildJsonObject {}) }
+                                .getOrElse { buildJsonObject { put("error", JsonPrimitive("Progress could not be saved; repeat the current step.")) } }
+                        } else buildJsonObject { put("notice", JsonPrimitive("Progress was already recorded for this turn. Wait for the learner.")) }
+                        latestLesson = response.toString()
+                        add(buildJsonObject {
+                            call["id"]?.let { put("id", it) }
+                            put("name", JsonPrimitive(name))
+                            put("response", response)
+                        })
+                    }
+                }
+                if (connectedSocket === socket && !stopped.get()) send(buildJsonObject {
+                    put("toolResponse", buildJsonObject { put("functionResponses", responses) })
+                })
+            }
         }
         if (root["setupComplete"] != null) {
             setupTimeoutJob?.cancel()
@@ -211,6 +237,8 @@ class GeminiLiveSession(
                     error = null
                 )
             }
+            if (sessionHandle == null) send(LiveProtocol.continuation(continuation,
+                config.openingPrompt + if (latestLesson.isBlank()) "" else " Latest authoritative lesson state: $latestLesson"))
             startRecorderIfNeeded()
         }
         if (root["goAway"] != null) {
@@ -222,10 +250,10 @@ class GeminiLiveSession(
             _state.update { it.copy(userCaption = text, phase = LivePhase.LISTENING) }
         }
         server["inputTranscription"]?.jsonObject?.transcript()?.let { text ->
-            _state.update { it.copy(userCaption = mergeTranscript(it.userCaption, text), phase = LivePhase.THINKING) }
+            _state.update { it.copy(userCaption = LiveProtocol.mergeTranscript(it.userCaption, text), phase = LivePhase.THINKING) }
         }
         server["outputTranscription"]?.jsonObject?.transcript()?.let { text ->
-            _state.update { it.copy(aiCaption = mergeTranscript(it.aiCaption, text), phase = LivePhase.SPEAKING) }
+            _state.update { it.copy(aiCaption = LiveProtocol.mergeTranscript(it.aiCaption, text), phase = LivePhase.SPEAKING) }
         }
         server["modelTurn"]?.jsonObject?.get("parts")?.jsonArray?.forEach { element ->
             val inline = element.jsonObject["inlineData"]?.jsonObject ?: return@forEach
@@ -237,10 +265,13 @@ class GeminiLiveSession(
             player.interrupt()
             _state.update { it.copy(phase = LivePhase.LISTENING, aiCaption = "") }
         }
-        if (server["turnComplete"]?.jsonPrimitive?.content == "true") completeTurn()
+        if (server["turnComplete"]?.jsonPrimitive?.content == "true") {
+            finalizing?.cancel()
+            finalizing = scope.launch { delay(250); completeTurn() }
+        }
     }
 
-    private fun JsonObject.transcript(): String? = this["text"]?.jsonPrimitive?.contentOrNull?.trim()?.takeIf { it.isNotEmpty() }
+    private fun JsonObject.transcript(): String? = this["text"]?.jsonPrimitive?.contentOrNull?.takeIf { it.isNotEmpty() }
 
     private fun completeTurn() {
         val snapshot = _state.value
@@ -252,7 +283,20 @@ class GeminiLiveSession(
             if (ai.isNotBlank()) add(LiveLine(LiveSpeaker.AI, ai))
         }.takeLast(40)
         _state.update { it.copy(lines = newLines, userCaption = "", aiCaption = "", phase = LivePhase.LISTENING) }
-        if (user.isNotBlank() || ai.isNotBlank()) scope.launch { onTurnComplete(user, ai) }
+        toolsInTurn = 0
+        reconnectCount = 0
+        if (user.isNotBlank()) continuation += "user" to user
+        if (ai.isNotBlank()) continuation += "model" to ai
+        while (continuation.size > 16) continuation.removeAt(0)
+        val pcm = synchronized(audioLock) {
+            val bytes = ByteArray(capturedAudio.sumOf { it.size })
+            var offset = 0
+            capturedAudio.forEach { chunk -> chunk.copyInto(bytes, offset); offset += chunk.size }
+            capturedAudio.clear()
+            bytes
+        }
+        val audio = if (config.recordAudio && user.isNotBlank() && pcm.isNotEmpty()) AudioPayload(pcm16Wave(pcm), "audio/wav") else null
+        if (user.isNotBlank() || ai.isNotBlank()) CoroutineScope(Dispatchers.IO).launch { onTurnComplete(user, ai, audio) }
     }
 
     private fun startRecorderIfNeeded() {
@@ -260,6 +304,10 @@ class GeminiLiveSession(
         recorder.start { bytes, level ->
             val current = _state.value
             if (!current.connected || !current.micEnabled || stopped.get()) return@start
+            if (config.recordAudio) synchronized(audioLock) {
+                capturedAudio.addLast(bytes.copyOf())
+                while (capturedAudio.size > 600) capturedAudio.removeFirst()
+            }
             _state.update { it.copy(inputLevel = level) }
             send(buildJsonObject {
                 put("realtimeInput", buildJsonObject {
@@ -276,11 +324,15 @@ class GeminiLiveSession(
 
     private fun scheduleReconnect(reason: String) {
         if (stopped.get() || reconnectJob?.isActive == true) return
+        if (++reconnectCount > 4) {
+            if (terminalFallbackStarted.compareAndSet(false, true)) onTerminalFailure("Live reconnect failed; continuing with Gemini TTS")
+            return
+        }
         player.interrupt()
         _state.update { it.copy(phase = LivePhase.RECONNECTING, connected = false, diagnostic = reason, error = null) }
         reconnectJob = scope.launch {
             delay(900)
-            if (!stopped.get()) connect(resuming = false)
+            if (!stopped.get()) connect(resuming = sessionHandle != null)
         }
     }
 
@@ -304,6 +356,7 @@ class GeminiLiveSession(
         oldSocket?.close(1000, "Trying fallback model")
         recorder.stop()
         player.interrupt()
+        sessionHandle = null
         modelIndex += 1
         _state.update {
             it.copy(
@@ -324,10 +377,4 @@ class GeminiLiveSession(
         if (reconnect) scheduleReconnect(message)
     }
 
-    private fun mergeTranscript(current: String, next: String): String = when {
-        current.isBlank() -> next
-        next.startsWith(current) -> next
-        current.endsWith(next) -> current
-        else -> "$current $next"
-    }.trim()
 }

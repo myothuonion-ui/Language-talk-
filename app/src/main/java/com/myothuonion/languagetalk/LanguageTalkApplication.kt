@@ -12,6 +12,8 @@ class LanguageTalkApplication : Application() {
     val repository: TutorRepository by lazy {
         TutorRepository(
             dao = AppDatabase.get(this).dao(),
+            database = AppDatabase.get(this),
+            recordingDirectory = java.io.File(filesDir, "practice-recordings"),
             settingsStore = SettingsStore(this),
             secrets = SecretStore(this),
             gemini = GeminiClient(),

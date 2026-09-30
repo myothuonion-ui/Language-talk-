@@ -39,14 +39,22 @@ data class TutorConfig(
     val voiceName: String = "Kore",
     val voiceStyle: String = "နူးညံ့ပြီး ရှင်းလင်းသော ဆရာမအသံ",
     val brainMode: BrainMode = BrainMode.GEMINI_ONLY,
-    val initialMemory: String = ""
+    val initialMemory: String = "",
+    val practiceMode: PracticeMode = PracticeMode.GUIDED,
+    val speakingPace: String = "SLOW",
+    val silenceMs: Int = 2000,
+    val speakCorrections: Boolean = true
 )
 
 data class LiveSessionConfig(
     val apiKey: String,
     val models: List<String>,
     val systemInstruction: String,
-    val voiceName: String
+    val voiceName: String,
+    val silenceMs: Int = 2000,
+    val initialTurns: List<Pair<String, String>> = emptyList(),
+    val openingPrompt: String = "Continue my current practice goal. Ask one short question and wait.",
+    val recordAudio: Boolean = true
 )
 
 data class GeminiRouteStatus(
@@ -97,8 +105,22 @@ data class TutorReply(
     val translation: String = "",
     val correction: String = "",
     val explanation: String = "",
-    val followUpQuestion: String = ""
+    val followUpQuestion: String = "",
+    val targetSentence: String = "",
+    val assessment: String = "NONE",
+    val lessonNote: String = "",
+    val voiceCommand: String = "",
+    val memoryFact: String = "",
+    val memoryEvidence: String = "",
+    val speechText: String = ""
 ) {
+    fun speech(includeCorrections: Boolean): String {
+        if (includeCorrections && speechText.isNotBlank()) return speechText.trim()
+        return listOf(reply.trim(), if (includeCorrections) correction.trim() else "",
+            if (includeCorrections && correction.isNotBlank()) explanation.trim() else "",
+            followUpQuestion.trim()).filter(String::isNotBlank).distinct().joinToString(" ")
+    }
+
     val spokenText: String
         get() = buildString {
             append(reply.trim())
