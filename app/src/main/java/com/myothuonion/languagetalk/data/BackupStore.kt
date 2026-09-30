@@ -6,6 +6,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import java.io.File
 import java.util.Base64
 import java.util.UUID
@@ -47,7 +50,9 @@ object BackupCodec {
 
     fun decode(bytes: ByteArray): LearningBackup {
         require(bytes.size <= MAX_BYTES) { "Backup must be 32 MB or less" }
-        val backup = json.decodeFromString<LearningBackup>(bytes.decodeToString())
+        val text = bytes.decodeToString()
+        require(json.parseToJsonElement(text).jsonObject["format"]?.jsonPrimitive?.contentOrNull == "language-talk-backup") { "Not a Language Talk backup" }
+        val backup = json.decodeFromString<LearningBackup>(text)
         require(backup.format == "language-talk-backup" && backup.version == 1) { "Unsupported backup format" }
         require(backup.chats.size <= 2000 && backup.messages.size <= 20000 && backup.memories.size <= 3000) { "Backup contains too many entries" }
         val ids = backup.chats.map { it.id }.toSet()

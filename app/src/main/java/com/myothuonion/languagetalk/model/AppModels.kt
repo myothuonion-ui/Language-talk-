@@ -112,7 +112,8 @@ data class TutorReply(
     val voiceCommand: String = "",
     val memoryFact: String = "",
     val memoryEvidence: String = "",
-    val speechText: String = ""
+    val speechText: String = "",
+    val nextTargetSentence: String = ""
 ) {
     fun speech(includeCorrections: Boolean): String {
         if (includeCorrections && speechText.isNotBlank()) return speechText.trim()

@@ -95,8 +95,8 @@ class TutorRepository(
         val sources = ContextSelector.sources(dao.enabledKnowledgeSources(), chat.topic + " " + userText)
         val currentProgress = dao.getProgress(chatId) ?: LearningProgressEntity(chatId, chat.topic)
         val system = buildSystemInstruction(chat, memories, sources, appSettings.explanationLanguage, appSettings.globalBehavior) +
-            "\nLearner profile: ${appSettings.learnerProfile}\n" + PracticeEngine.instruction(currentProgress.state(), practiceMode(chat)) +
-            "\nReturn targetSentence, assessment (NONE/PASSED/RETRY/UNSURE), lessonNote, voiceCommand, memoryFact, memoryEvidence, and speechText. " +
+            "\nLearner profile (${appSettings.displayName}): ${appSettings.learnerProfile}\n" + PracticeEngine.instruction(currentProgress.state(), practiceMode(chat)) +
+            "\nReturn targetSentence, nextTargetSentence, assessment (NONE/PASSED/RETRY/UNSURE), lessonNote, voiceCommand, memoryFact, memoryEvidence, and speechText. " +
             "speechText is the exact brief spoken lesson, including one useful correction when speakCorrections=${chat.speakCorrections}, then one question. " +
             "For commands use REPEAT/SLOW/NORMAL/EXPLAIN/KEEP_TOPIC; never advance for commands. " +
             "Only emit memoryFact if the learner explicitly asks to remember a real fact; memoryEvidence must be an exact quote from heardText or the user text. " +
@@ -175,7 +175,7 @@ class TutorRepository(
                 explanation = reply.explanation
             )
         )
-        applyAssessment(chat, PracticeAssessment(reply.targetSentence, reply.assessment, reply.correction, reply.lessonNote, reply.voiceCommand),
+        applyAssessment(chat, PracticeAssessment(reply.targetSentence, reply.assessment, reply.correction, reply.lessonNote, reply.voiceCommand, reply.nextTargetSentence),
             reply.heardText.ifBlank { if (opening) "" else userText }, reply.memoryFact, reply.memoryEvidence)
         dao.touchChat(chatId)
         reply
@@ -240,7 +240,7 @@ class TutorRepository(
             chat, ContextSelector.memories(dao.enabledMemories(chatId), chatId, chat.topic),
             ContextSelector.sources(dao.enabledKnowledgeSources(), chat.topic),
             appSettings.explanationLanguage, appSettings.globalBehavior
-        ) + "\nLearner profile: ${appSettings.learnerProfile}\n" +
+        ) + "\nLearner profile (${appSettings.displayName}): ${appSettings.learnerProfile}\n" +
             PracticeEngine.instruction(currentProgress.state(), practiceMode(chat)) + """
             This is live audio: speak directly, never speak JSON or field names.
             Voice style: ${chat.voiceStyle}. Pace: ${chat.speakingPace}. Speak useful corrections: ${chat.speakCorrections}.
@@ -451,7 +451,7 @@ class TutorRepository(
         fun value(key: String) = args[key]?.jsonPrimitive?.contentOrNull.orEmpty()
         val chat = dao.getChat(chatId) ?: error("Chat not found")
         val state = applyAssessment(chat, PracticeAssessment(value("targetSentence"), value("assessment"), value("correction"),
-            value("lessonNote"), value("voiceCommand")), value("heardText"), value("memoryFact"), value("memoryEvidence"))
+            value("lessonNote"), value("voiceCommand"), value("nextTargetSentence")), value("heardText"), value("memoryFact"), value("memoryEvidence"))
         buildJsonObject {
             put("stage", JsonPrimitive(state.stage))
             put("goal", JsonPrimitive(state.goal))

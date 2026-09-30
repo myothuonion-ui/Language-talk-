@@ -23,7 +23,8 @@ data class PracticeAssessment(
     val assessment: String = "NONE",
     val correction: String = "",
     val note: String = "",
-    val command: String = ""
+    val command: String = "",
+    val nextTargetSentence: String = ""
 )
 
 object PracticeEngine {
@@ -42,8 +43,10 @@ object PracticeEngine {
             PracticeStage.REPEAT -> if (result.assessment == "PASSED") updated.copy(stage = PracticeStage.APPLY.name) else updated
             PracticeStage.APPLY -> if (result.assessment == "PASSED") updated.copy(
                 completed = (state.completed + 1).coerceAtMost(5),
-                stage = if (state.completed + 1 >= 5) PracticeStage.REVIEW.name else PracticeStage.INTRO.name,
-                targetSentence = if (state.completed + 1 >= 5) state.targetSentence else ""
+                stage = if (state.completed + 1 >= 5) PracticeStage.REVIEW.name
+                    else if (result.nextTargetSentence.isNotBlank() && result.nextTargetSentence.trim() != state.targetSentence) PracticeStage.REPEAT.name else PracticeStage.INTRO.name,
+                targetSentence = if (state.completed + 1 >= 5) state.targetSentence
+                    else result.nextTargetSentence.trim().take(300).takeIf { it != state.targetSentence }.orEmpty()
             ) else updated
             PracticeStage.REVIEW -> updated
         }
@@ -56,6 +59,8 @@ object PracticeEngine {
         GUIDED: INTRO introduces ONE useful sentence and asks the learner to repeat it.
         REPEAT checks that SAME sentence; do not replace it. A successful repeat leads to APPLY.
         APPLY uses a new real-life situation without giving the answer first. Only successful independent use counts as mastery.
+        After successful APPLY with fewer than five completed phrases, provide nextTargetSentence if you introduce the next phrase immediately.
+        If nextTargetSentence is blank, ask whether the learner is ready; do not introduce a new phrase until INTRO.
         RETRY or UNSURE stays on the same step. REVIEW briefly recalls the five phrases and asks whether to review or start another goal.
         ROLEPLAY: stay in the chosen character and situation; correct one important mistake after the learner finishes.
         FREE_TALK: follow the learner's chosen topic, with optional brief corrections. Never choose unrelated topics.

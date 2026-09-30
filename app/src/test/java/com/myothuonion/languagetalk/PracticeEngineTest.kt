@@ -29,6 +29,11 @@ class PracticeEngineTest {
         assertEquals(1, next.completed); assertEquals("INTRO", next.stage)
         assertEquals(1, PracticeEngine.advance(next, PracticeAssessment(assessment = "PASSED"), PracticeMode.GUIDED).completed)
     }
+    @Test fun nextPhraseIsPersistedBeforeTheLearnerRepeatsIt() {
+        val state = PracticeState(stage = "APPLY", targetSentence = "안녕하세요.")
+        val next = PracticeEngine.advance(state, PracticeAssessment(assessment = "PASSED", nextTargetSentence = "감사합니다."), PracticeMode.GUIDED)
+        assertEquals("REPEAT", next.stage); assertEquals("감사합니다.", next.targetSentence); assertEquals(1, next.completed)
+    }
     @Test fun fiveUsefulPhrasesLeadToReview() {
         val state = PracticeState(stage = "APPLY", completed = 4, targetSentence = "감사합니다.")
         val next = PracticeEngine.advance(state, PracticeAssessment(assessment = "PASSED"), PracticeMode.GUIDED)
