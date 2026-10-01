@@ -37,11 +37,11 @@ jobs:
       - name: Unit tests, lint, APK, and device-test compilation
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest --stacktrace
       - name: Prepare APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.5.0.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.5.1.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: language-talk-v0.5.0-apk
-          path: language-talk-v0.5.0.apk
+          name: language-talk-v0.5.1-apk
+          path: language-talk-v0.5.1.apk
           if-no-files-found: error
           retention-days: 90
       - uses: actions/upload-artifact@v4
@@ -117,35 +117,31 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: language-talk-v0.5.0-apk
+          name: language-talk-v0.5.1-apk
       - uses: actions/download-artifact@v4
         with:
           name: language-talk-legacy-backup-windows
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.5.0
-          name: Language Talk AI v0.5.0
+          tag_name: v0.5.1
+          name: Language Talk AI v0.5.1
           body: |
-            Personal Korean voice practice and learning memory.
+            Fixes the unavailable Gemini 2.5 model error for new users.
 
-            - Guided Practice, Roleplay, and Free Talk
-            - Repeat a phrase, then use it independently before moving on
-            - Persistent lesson steps, learning notes, and spaced review
-            - Saved custom voice presets, Slow/Natural pace, configurable answer pauses
-            - Native Live voice configuration, interruption, and session resumption
-            - Selected NVIDIA brain modes use Gemini TTS hands-free conversation
-            - Voice recordings, replay, and deletion
-            - Editable personal profile, global/chat memories, and learning notes
-            - Portable backup/restore including recordings; API keys excluded
-            - Home, Practice, Review, My Context, and Settings
-            - Database migration and a Windows helper to save v0.4.0 chats before reinstalling
-            - Unit tests, lint, APK build, migration/restore tests, and emulator screen checks
+            - Migrates saved legacy text, speech and Live models while retaining personal preferences
+            - Uses the current Gemini Interactions API for structured tutoring, translation, imports and speech
+            - Keeps speech style in metadata, separate from the sentence being spoken
+            - Paginates the model catalog and only routes to listed compatible modern models
+            - Settings Test makes actual text and voice requests; listing models alone no longer claims readiness
+            - Preserves the real quota/access error instead of replacing it with a final missing-model error
+            - Native Live can recover through text + voice when access or setup is unavailable
+            - HTTP regression tests, lint, APK build, Android migration/backup tests and emulator screen checks
 
-            IMPORTANT: v0.4.0 and this APK have different signing certificates. Save your old chats before uninstalling. The Windows backup helper below does not delete phone data.
+            BACK UP FIRST: APKs use runner-generated debug signing keys. Android may reject an in-place update from v0.4.0 or v0.5.0. In v0.5.0 use My Context → Export backup before uninstalling. For v0.4.0 use the Windows backup helper below. Restore your JSON after installing v0.5.1 and re-enter your API keys.
             Upgrade instructions: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/UPGRADING.md
 
-            Install the APK below. Live provider calls require your own API keys and microphone testing on your device.
+            CI uses simulated provider responses, not your personal API key. After installation, open Settings → Test to check real text and voice access/quota, then try Live on your phone.
           files: |
-            language-talk-v0.5.0.apk
+            language-talk-v0.5.1.apk
             language-talk-legacy-backup-windows.exe
           make_latest: true

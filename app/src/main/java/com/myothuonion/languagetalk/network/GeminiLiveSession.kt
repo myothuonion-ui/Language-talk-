@@ -95,7 +95,7 @@ class GeminiLiveSession(
     fun start() {
         if (socket != null || stopped.get()) return
         if (config.models.isEmpty()) {
-            fail("Gemini Live model မသတ်မှတ်ထားပါ", reconnect = false)
+            switchToReliableVoice("ဒီ key အတွက် native Live model မရှိပါ။ Gemini text + voice သို့ပြောင်းနေသည်။")
             return
         }
         connect(resuming = false)
@@ -118,7 +118,7 @@ class GeminiLiveSession(
         socket = http.newWebSocket(request, listener)
         setupTimeoutJob?.cancel()
         setupTimeoutJob = scope.launch {
-            delay(5_500)
+            delay(15_000)
             if (!stopped.get() && !_state.value.connected) {
                 tryNextModel("Live setup timeout: ${config.models[modelIndex]}")
             }
@@ -180,7 +180,9 @@ class GeminiLiveSession(
             socket = null
             val reason = response?.let { "Live handshake failed (${it.code})" }
                 ?: t.message ?: "Live connection မရပါ"
-            if (!_state.value.connected && response?.code !in listOf(401, 403)) {
+            if (response?.code == 403) {
+                switchToReliableVoice(reason)
+            } else if (!_state.value.connected && response?.code != 401) {
                 tryNextModel(reason)
             } else fail(reason, reconnect = _state.value.connected)
         }
@@ -192,7 +194,8 @@ class GeminiLiveSession(
         root["error"]?.jsonObject?.let { error ->
             val code = error["code"]?.jsonPrimitive?.contentOrNull?.toIntOrNull()
             val message = error["message"]?.jsonPrimitive?.contentOrNull ?: "Gemini Live setup error"
-            if (!_state.value.connected && code !in listOf(401, 403)) tryNextModel(message)
+            if (code == 403) switchToReliableVoice(message)
+            else if (!_state.value.connected && code != 401) tryNextModel(message)
             else fail(message, reconnect = false)
             return
         }
@@ -325,7 +328,7 @@ class GeminiLiveSession(
     private fun scheduleReconnect(reason: String) {
         if (stopped.get() || reconnectJob?.isActive == true) return
         if (++reconnectCount > 4) {
-            if (terminalFallbackStarted.compareAndSet(false, true)) onTerminalFailure("Live reconnect failed; continuing with Gemini TTS")
+            switchToReliableVoice("Live reconnect failed; continuing with Gemini TTS")
             return
         }
         player.interrupt()
@@ -339,16 +342,7 @@ class GeminiLiveSession(
     private fun tryNextModel(reason: String) {
         setupTimeoutJob?.cancel()
         if (modelIndex + 1 >= config.models.size) {
-            val message = "$reason\nLive socket မရသဖြင့် reliable voice mode သို့ပြောင်းနေသည်"
-            _state.update {
-                it.copy(
-                    phase = LivePhase.RECONNECTING,
-                    connected = false,
-                    diagnostic = "Switching voice mode",
-                    error = null
-                )
-            }
-            if (terminalFallbackStarted.compareAndSet(false, true)) onTerminalFailure(message)
+            switchToReliableVoice("$reason\nLive socket မရသဖြင့် reliable voice mode သို့ပြောင်းနေသည်")
             return
         }
         val oldSocket = socket
@@ -369,6 +363,19 @@ class GeminiLiveSession(
             )
         }
         connect(resuming = false)
+    }
+
+    private fun switchToReliableVoice(reason: String) {
+        if (stopped.get() || !terminalFallbackStarted.compareAndSet(false, true)) return
+        setupTimeoutJob?.cancel()
+        reconnectJob?.cancel()
+        val oldSocket = socket
+        socket = null
+        oldSocket?.close(1000, "Switching to text and voice")
+        recorder.stop()
+        player.interrupt()
+        _state.update { it.copy(phase = LivePhase.RECONNECTING, connected = false, diagnostic = "Switching voice mode", error = null) }
+        onTerminalFailure(reason)
     }
 
     private fun fail(message: String, reconnect: Boolean) {

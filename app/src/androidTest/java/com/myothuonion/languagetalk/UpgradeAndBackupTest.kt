@@ -3,10 +3,18 @@ package com.myothuonion.languagetalk
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import androidx.room.Room
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.myothuonion.languagetalk.data.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.first
 import org.junit.Assert.*
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,6 +23,31 @@ import java.io.File
 @RunWith(AndroidJUnit4::class)
 class UpgradeAndBackupTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
+
+    @Test fun savedOldProviderPreferencesMigrateOnReopeningDataStore() = runBlocking<Unit> {
+        val file = File(context.cacheDir, "provider-upgrade.preferences_pb")
+        file.delete()
+        val oldJob = SupervisorJob()
+        val old = PreferenceDataStoreFactory.create(scope = CoroutineScope(Dispatchers.IO + oldJob), produceFile = { file })
+        old.edit {
+            it[stringPreferencesKey("gemini_model")] = "gemini-2.5-flash"
+            it[stringPreferencesKey("gemini_tts_model")] = "gemini-2.5-flash-preview-tts"
+            it[stringPreferencesKey("live_model")] = "gemini-3.1-flash-live-preview"
+            it[stringPreferencesKey("learner_profile")] = "ညဆိုင်း · Factory Korean"
+            it[stringPreferencesKey("default_voice_name")] = "Charon"
+        }
+        oldJob.cancelAndJoin()
+        val newJob = SupervisorJob()
+        try {
+            val updated = PreferenceDataStoreFactory.create(migrations = listOf(GeminiSettingsMigration()), scope = CoroutineScope(Dispatchers.IO + newJob), produceFile = { file })
+            val result = updated.data.first()
+            assertEquals("gemini-3.8-flash", result[stringPreferencesKey("gemini_model")])
+            assertEquals("gemini-3.8-flash-tts", result[stringPreferencesKey("gemini_tts_model")])
+            assertEquals("gemini-3.8-live", result[stringPreferencesKey("live_model")])
+            assertEquals("ညဆိုင်း · Factory Korean", result[stringPreferencesKey("learner_profile")])
+            assertEquals("Charon", result[stringPreferencesKey("default_voice_name")])
+        } finally { newJob.cancelAndJoin(); file.delete() }
+    }
 
     @Test fun legacyHelperJsonRestoresThePreviousDatabaseFields() = runBlocking<Unit> {
         val testContext = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().context

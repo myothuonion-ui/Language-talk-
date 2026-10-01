@@ -73,7 +73,7 @@ class HandsFreeRestSession(
             scope.launch {
                 try { playTurn(begin()) } catch (failure: Exception) {
                     processing.set(false)
-                    _state.update { it.copy(phase = LivePhase.ERROR, error = failure.message) }
+                    _state.update { it.copy(phase = LivePhase.ERROR, connected = false, diagnostic = "Voice request failed", error = failure.message) }
                 }
             }
         }

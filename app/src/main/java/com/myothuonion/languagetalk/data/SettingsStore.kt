@@ -9,8 +9,10 @@ import com.myothuonion.languagetalk.model.BrainMode
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import com.myothuonion.languagetalk.network.GeminiModels
+import com.myothuonion.languagetalk.network.GeminiTask
 
-private val Context.dataStore by preferencesDataStore(name = "language_talk_settings")
+private val Context.dataStore by preferencesDataStore(name = "language_talk_settings", produceMigrations = { listOf(GeminiSettingsMigration()) })
 
 data class AppSettings(
     val displayName: String = "Myo Min Thu",
@@ -40,10 +42,10 @@ class SettingsStore(private val context: Context) {
             explanationLanguage = prefs[EXPLANATION_LANGUAGE] ?: "မြန်မာ",
             brainMode = runCatching { BrainMode.valueOf(prefs[BRAIN_MODE] ?: "") }
                 .getOrDefault(BrainMode.GEMINI_ONLY),
-            geminiModel = prefs[GEMINI_MODEL] ?: "gemini-3.8-flash",
-            geminiTtsModel = prefs[GEMINI_TTS_MODEL] ?: "gemini-3.8-flash-tts",
+            geminiModel = GeminiModels.normalize(prefs[GEMINI_MODEL].orEmpty(), GeminiTask.TEXT),
+            geminiTtsModel = GeminiModels.normalize(prefs[GEMINI_TTS_MODEL].orEmpty(), GeminiTask.SPEECH),
             nvidiaModel = prefs[NVIDIA_MODEL] ?: "nvidia/nemotron-3-ultra-550b-a55b",
-            liveModel = prefs[LIVE_MODEL] ?: "gemini-3.8-live",
+            liveModel = GeminiModels.normalize(prefs[LIVE_MODEL].orEmpty(), GeminiTask.LIVE),
             globalBehavior = prefs[GLOBAL_BEHAVIOR] ?: DEFAULT_GLOBAL_BEHAVIOR,
             learnerProfile = prefs[LEARNER_PROFILE] ?: DEFAULT_LEARNER_PROFILE,
             autoLearningMemory = prefs[AUTO_LEARNING_MEMORY] ?: true,
@@ -59,7 +61,9 @@ class SettingsStore(private val context: Context) {
     }
 
     suspend fun update(transform: (AppSettings) -> AppSettings) {
-        val value = transform(settings.first())
+        val changed = transform(settings.first())
+        val value = changed.copy(geminiModel = GeminiModels.normalize(changed.geminiModel, GeminiTask.TEXT),
+            geminiTtsModel = GeminiModels.normalize(changed.geminiTtsModel, GeminiTask.SPEECH), liveModel = GeminiModels.normalize(changed.liveModel, GeminiTask.LIVE))
         context.dataStore.edit { prefs ->
             prefs[DISPLAY_NAME] = value.displayName
             prefs[EXPLANATION_LANGUAGE] = value.explanationLanguage

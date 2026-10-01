@@ -450,9 +450,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _credentials.update { it.copy(checkingGemini = true, geminiStatus = "Testing new key…") }
             try {
-                val count = repository.replaceGeminiKey(candidate)
+                val result = repository.replaceGeminiKey(candidate)
                 _credentials.update {
-                    it.copy(geminiConfigured = true, checkingGemini = false, geminiStatus = "Valid · $count models available")
+                    it.copy(geminiConfigured = true, checkingGemini = false, geminiStatus = result.summary)
                 }
             } catch (e: Exception) {
                 _credentials.update { it.copy(checkingGemini = false, geminiStatus = "Invalid · ${friendlyError(e)}") }
@@ -464,8 +464,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _credentials.update { it.copy(checkingGemini = true, geminiStatus = "Checking Gemini key…") }
             try {
-                val count = repository.testGeminiKey(candidate)
-                _credentials.update { it.copy(checkingGemini = false, geminiStatus = "Valid · $count models available") }
+                val result = repository.testGeminiKey(candidate)
+                _credentials.update { it.copy(checkingGemini = false, geminiStatus = result.summary) }
             } catch (e: Exception) {
                 _credentials.update { it.copy(checkingGemini = false, geminiStatus = "Invalid · ${friendlyError(e)}") }
             }

@@ -15,6 +15,12 @@ import com.myothuonion.languagetalk.network.AiApiException
 import com.myothuonion.languagetalk.network.GeminiClient
 import com.myothuonion.languagetalk.network.HandsFreeTurn
 import com.myothuonion.languagetalk.network.NvidiaClient
+import com.myothuonion.languagetalk.network.GeminiModel
+import com.myothuonion.languagetalk.network.GeminiModels
+import com.myothuonion.languagetalk.network.GeminiTask
+import com.myothuonion.languagetalk.network.GeminiKeyCheck
+import com.myothuonion.languagetalk.network.routeGemini
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
@@ -47,6 +53,9 @@ class TutorRepository(
     private val nvidia: NvidiaClient
 ) {
     private val turnMutex = Mutex()
+    private val catalogMutex = Mutex()
+    private class Catalog(val key: String, val expires: Long, val models: List<GeminiModel>)
+    @Volatile private var modelCatalog: Catalog? = null
     val allMemories = dao.observeAllMemories()
     val recordings = dao.observeRecordings()
     val progress = dao.observeProgress()
@@ -321,22 +330,47 @@ class TutorRepository(
         )
     }
 
-    suspend fun replaceGeminiKey(candidate: String): Int {
+    suspend fun replaceGeminiKey(candidate: String): GeminiKeyCheck {
         val clean = candidate.trim()
         require(clean.isNotBlank()) { "Gemini API key ထည့်ပါ" }
-        val models = gemini.listModels(clean)
+        val models = gemini.listModelCatalog(clean)
         require(models.isNotEmpty()) { "ဒီ Gemini key မှာ အသုံးပြုနိုင်တဲ့ model မတွေ့ပါ" }
         secrets.geminiApiKey = clean
-        return models.size
+        modelCatalog = Catalog(clean, System.currentTimeMillis() + 600_000, models)
+        return checkGeminiCapabilities(clean, models)
     }
 
-    suspend fun testGeminiKey(candidate: String? = null): Int {
+    suspend fun testGeminiKey(candidate: String? = null): GeminiKeyCheck {
         val key = candidate?.trim()?.takeIf { it.isNotEmpty() } ?: secrets.geminiApiKey
         require(key.isNotBlank()) { "Gemini API key ထည့်ပါ" }
-        return gemini.listModels(key).size
+        val models = gemini.listModelCatalog(key)
+        require(models.isNotEmpty()) { "Gemini model list is empty" }
+        modelCatalog = Catalog(key, System.currentTimeMillis() + 600_000, models)
+        return checkGeminiCapabilities(key, models)
     }
 
-    fun removeGeminiKey() { secrets.geminiApiKey = "" }
+    private suspend fun checkGeminiCapabilities(key: String, models: List<GeminiModel>): GeminiKeyCheck {
+        val settings = settingsStore.settings.first()
+        val issues = mutableListOf<String>()
+        var textModel: String? = null
+        var speechModel: String? = null
+        try {
+            textModel = routeGemini("Text", GeminiModels.candidates(settings.geminiModel, GeminiTask.TEXT, models)) { model ->
+                gemini.tutorReply(key, model, "You are a Korean tutor. Return the required tutoring JSON. This is a connection test: introduce one short greeting, assessment NONE, do not infer learner facts.", emptyList(), "Say a short Korean greeting.")
+            }.model
+        } catch (failure: Exception) { if (failure is CancellationException) throw failure; issues += "Text: ${failure.message}" }
+        try {
+            speechModel = routeGemini("Voice", GeminiModels.candidates(settings.geminiTtsModel, GeminiTask.SPEECH, models)) { model ->
+                gemini.synthesize(key, model, "안녕하세요.", settings.defaultVoiceName, settings.defaultVoiceStyle)
+            }.model
+        } catch (failure: Exception) { if (failure is CancellationException) throw failure; issues += "Voice: ${failure.message}" }
+        val liveModel = GeminiModels.candidates(settings.liveModel, GeminiTask.LIVE, models).firstOrNull()
+        if (key == secrets.geminiApiKey) settingsStore.update { it.copy(
+            geminiModel = textModel ?: it.geminiModel, geminiTtsModel = speechModel ?: it.geminiTtsModel, liveModel = liveModel ?: it.liveModel) }
+        return GeminiKeyCheck(models.size, textModel, speechModel, liveModel, issues)
+    }
+
+    fun removeGeminiKey() { secrets.geminiApiKey = ""; modelCatalog = null }
 
     fun replaceNvidiaKey(candidate: String) {
         require(candidate.isNotBlank()) { "NVIDIA API key ထည့်ပါ" }
@@ -498,50 +532,24 @@ class TutorRepository(
         candidates: List<String>,
         call: suspend (String) -> T
     ): Routed<T> {
-        var lastFailure: Throwable? = null
-        candidates.distinct().forEachIndexed { index, model ->
-            try {
-                val value = call(model)
-                geminiRoute.value = GeminiRouteStatus(
-                    task = task,
-                    requestedModel = requested,
-                    activeModel = model,
-                    usedFallback = index > 0
-                )
-                return Routed(value, model)
-            } catch (failure: Throwable) {
-                lastFailure = failure
-                if (!isGeminiFallbackEligible(failure) || index == candidates.lastIndex) throw failure
-            }
-        }
-        throw lastFailure ?: AiApiException("Gemini model မရပါ")
+        val routed = routeGemini(task, candidates, call)
+        geminiRoute.value = GeminiRouteStatus(task = task, requestedModel = requested, activeModel = routed.model,
+            usedFallback = GeminiModels.name(requested) != routed.model)
+        return Routed(routed.value, routed.model)
     }
 
-    private fun textModels(requested: String) = listOf(
-        requested,
-        "gemini-3.8-flash",
-        "gemini-2.5-flash"
-    ).filter(String::isNotBlank).distinct()
+    private suspend fun catalog(): List<GeminiModel> = catalogMutex.withLock {
+        val key = secrets.geminiApiKey
+        require(key.isNotBlank()) { "Settings ထဲတွင် Gemini API key ထည့်ပါ" }
+        val cached = modelCatalog
+        if (cached != null && cached.key == key && cached.expires > System.currentTimeMillis()) cached.models
+        else gemini.listModelCatalog(key).also { modelCatalog = Catalog(key, System.currentTimeMillis() + 600_000, it) }
+    }
 
-    private fun ttsModels(requested: String) = listOf(
-        requested,
-        "gemini-3.8-flash-tts",
-        "gemini-3.1-flash-tts-preview",
-        "gemini-2.5-flash-preview-tts"
-    ).filter(String::isNotBlank).distinct()
-
-    private fun nameModels(requested: String) = listOf(
-        requested,
-        "gemini-3.8-flash",
-        "gemini-2.5-flash"
-    ).filter(String::isNotBlank).distinct()
-
-    private fun liveModels(requested: String) = listOf(
-        requested,
-        "gemini-3.8-live",
-        "gemini-3.1-flash-live-preview",
-        "gemini-2.5-flash-native-audio-preview-12-2025"
-    ).filter(String::isNotBlank).distinct()
+    private suspend fun textModels(requested: String) = GeminiModels.candidates(requested, GeminiTask.TEXT, catalog())
+    private suspend fun nameModels(requested: String) = textModels(requested)
+    private suspend fun ttsModels(requested: String) = GeminiModels.candidates(requested, GeminiTask.SPEECH, catalog())
+    private suspend fun liveModels(requested: String) = GeminiModels.candidates(requested, GeminiTask.LIVE, catalog())
 
     private data class Routed<T>(val value: T, val model: String)
 

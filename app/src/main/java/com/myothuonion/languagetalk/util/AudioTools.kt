@@ -45,7 +45,7 @@ class VoiceRecorder(private val context: Context) {
             recorder = null
             outputFile = null
             if (file != null && file.exists() && file.length() > 0) {
-                AudioPayload(file.readBytes(), "audio/mp4")
+                AudioPayload(file.readBytes(), "audio/m4a")
             } else null
         } catch (_: Exception) {
             stopSilently()

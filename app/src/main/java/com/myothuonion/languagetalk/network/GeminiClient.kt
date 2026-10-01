@@ -1,6 +1,6 @@
 package com.myothuonion.languagetalk.network
 
-import android.util.Base64
+import java.util.Base64
 import com.myothuonion.languagetalk.data.MessageEntity
 import com.myothuonion.languagetalk.model.KoreanNameCandidate
 import com.myothuonion.languagetalk.model.KoreanNameResult
@@ -19,11 +19,13 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
-class GeminiClient(private val http: OkHttpClient = defaultHttpClient()) {
+class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private val baseUrl: HttpUrl = "https://generativelanguage.googleapis.com/v1beta/".toHttpUrl()) {
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
     private val mediaType = "application/json; charset=utf-8".toMediaType()
 
@@ -52,7 +54,7 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient()) {
                         add(buildJsonObject {
                             put("inlineData", buildJsonObject {
                                 put("mimeType", JsonPrimitive(audio.mimeType))
-                                put("data", JsonPrimitive(Base64.encodeToString(audio.bytes, Base64.NO_WRAP)))
+                                put("data", JsonPrimitive(Base64.getEncoder().encodeToString(audio.bytes)))
                             })
                         })
                         add(buildJsonObject {
@@ -102,22 +104,31 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient()) {
         return tutorReply(apiKey, model, systemInstruction, emptyList(), prompt)
     }
 
-    suspend fun listModels(apiKey: String): List<String> {
+    suspend fun listModels(apiKey: String): List<String> = listModelCatalog(apiKey).map { it.name }
+
+    suspend fun listModelCatalog(apiKey: String): List<GeminiModel> {
         requireKey(apiKey)
-        val request = Request.Builder()
-            .url("https://generativelanguage.googleapis.com/v1beta/models?key=$apiKey&pageSize=100")
-            .get()
-            .build()
-        http.newCall(request).await().use { response ->
-            val responseBody = response.body?.string().orEmpty()
-            if (!response.isSuccessful) {
-                throw apiException(responseBody, response.code, "Gemini key check failed")
+        val models = mutableListOf<GeminiModel>()
+        val seenTokens = mutableSetOf<String>()
+        var token: String? = null
+        do {
+            val url = baseUrl.resolve("models")!!.newBuilder().addQueryParameter("pageSize", "100")
+            token?.let { url.addQueryParameter("pageToken", it) }
+            val request = Request.Builder().url(url.build()).header("x-goog-api-key", apiKey).get().build()
+            http.newCall(request).await().use { response ->
+                val responseBody = response.body?.string().orEmpty()
+                if (!response.isSuccessful) throw apiException(responseBody, response.code, "Gemini key check failed")
+                val page = json.parseToJsonElement(responseBody).jsonObject
+                page["models"]?.jsonArray.orEmpty().forEach { entry ->
+                    val item = entry.jsonObject
+                    val name = item["name"]?.jsonPrimitive?.contentOrNull
+                    if (!name.isNullOrBlank()) models += GeminiModel(GeminiModels.name(name), item["supportedGenerationMethods"]?.jsonArray.orEmpty().map { it.jsonPrimitive.content }.toSet())
+                }
+                token = page["nextPageToken"]?.jsonPrimitive?.contentOrNull?.takeIf(String::isNotBlank)
+                if (token != null && (!seenTokens.add(token!!) || seenTokens.size > 20)) throw AiApiException("Gemini model list pagination did not complete")
             }
-            return json.parseToJsonElement(responseBody).jsonObject["models"]?.jsonArray
-                ?.mapNotNull { model ->
-                    model.jsonObject["name"]?.jsonPrimitive?.contentOrNull?.removePrefix("models/")
-                }.orEmpty()
-        }
+        } while (token != null)
+        return models.distinctBy { it.name }
     }
 
     suspend fun createKoreanNames(apiKey: String, model: String, originalName: String): KoreanNameResult {
@@ -191,7 +202,7 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient()) {
                 add(buildJsonObject {
                     put("inlineData", buildJsonObject {
                         put("mimeType", JsonPrimitive(audio.mimeType))
-                        put("data", JsonPrimitive(Base64.encodeToString(audio.bytes, Base64.NO_WRAP)))
+                        put("data", JsonPrimitive(Base64.getEncoder().encodeToString(audio.bytes)))
                     })
                 })
                 add(buildJsonObject { put("text", JsonPrimitive("$instruction\nTranscribe and translate this voice recording.")) })
@@ -242,7 +253,7 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient()) {
                         add(buildJsonObject {
                             put("inlineData", buildJsonObject {
                                 put("mimeType", JsonPrimitive(mimeType))
-                                put("data", JsonPrimitive(Base64.encodeToString(bytes, Base64.NO_WRAP)))
+                                put("data", JsonPrimitive(Base64.getEncoder().encodeToString(bytes)))
                             })
                         })
                         add(buildJsonObject {
@@ -266,59 +277,33 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient()) {
         style: String
     ): AudioPayload {
         requireKey(apiKey)
-        val styledText = "Voice direction: $style\n\nSpeak this text naturally:\n$text"
-        val body = buildJsonObject {
-            put("contents", buildJsonArray {
-                add(buildJsonObject {
-                    put("role", JsonPrimitive("user"))
-                    put("parts", buildJsonArray {
-                        add(buildJsonObject { put("text", JsonPrimitive(styledText)) })
-                    })
-                })
-            })
-            put("generationConfig", buildJsonObject {
-                put("responseModalities", buildJsonArray { add(JsonPrimitive("AUDIO")) })
-                put("speechConfig", buildJsonObject {
-                    put("voiceConfig", buildJsonObject {
-                        put("prebuiltVoiceConfig", buildJsonObject {
-                            put("voiceName", JsonPrimitive(voiceName))
-                        })
-                    })
-                })
-            })
-        }
-        val root = execute(apiKey, model, body)
-        val part = root["candidates"]?.jsonArray?.firstOrNull()?.jsonObject
-            ?.get("content")?.jsonObject?.get("parts")?.jsonArray
-            ?.firstOrNull { it.jsonObject["inlineData"] != null }?.jsonObject
-            ?.get("inlineData")?.jsonObject
+        val root = executeInteraction(apiKey, GeminiInteractions.speechRequest(model, text, voiceName, style))
+        val part = GeminiInteractions.output(root).firstOrNull { it["type"]?.jsonPrimitive?.contentOrNull == "audio" }
             ?: throw AiApiException("Gemini TTS returned no audio")
-        val data = part["data"]?.jsonPrimitive?.contentOrNull
+        val data = part["data"]?.jsonPrimitive?.contentOrNull?.takeIf(String::isNotBlank)
             ?: throw AiApiException("Gemini TTS audio data is missing")
-        val mime = part["mimeType"]?.jsonPrimitive?.contentOrNull
-            ?: "audio/L16;codec=pcm;rate=24000"
-        return AudioPayload(Base64.decode(data, Base64.DEFAULT), mime)
+        val bytes = runCatching { Base64.getDecoder().decode(data) }.getOrElse { throw AiApiException("Gemini TTS returned invalid audio data") }
+        require(bytes.isNotEmpty()) { "Gemini TTS returned empty audio" }
+        return AudioPayload(bytes, part["mime_type"]?.jsonPrimitive?.contentOrNull ?: "audio/wav")
     }
 
     private suspend fun postGenerate(apiKey: String, model: String, body: JsonObject): String {
-        val root = execute(apiKey, model, body)
-        return root["candidates"]?.jsonArray?.firstOrNull()?.jsonObject
-            ?.get("content")?.jsonObject?.get("parts")?.jsonArray?.firstOrNull()?.jsonObject
-            ?.get("text")?.jsonPrimitive?.contentOrNull
-            ?: throw AiApiException("Gemini returned an empty response")
+        val root = executeInteraction(apiKey, GeminiInteractions.textRequest(model, body))
+        return GeminiInteractions.output(root).filter { it["type"]?.jsonPrimitive?.contentOrNull == "text" }
+            .joinToString("") { it["text"]?.jsonPrimitive?.contentOrNull.orEmpty() }
+            .takeIf(String::isNotBlank) ?: throw AiApiException("Gemini returned an empty response")
     }
 
-    private suspend fun execute(apiKey: String, model: String, body: JsonObject): JsonObject {
-        val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
+    private suspend fun executeInteraction(apiKey: String, body: JsonObject): JsonObject {
+        requireKey(apiKey)
         val request = Request.Builder()
-            .url(url)
+            .url(baseUrl.resolve("interactions")!!)
+            .header("x-goog-api-key", apiKey)
             .post(body.toString().toRequestBody(mediaType))
             .build()
         http.newCall(request).await().use { response ->
             val responseBody = response.body?.string().orEmpty()
-            if (!response.isSuccessful) {
-                throw apiException(responseBody, response.code, "Gemini request failed")
-            }
+            if (!response.isSuccessful) throw apiException(responseBody, response.code, "Gemini request failed")
             return json.parseToJsonElement(responseBody).jsonObject
         }
     }

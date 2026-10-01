@@ -1118,7 +1118,11 @@ private fun SettingsScreen(
                 if (credentials.geminiStatus.isNotBlank()) {
                     Text(
                         credentials.geminiStatus,
-                        color = if (credentials.geminiStatus.startsWith("Invalid")) Coral else Mint,
+                        color = when {
+                            credentials.checkingGemini -> MaterialTheme.colorScheme.onSurfaceVariant
+                            credentials.geminiStatus.startsWith("Ready") -> Mint
+                            else -> Coral
+                        },
                         fontSize = 12.sp,
                         modifier = Modifier.padding(top = 7.dp)
                     )
@@ -1135,9 +1139,11 @@ private fun SettingsScreen(
                         modifier = Modifier.weight(1f)
                     ) { Text(if (credentials.geminiConfigured) "Replace" else "Add key") }
                     if (credentials.geminiConfigured) {
-                        TextButton(onClick = { confirmRemoveGemini = true }) { Text("Remove", color = Coral) }
+                        TextButton(onClick = { confirmRemoveGemini = true }, enabled = !credentials.checkingGemini) { Text("Remove", color = Coral) }
                     }
                 }
+                Text("Test က စာပြန်နိုင်မှုနဲ့ အသံထုတ်နိုင်မှုကို တကယ်စမ်းမည်။ Live connection ကို Live စတင်ချိန်မှာစစ်မည်။",
+                    fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 7.dp))
                 Spacer(Modifier.height(12.dp))
                 KeyField(
                     label = "NVIDIA API key",
