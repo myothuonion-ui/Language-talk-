@@ -3,7 +3,6 @@ package com.myothuonion.languagetalk.data
 import androidx.datastore.core.DataMigration
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.core.toMutablePreferences
 import com.myothuonion.languagetalk.network.GeminiModels
 import com.myothuonion.languagetalk.network.GeminiTask
 
