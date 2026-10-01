@@ -45,13 +45,25 @@ object GeminiInteractions {
     }
 
     fun speechRequest(model: String, text: String, voice: String, style: String) = buildJsonObject {
-        put("model", JsonPrimitive(GeminiModels.name(model))); put("store", JsonPrimitive(false))
-        put("input", buildJsonArray { add(buildJsonObject {
-            put("type", JsonPrimitive("user_input")); put("content", buildJsonArray { add(buildJsonObject {
-                put("type", JsonPrimitive("text")); put("text", JsonPrimitive(text))
-                put("annotations", buildJsonArray { add(buildJsonObject { put("type", JsonPrimitive("speech_metadata")); put("style", JsonPrimitive(style)) }) })
+        put("model", JsonPrimitive(GeminiModels.name(model)))
+        put("store", JsonPrimitive(false))
+        put("input", buildJsonArray {
+            add(buildJsonObject {
+                put("type", JsonPrimitive("user_input"))
+                put("content", buildJsonArray {
+                    add(buildJsonObject {
+                        put("type", JsonPrimitive("text"))
+                        put("text", JsonPrimitive(text))
+                        put("annotations", buildJsonArray {
+                            add(buildJsonObject {
+                                put("type", JsonPrimitive("speech_metadata"))
+                                put("style", JsonPrimitive(style))
+                            })
+                        })
+                    })
+                })
             })
-        }) })
+        })
         put("response_format", buildJsonObject { put("type", JsonPrimitive("audio")); put("mime_type", JsonPrimitive("audio/wav")); put("delivery", JsonPrimitive("inline")) })
         put("generation_config", buildJsonObject { put("speech_config", buildJsonArray { add(buildJsonObject { put("voice", JsonPrimitive(voice)) }) }) })
     }
