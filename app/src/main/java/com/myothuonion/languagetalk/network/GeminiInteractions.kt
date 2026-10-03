@@ -64,7 +64,8 @@ object GeminiInteractions {
                 })
             })
         })
-        put("response_format", buildJsonObject { put("type", JsonPrimitive("audio")); put("mime_type", JsonPrimitive("audio/wav")); put("delivery", JsonPrimitive("inline")) })
+        // Gemini TTS rejects an explicitly selected delivery mode. Unary audio is inline by default.
+        put("response_format", buildJsonObject { put("type", JsonPrimitive("audio")); put("mime_type", JsonPrimitive("audio/wav")) })
         put("generation_config", buildJsonObject { put("speech_config", buildJsonArray { add(buildJsonObject { put("voice", JsonPrimitive(voice)) }) }) })
     }
 

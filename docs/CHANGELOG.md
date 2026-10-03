@@ -1,3 +1,14 @@
+# v0.5.2 — Verified Gemini voice fix
+
+- Fixes the exact HTTP 400 "Audio delivery mode is not supported" error by omitting `response_format.delivery` from TTS requests. Explicit WAV encoding, exact spoken text and voice/style remain supported.
+- Makes the central Live content scroll so the retry button remains readable and clickable on short screens.
+- Stops recording after a failed voice request or playback; stale connection attempts and fallback callbacks cannot revive a stopped session.
+- Distinguishes audio playback failures from successful completion in hands-free voice.
+- Adds app-generated provider request fixtures, an Android test with an actual generated Gemini WAV, an invalid-audio check and a short-screen retry regression.
+- Real provider checks reproduced the old delivery error and verified corrected TTS, structured text fallback, native Live setup/tools and audio input/output over two turns. No credential is shipped or stored in public CI.
+
+See [Provider validation](PROVIDER_VALIDATION.md) and [Upgrade instructions](UPGRADING.md).
+
 # v0.5.1 — Gemini access and voice fixes
 
 - Fixes the new-user unavailable Gemini 2.5 error by migrating saved legacy model preferences, including settings restored from backups.

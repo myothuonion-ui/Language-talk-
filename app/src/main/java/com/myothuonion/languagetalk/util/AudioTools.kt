@@ -69,12 +69,17 @@ class GeminiAudioPlayer(private val context: Context) {
     private var mediaPlayer: MediaPlayer? = null
     private var tempFile: File? = null
 
-    fun play(payload: AudioPayload, onComplete: () -> Unit = {}) {
+    fun play(payload: AudioPayload, onError: ((Throwable) -> Unit)? = null, onComplete: () -> Unit = {}) {
         stop()
-        if (payload.mimeType.contains("pcm", ignoreCase = true) || payload.mimeType.contains("L16", ignoreCase = true)) {
-            playPcm(payload.bytes, payload.mimeType, onComplete)
-        } else {
-            playEncoded(payload, onComplete)
+        try {
+            if (payload.mimeType.contains("pcm", ignoreCase = true) || payload.mimeType.contains("L16", ignoreCase = true)) {
+                playPcm(payload.bytes, payload.mimeType, onComplete)
+            } else {
+                playEncoded(payload, onError, onComplete)
+            }
+        } catch (failure: Exception) {
+            stop()
+            if (onError != null) onError(failure) else onComplete()
         }
     }
 
@@ -115,7 +120,7 @@ class GeminiAudioPlayer(private val context: Context) {
         track.play()
     }
 
-    private fun playEncoded(payload: AudioPayload, onComplete: () -> Unit) {
+    private fun playEncoded(payload: AudioPayload, onError: ((Throwable) -> Unit)?, onComplete: () -> Unit) {
         val suffix = when {
             payload.mimeType.contains("wav") -> ".wav"
             payload.mimeType.contains("mpeg") -> ".mp3"
@@ -125,16 +130,18 @@ class GeminiAudioPlayer(private val context: Context) {
             writeBytes(payload.bytes)
         }
         tempFile = file
-        mediaPlayer = MediaPlayer().apply {
+        val player = MediaPlayer()
+        mediaPlayer = player
+        player.apply {
             setAudioStreamType(AudioManager.STREAM_MUSIC)
             setDataSource(file.absolutePath)
             setOnCompletionListener {
                 stop()
                 onComplete()
             }
-            setOnErrorListener { _, _, _ ->
+            setOnErrorListener { _, what, extra ->
                 stop()
-                onComplete()
+                if (onError != null) onError(IllegalStateException("Audio playback failed ($what/$extra)")) else onComplete()
                 true
             }
             prepare()

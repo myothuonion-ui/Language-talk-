@@ -7,6 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -72,8 +73,7 @@ class HandsFreeRestSession(
             _state.update { it.copy(phase = LivePhase.THINKING) }
             scope.launch {
                 try { playTurn(begin()) } catch (failure: Exception) {
-                    processing.set(false)
-                    _state.update { it.copy(phase = LivePhase.ERROR, connected = false, diagnostic = "Voice request failed", error = failure.message) }
+                    pauseAfterFailure(failure)
                 }
             }
         }
@@ -199,19 +199,18 @@ class HandsFreeRestSession(
         try {
             val turn = onTurn(AudioPayload(pcm16Wav(pcm), "audio/wav"))
             playTurn(turn)
-        } catch (failure: Throwable) {
-            processing.set(false)
-            _state.update {
-                it.copy(
-                    phase = LivePhase.ERROR,
-                    connected = false,
-                    inputLevel = 0f,
-                    outputLevel = 0f,
-                    diagnostic = "Voice request failed",
-                    error = failure.message ?: "Voice request မအောင်မြင်ပါ"
-                )
-            }
-        }
+        } catch (failure: Exception) { pauseAfterFailure(failure) }
+    }
+
+    private fun pauseAfterFailure(failure: Throwable) {
+        if (failure is CancellationException) throw failure
+        if (stopped.get()) return
+        processing.set(false)
+        recorder.stop()
+        player.stop()
+        resetCapture()
+        _state.update { it.copy(phase = LivePhase.ERROR, connected = false, inputLevel = 0f, outputLevel = 0f,
+            diagnostic = "Voice request failed", error = failure.message ?: "Voice request မအောင်မြင်ပါ") }
     }
 
     private fun playTurn(turn: HandsFreeTurn) {
@@ -225,7 +224,7 @@ class HandsFreeRestSession(
         _state.update { it.copy(phase = LivePhase.SPEAKING, userCaption = turn.heardText, aiCaption = turn.replyText,
             lines = newLines, outputLevel = .48f, diagnostic = "Speaking", error = null) }
         startRecorder()
-        player.play(turn.speech) { scope.launch { resumeListening() } }
+        player.play(turn.speech, onError = ::pauseAfterFailure) { scope.launch { resumeListening() } }
     }
 
     private fun resumeListening() {

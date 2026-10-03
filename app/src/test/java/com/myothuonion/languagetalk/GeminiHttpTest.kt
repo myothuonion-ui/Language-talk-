@@ -79,7 +79,8 @@ class GeminiHttpTest {
         assertEquals("안녕하세요.", text["text"]!!.jsonPrimitive.content)
         assertEquals("Warm and slow.", text["annotations"]!!.jsonArray.single().jsonObject["style"]!!.jsonPrimitive.content)
         assertEquals("Charon", body["generation_config"]!!.jsonObject["speech_config"]!!.jsonArray.single().jsonObject["voice"]!!.jsonPrimitive.content)
-        assertEquals("inline", body["response_format"]!!.jsonObject["delivery"]!!.jsonPrimitive.content)
+        assertEquals("audio/wav", body["response_format"]!!.jsonObject["mime_type"]!!.jsonPrimitive.content)
+        assertNull(body["response_format"]!!.jsonObject["delivery"])
     }
 
     @Test fun modernQuotaFailureRoutesToAvailableModernModelNeverToLegacy() = runBlocking<Unit> {

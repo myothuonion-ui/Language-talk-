@@ -446,7 +446,7 @@ internal fun LiveChatScreen(
             }
 
             Column(
-                Modifier.weight(1f).fillMaxWidth().padding(horizontal = 24.dp),
+                Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {

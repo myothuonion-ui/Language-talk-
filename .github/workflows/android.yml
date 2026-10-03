@@ -37,11 +37,11 @@ jobs:
       - name: Unit tests, lint, APK, and device-test compilation
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest --stacktrace
       - name: Prepare APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.5.1.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.5.2.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: language-talk-v0.5.1-apk
-          path: language-talk-v0.5.1.apk
+          name: language-talk-v0.5.2-apk
+          path: language-talk-v0.5.2.apk
           if-no-files-found: error
           retention-days: 90
       - uses: actions/upload-artifact@v4
@@ -50,6 +50,7 @@ jobs:
           name: build-test-reports
           path: |
             app/build/reports/tests
+            app/build/reports/provider-contract
             app/build/reports/lint-results-debug.html
 
   device-tests:
@@ -117,31 +118,30 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: language-talk-v0.5.1-apk
+          name: language-talk-v0.5.2-apk
       - uses: actions/download-artifact@v4
         with:
           name: language-talk-legacy-backup-windows
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.5.1
-          name: Language Talk AI v0.5.1
+          tag_name: v0.5.2
+          name: Language Talk AI v0.5.2
           body: |
-            Fixes the unavailable Gemini 2.5 model error for new users.
+            Fixes "Audio delivery mode is not supported" during Gemini voice chat.
 
-            - Migrates saved legacy text, speech and Live models while retaining personal preferences
-            - Uses the current Gemini Interactions API for structured tutoring, translation, imports and speech
-            - Keeps speech style in metadata, separate from the sentence being spoken
-            - Paginates the model catalog and only routes to listed compatible modern models
-            - Settings Test makes actual text and voice requests; listing models alone no longer claims readiness
-            - Preserves the real quota/access error instead of replacing it with a final missing-model error
-            - Native Live can recover through text + voice when access or setup is unavailable
-            - HTTP regression tests, lint, APK build, Android migration/backup tests and emulator screen checks
+            - Removes the explicitly selected audio delivery mode rejected by Gemini TTS
+            - Keeps exact spoken text, custom voice/style metadata and WAV output
+            - Makes the Live retry control accessible on shorter screens
+            - Stops microphone capture after voice/playback errors and prevents stale session starts
+            - Tests actual app request fixtures, real Gemini WAV playback, invalid audio and the retry screen
 
-            BACK UP FIRST: APKs use runner-generated debug signing keys. Android may reject an in-place update from v0.4.0 or v0.5.0. In v0.5.0 use My Context → Export backup before uninstalling. For v0.4.0 use the Windows backup helper below. Restore your JSON after installing v0.5.1 and re-enter your API keys.
+            Actual provider checks performed outside public CI with a user-supplied key: the old request reproduced HTTP 400; corrected speech returned WAV; structured tutoring succeeded through the configured text fallback; native Live setup, lesson tool, audio input transcription and spoken reply succeeded over two turns. Personal keys are not included in this APK, repository or CI.
+
+            BACK UP FIRST: this debug APK uses a different runner-generated signing key. In your old app, use My Context → Export backup before uninstalling. Install this APK, restore the JSON and re-enter your key. For v0.4.0 use the Windows helper below.
             Upgrade instructions: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/UPGRADING.md
 
-            CI uses simulated provider responses, not your personal API key. After installation, open Settings → Test to check real text and voice access/quota, then try Live on your phone.
+            Your phone microphone/network and current provider quota still affect live use. Settings → Test checks text and speech access; native Live is checked at session start.
           files: |
-            language-talk-v0.5.1.apk
+            language-talk-v0.5.2.apk
             language-talk-legacy-backup-windows.exe
           make_latest: true

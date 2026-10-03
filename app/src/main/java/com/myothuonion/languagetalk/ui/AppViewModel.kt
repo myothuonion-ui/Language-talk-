@@ -28,6 +28,7 @@ import com.myothuonion.languagetalk.util.GeminiAudioPlayer
 import com.myothuonion.languagetalk.util.VoiceRecorder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -123,6 +124,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private var liveSession: GeminiLiveSession? = null
     private var reliableLiveSession: HandsFreeRestSession? = null
     private var liveCollector: Job? = null
+    private var liveStartJob: Job? = null
+    private var liveGeneration = 0L
 
     fun openChat(id: Long) { _currentChatId.value = id }
     fun closeChat() {
@@ -254,11 +257,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun startLive(chatId: Long) {
-        if ((liveSession != null || reliableLiveSession != null) && _currentChatId.value == chatId) return
+        if ((liveStartJob?.isActive == true || liveSession != null || reliableLiveSession != null) && _currentChatId.value == chatId) return
         stopLive()
         _currentChatId.value = chatId
         _liveState.value = LiveState(phase = LivePhase.CONNECTING)
-        viewModelScope.launch {
+        val generation = liveGeneration
+        liveStartJob = viewModelScope.launch {
             try {
                 if (repository.prefersReliableVoice(chatId)) {
                     startReliableLive(chatId, "Using your selected brain mode with Gemini voice")
@@ -270,7 +274,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     onTurnComplete = { user, ai, audio -> repository.saveLiveTurn(chatId, user, ai, audio) },
                     onLearningTool = { args -> repository.handleLiveTool(chatId, args) },
                     onTerminalFailure = { reason ->
-                        viewModelScope.launch { startReliableLive(chatId, reason) }
+                        viewModelScope.launch { if (generation == liveGeneration) startReliableLive(chatId, reason) }
                     }
                 )
                 liveSession = session
@@ -279,6 +283,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 session.start()
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 _liveState.value = LiveState(phase = LivePhase.ERROR, error = friendlyError(e))
             }
         }
@@ -291,6 +296,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun stopLive() {
+        liveGeneration++
+        liveStartJob?.cancel()
+        liveStartJob = null
         liveCollector?.cancel()
         liveCollector = null
         liveSession?.stop()
