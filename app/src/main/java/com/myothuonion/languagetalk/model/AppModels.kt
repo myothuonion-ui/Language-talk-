@@ -119,7 +119,7 @@ data class TutorReply(
     val answerHint: String = ""
 ) {
     fun speech(includeCorrections: Boolean): String {
-        val speech = if (speechText.isNotBlank()) speechText else
+        val speech = if (includeCorrections && speechText.isNotBlank()) speechText else
             listOf(reply.trim(), if (includeCorrections) correction.trim() else "", followUpQuestion.trim())
                 .filter(String::isNotBlank).distinct().joinToString(" ")
         return VoiceText.korean(speech)

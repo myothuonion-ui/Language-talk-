@@ -80,8 +80,8 @@ internal fun LiveSetupScreen(settings: AppSettings, chats: List<ChatEntity>, vie
         item {
             Row(Modifier.statusBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onBack) { Icon(Icons.Default.ArrowBack, "Back") }
-                Text("Live စကားပြော", fontSize = 25.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.weight(1f)); AiTaskPicker(AiTask.CONVERSATION, viewModel)
+                Text("Live စကားပြော", Modifier.weight(1f), fontSize = 25.sp, fontWeight = FontWeight.SemiBold)
+                AiTaskPicker(AiTask.CONVERSATION, viewModel)
             }
         }
         item {

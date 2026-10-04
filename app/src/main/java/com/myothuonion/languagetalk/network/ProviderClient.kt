@@ -10,6 +10,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
+import java.util.Base64
 
 /** Native Messages and OpenAI-compatible Chat APIs, with credentials scoped to one endpoint. */
 class ProviderClient(
@@ -21,7 +22,8 @@ class ProviderClient(
     private val media = "application/json; charset=utf-8".toMediaType()
 
     suspend fun tutor(profile: AiProfile, key: String, model: String, instruction: String,
-        history: List<MessageEntity>, input: String, allowEmptyReply: Boolean = false): TutorReply {
+        history: List<MessageEntity>, input: String, allowEmptyReply: Boolean = false,
+        image: Pair<String, ByteArray>? = null): TutorReply {
         val contract = """
             Return ONLY a valid JSON object, without markdown fences or reasoning text.
             All these fields are strings (empty when irrelevant): reply, heardText, translation,
@@ -35,12 +37,12 @@ class ProviderClient(
             you just asked, not a question frame. answerExample is a matching Korean example.
             Give no answer hints for assessments, dictionaries, or book explanations unless instructed.
         """.trimIndent()
-        val raw = text(profile, key, model, instruction + "\n" + contract, history, input)
+        val raw = text(profile, key, model, instruction + "\n" + contract, history, input, image)
         return GeminiClient().parseTutorReply(raw, allowEmptyReply)
     }
 
     suspend fun text(profile: AiProfile, key: String, model: String, instruction: String,
-        history: List<MessageEntity>, input: String): String {
+        history: List<MessageEntity>, input: String, image: Pair<String, ByteArray>? = null): String {
         require(key.isNotBlank()) { "API key ထည့်ပါ။" }
         val messages = buildJsonArray {
             if (profile.format != ApiFormat.CLAUDE_MESSAGES)
@@ -48,7 +50,22 @@ class ProviderClient(
             history.filter { it.role in setOf("USER", "ASSISTANT") }.takeLast(16).forEach {
                 add(buildJsonObject { put("role", if (it.role == "USER") "user" else "assistant"); put("content", it.content.take(12000)) })
             }
-            add(buildJsonObject { put("role", "user"); put("content", input.take(60000)) })
+            add(buildJsonObject {
+                put("role", "user")
+                if (image == null) put("content", input.take(60000)) else put("content", buildJsonArray {
+                    val data = Base64.getEncoder().encodeToString(image.second)
+                    if (profile.format == ApiFormat.CLAUDE_MESSAGES) {
+                        add(buildJsonObject {
+                            put("type", "image"); put("source", buildJsonObject {
+                                put("type", "base64"); put("media_type", image.first); put("data", data)
+                            })
+                        })
+                    } else add(buildJsonObject {
+                        put("type", "image_url"); put("image_url", buildJsonObject { put("url", "data:${image.first};base64,$data") })
+                    })
+                    add(buildJsonObject { put("type", "text"); put("text", input.take(60000)) })
+                })
+            })
         }
         val body = buildJsonObject {
             put("model", model)
@@ -62,11 +79,12 @@ class ProviderClient(
         }
         val endpoint = if (profile.format == ApiFormat.CLAUDE_MESSAGES) "messages" else "chat/completions"
         val root = parse(post(profile, key, endpoint, body.toString().toRequestBody(media)))
-        val value = if (profile.format == ApiFormat.CLAUDE_MESSAGES) root["content"]?.jsonArray.orEmpty()
+        val value = try { if (profile.format == ApiFormat.CLAUDE_MESSAGES) root["content"]?.jsonArray.orEmpty()
             .filter { it.jsonObject["type"]?.jsonPrimitive?.contentOrNull == "text" }
             .joinToString("") { it.jsonObject["text"]?.jsonPrimitive?.contentOrNull.orEmpty() }
         else root["choices"]?.jsonArray?.firstOrNull()?.jsonObject?.get("message")?.jsonObject
             ?.get("content")?.jsonPrimitive?.contentOrNull.orEmpty()
+        } catch (_: Exception) { throw AiApiException("AI returned invalid structured data") }
         if (value.isBlank()) throw AiApiException("AI returned an empty response")
         return value
     }
@@ -139,6 +157,7 @@ class ProviderClient(
 fun validateAiProfile(profile: AiProfile) {
     require(profile.id.matches(Regex("[a-zA-Z0-9_-]{1,80}"))) { "API profile ID မမှန်ပါ။" }
     require(profile.label.isNotBlank() && profile.label.length <= 80) { "API နာမည်ထည့်ပါ။" }
+    require(profile.textModel.isNotBlank()) { "Text model ID ထည့်ပါ။" }
     val url = profile.baseUrl.toHttpUrl()
     require(url.isHttps && url.username.isEmpty() && url.password.isEmpty() && url.query == null && url.fragment == null) {
         "Base URL ကို HTTPS နဲ့ query/key မပါဘဲ ထည့်ပါ။"

@@ -141,7 +141,8 @@ class LearningRepository(private val context: Context, val store: LearningStore,
     suspend fun speech(text: String, slow: Boolean, alternate: Boolean = false): AudioPayload = withContext(Dispatchers.IO) {
         val settings = tutor.settings.first()
         val voice = if (alternate) if (settings.defaultVoiceName == "Puck") "Kore" else "Puck" else settings.defaultVoiceName
-        val signature = listOf(text, voice, settings.defaultVoiceStyle, settings.geminiTtsModel, slow).joinToString("|")
+        val signature = listOf(text, voice, settings.defaultVoiceStyle, settings.ai.profiles,
+            tutor.ai.preferences(AiTask.SPEECH), slow).joinToString("|")
         val key = MessageDigest.getInstance("SHA-256").digest(signature.toByteArray()).joinToString("") { "%02x".format(it.toInt() and 255) }
         val file = File(speechCache, key + ".bin")
         val type = File(speechCache, key + ".mime")

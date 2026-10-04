@@ -4,6 +4,7 @@ import com.myothuonion.languagetalk.model.*
 import com.myothuonion.languagetalk.network.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.*
 import okhttp3.mockwebserver.MockResponse
@@ -143,7 +144,7 @@ class AiRoutingTest {
         }
     }
 
-    @Test fun badOrEmptyStructuredOutputTriggersTheNextModel() = runTest {
+    @Test fun badOrEmptyStructuredOutputTriggersTheNextModel() = runBlocking<Unit> {
         MockWebServer().use { server ->
             server.enqueue(chatReply(""))
             server.enqueue(chatReply("""{"reply":"안녕하세요.","assessment":"NONE"}"""))
@@ -162,6 +163,55 @@ class AiRoutingTest {
             assertTrue(runCatching { validateAiProfile(custom.copy(baseUrl = it)) }.isFailure)
         }
         assertTrue(runCatching { validateAiProfile(builtInAiProfiles().first().copy(baseUrl = "https://example.com/v1/")) }.isFailure)
+    }
+
+    @Test fun customTaskModelOverridesTheBuiltinFastDefault() {
+        val profiles = builtInAiProfiles().map { if (it.id == "gemini")
+            it.copy(textModel = "custom-text", taskDefaults = false) else it }
+        val candidates = AiPlans.candidates(AiConfiguration(profiles), AiTask.TRANSLATE, { true })
+        assertEquals("custom-text", candidates.first().model)
+    }
+
+    @Test fun voicePipelineUsesMultipartTranscriptionAndKoreanWavSpeech() = runBlocking<Unit> {
+        MockWebServer().use { server ->
+            val profile = builtInAiProfiles().first { it.id == "openai" }.copy(baseUrl = server.url("/v1/").toString())
+            server.enqueue(MockResponse().setBody("""{"text":"물 주세요."}"""))
+            val transcript = ProviderClient().transcribe(profile, "voice-test-only", profile.transcribeModel,
+                AudioPayload(byteArrayOf(1, 2, 3), "audio/m4a"))
+            assertEquals("물 주세요.", transcript)
+            val transcription = server.takeRequest()
+            assertEquals("/v1/audio/transcriptions", transcription.path)
+            assertTrue(transcription.getHeader("Content-Type").orEmpty().startsWith("multipart/form-data"))
+            val form = transcription.body.readUtf8()
+            assertTrue(form.contains("recording.m4a"))
+            assertTrue(form.contains(profile.transcribeModel))
+            server.enqueue(MockResponse().setHeader("Content-Type", "audio/wav").setBody("RIFF-test"))
+            val audio = ProviderClient().speech(profile, "voice-test-only", profile.speechModel, transcript, "Slowly")
+            assertEquals("audio/wav", audio.mimeType)
+            assertArrayEquals("RIFF-test".toByteArray(), audio.bytes)
+            val speech = server.takeRequest()
+            assertEquals("/v1/audio/speech", speech.path)
+            val body = Json.parseToJsonElement(speech.body.readUtf8()).jsonObject
+            assertEquals("물 주세요.", body["input"]?.jsonPrimitive?.content)
+            assertEquals("wav", body["response_format"]?.jsonPrimitive?.content)
+        }
+    }
+
+    @Test fun documentImagesUseTheChosenProvidersNativeContentFormat() = runBlocking<Unit> {
+        MockWebServer().use { server ->
+            for (id in listOf("claude", "openai")) {
+                val profile = builtInAiProfiles().first { it.id == id }.copy(baseUrl = server.url("/v1/").toString())
+                server.enqueue(if (id == "claude") MockResponse().setBody("""{"content":[{"type":"text","text":"Summary"}]}""")
+                    else chatReply("Summary"))
+                assertEquals("Summary", ProviderClient().text(profile, "image-test-only", profile.textModel,
+                    "Summarize the source", emptyList(), "Document image", "image/png" to byteArrayOf(1, 2, 3)))
+                val body = Json.parseToJsonElement(server.takeRequest().body.readUtf8()).jsonObject
+                val parts = body["messages"]!!.jsonArray.last().jsonObject["content"]!!.jsonArray
+                assertEquals(if (id == "claude") "image" else "image_url", parts.first().jsonObject["type"]?.jsonPrimitive?.content)
+                assertEquals("Document image", parts.last().jsonObject["text"]?.jsonPrimitive?.content)
+                assertTrue(parts.first().toString().contains("AQID"))
+            }
+        }
     }
 
     private fun chatReply(content: String) = MockResponse().setBody(buildJsonObject {

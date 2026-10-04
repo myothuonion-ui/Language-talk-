@@ -61,19 +61,23 @@ Custom OpenAI-compatible speech/transcription endpoints require explicit audio s
 When no audio service is available, use the text-conversation action.
 
 Non-Gemini text brains receive a transcript, not the original audio. They are instructed not to judge
-pronunciation from text. Book pronunciation tasks must retain an audio-capable evaluator.
+pronunciation from text. Book pronunciation tasks are routed only to an audio-capable Gemini evaluator; a text transcript cannot pass those audio checks. A reviewer receiving text cannot overwrite an audio assessment.
 My Context and finalized recent conversation turns are supplied again when a text provider changes.
 
 ## Guided conversation
 
 Guided mode displays a Korean answer frame with slots and a Myanmar hint. Tap to reveal the matching complete
 example. Open mode shows hints only on request. Independent application stages hide answers by default.
-Personal facts are still saved only after an explicit remember request with verbatim evidence; textbook
+If help is used during independent application, that answer remains practice and a later unaided attempt is required. Personal facts are still saved only after an explicit remember request with verbatim evidence; textbook
 and roleplay identities never become personal memory.
+
+## Personal document imports
+
+The Document feature uses its own selected provider/model and fallback plan. Gemini receives the original supported source. Other text providers receive text, a document image in the provider's native format, or extracted Korean/Latin PDF text. PDF extraction covers at most the first 20 pages and labels partial coverage. It does not claim to have read omitted pages or unreadable scans. This source-summary import is separate from the existing full PDF reader.
 
 ## Update and verification
 
-Database version 4 adds answer scaffold fields and keeps migrations from versions 1–3.
+Database version 4 adds answer scaffold and assisted-practice fields and keeps migrations from versions 1–3.
 Keep your source PDFs and export My Context before uninstalling an APK signed with an earlier CI key.
 The source repository includes mocked provider HTTP/routing tests and Android UI/upgrade tests.
 Automated contract tests do not establish your account's live access, latency or Korean–Myanmar quality.

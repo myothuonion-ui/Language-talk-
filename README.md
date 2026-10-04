@@ -1,9 +1,10 @@
-# Language Talk AI v0.7.1
+# Language Talk AI v0.8.0
 
-Simple Books / Practice / Me interface, integrated PDF reading with Myanmar dictionary lookup, and a six-stage Korean speaking coach.
+Books / Practice / Me, Korean-only speech with written Myanmar teaching, guided answer frames, and flexible Gemini / NVIDIA / OpenAI / Claude / DeepSeek API connections.
 
-- [Download APK](https://github.com/myothuonion-ui/Language-talk-/releases/download/v0.7.1/language-talk-v0.7.1.apk)
-- [Release and complete source](https://github.com/myothuonion-ui/Language-talk-/releases/tag/v0.7.1)
+- [Download APK](https://github.com/myothuonion-ui/Language-talk-/releases/download/v0.8.0/language-talk-v0.8.0.apk)
+- [Release and complete source](https://github.com/myothuonion-ui/Language-talk-/releases/tag/v0.8.0)
+- [New Practice and API guide](docs/AI_AND_PRACTICE.md)
 - [Korean Coach and PDF reader guide](docs/LEARNING_READER.md)
 
 48 original units complement the source-faithful 70 bundled TTMIK chapters. New translations, assessments and AI voice require your own configured key; books and cached lookups work offline. Back up from Me → My Context before upgrading. Keep original imported PDFs for reimport after reinstalling.
@@ -18,13 +19,13 @@ An Android Korean/English voice tutor with an editable personal profile, persist
 
 ## Practice
 
-**Practice → Start today** opens a due speaking review or the next unfinished Korean Coach unit. The 48 original units cover six app stages. Each has listening, shadowing, guided reply, role swap, no-hint reply, a new situation and a separate checkpoint. Choose a stage or use the adaptive placement estimate. **Me** shows words, mistakes, learning progress and recordings.
+**Practice** opens with three choices, with book lessons and Live conversation first:
 
-**Practice → Live စကားပြော** keeps the existing conversation modes:
+- **စာအုပ်သင်ခန်းစာ:** the original Beginner 40 and Intermediate 30 chapters, in book order, with role-controlled dialogue and Myanmar explanations.
+- **Live စကားပြော:** Guided shows a Korean answer frame with slots and an optional example. Open follows your chosen topic, with help on request. Independent application hides answers by default; an assisted answer does not count as independent mastery.
+- **ဒီနေ့ နည်းနည်းစီ:** a 5–10 minute lesson teaches the pattern, Myanmar grammar and two words first, then moves through supported practice, independent use, transfer and a checkpoint. The 48 original units cover six app stages; due speaking reviews and progress remain saved.
 
-- **Guided Practice:** introduce one useful sentence, repeat it, then use it independently in a new situation. Move forward only after the independent attempt. Five useful phrases lead to review.
-- **Roleplay:** practice with a coworker, manager, friend or other chosen character while staying in the selected situation.
-- **Free Talk:** follow your chosen topic and correction preference.
+Generated speech uses Korean only. Myanmar meanings, explanations and corrections stay as written text. **Me** shows saved words, mistakes, progress and recordings.
 
 Books opens at the saved page and supports PDF imports with dictionary lookup inside the reader. Practice offers the Korean Coach, book lessons and hands-free conversation. Me → My Context holds your profile, memories, documents, learning notes and backup controls. Me → Review & recordings keeps prior conversation reviews.
 
@@ -48,14 +49,13 @@ Learning notes and recordings each have an off switch. Disabling automatic learn
 
 ## Providers
 
-Enter your Gemini key in Settings; add/test/replace/remove controls are available. Test runs a short structured text request and a short speech request, and shows Ready only when both succeed. Native Live access is checked when a Live session starts; a model catalog listing is not proof of voice access or remaining quota. NVIDIA is optional. Keys are encrypted locally using Android Keystore and are not committed or exported.
+**Me → Settings → AI & APIs** stores your own encrypted keys. Built-in adapters support Gemini Interactions, NVIDIA's hosted Chat API, OpenAI Chat plus file transcription/speech, native Claude Messages, and direct DeepSeek. Add additional named keys or a custom HTTPS endpoint. No key is shipped or exported.
 
-- **Gemini Only:** native Live with learning tools, or structured Gemini REST + Gemini TTS recovery.
-- **Hybrid Auto:** Gemini tutoring with configured NVIDIA verification when useful.
-- **Best Quality:** Gemini and configured NVIDIA review, then Gemini final structured response.
-- **NVIDIA Brain:** configured NVIDIA reasoning with Gemini multimodal understanding/final formatting and Gemini speech.
+Each feature has an Auto picker. Choose a primary provider/model, same-key backups and an ordered list of other fallback providers, either for this chat/app session or as the feature default. Auto tries another model/provider after a failure. Independent two-AI review uses a separate profile to correct the draft; an unsuccessful review is labeled honestly. Paid API profiles join automatic fallback only after the user enables it.
 
-NVIDIA-enabled voice sessions use the REST/TTS path so the selected brain mode is honored. Gemini uses the Interactions API for text, audio understanding and speech. Model selection paginates the available catalog and uses only listed compatible modern fallbacks; NVIDIA stays on the exact configured model. Provider model names are editable. New defaults use Gemini 3.8 Flash, Live and Flash TTS; saved legacy Gemini 1.x/2.x and 3.1 preview preferences migrate to modern defaults. Compatible modern custom choices, voice presets and personal context are preserved. Gemini 3.8 speech style uses metadata so instructions are not read aloud. Audio delivery is left at the provider default because explicitly requesting inline delivery is rejected by TTS.
+Native Live uses Gemini. The hands-free voice pipeline can combine Gemini/OpenAI transcription, a chosen text AI, and Gemini/OpenAI Korean speech. Text-only NVIDIA, Claude and DeepSeek do not generate audio or assess pronunciation from a transcript. Book pronunciation checks use an audio-capable Gemini evaluator. Original finalized history and selected My Context are supplied again when the brain changes.
+
+Test text makes a real structured request; Models only lists the catalog. Speech and native Live access are checked when started. Catalog listings do not establish quota or access. Models are editable, and custom task choices override built-in fast/quality defaults. See [AI setup and fallback behavior](docs/AI_AND_PRACTICE.md).
 
 ## Other tools
 
@@ -63,7 +63,7 @@ Quick Translate handles typed/spoken Korean, English and Myanmar. Korean Name St
 
 ## Install and development
 
-Android 8.0 or newer. Install the APK from Releases and enter your own API key. **Back up before reinstalling: debug APKs use runner-generated signing keys and can differ between versions.** In v0.5.0 or later use My Context → Export backup. For v0.4.0 use the Windows backup helper from Releases. Restore the JSON in Me → My Context after installing v0.7.1 and re-enter your API key. See [Upgrade instructions](docs/UPGRADING.md). Database v3 includes migrations from previous app databases and does not reset existing chats when the signing key matches.
+Android 8.0 or newer. Install the APK from Releases and enter your own API key. **Back up before reinstalling: debug APKs use runner-generated signing keys and can differ between versions.** In v0.5.0 or later use My Context → Export backup. For v0.4.0 use the Windows backup helper from Releases. Restore the JSON in Me → My Context after installing v0.8.0 and re-enter your API key. See [Upgrade instructions](docs/UPGRADING.md). Database v4 includes migrations from previous app databases and does not reset existing chats when the signing key matches.
 
 Requirements: JDK 17, Android SDK 35, Gradle 8.10.2.
 
@@ -73,6 +73,6 @@ gradle wrapper --gradle-version 8.10.2
 ./gradlew connectedDebugAndroidTest
 ```
 
-GitHub Actions runs unit tests, lint, APK compilation and Android emulator migration, backup restoration and screen checks on Android 10 and 15 before publishing v0.7.1. HTTP tests use simulated Gemini catalog, tutoring, speech and quota responses. CI does not make real Gemini/NVIDIA calls because no personal API keys are supplied. Actual provider checks are documented in [Provider validation](docs/PROVIDER_VALIDATION.md). Microphone quality, pronunciation judgments and provider availability require device testing.
+GitHub Actions runs unit tests, lint, APK compilation and Android emulator migration, backup restoration and screen checks on Android 10 and 15 before publishing v0.8.0. HTTP tests simulate Gemini and compatible provider requests, structured output, quota, timeout, cancellation, fallback, transcription and speech. CI does not make real provider calls because no personal API keys are supplied. Actual provider checks are documented in [Provider validation](docs/PROVIDER_VALIDATION.md). Microphone quality, pronunciation judgments and provider availability require device testing.
 
 See [Architecture](docs/ARCHITECTURE.md).

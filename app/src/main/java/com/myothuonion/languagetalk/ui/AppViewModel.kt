@@ -452,7 +452,31 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                         ?: error("Could not read file")
                     Triple(name, mime, bytes)
                 }
-                repository.analyzeAndAddSource(metadata.first, metadata.second, uri.toString(), metadata.third)
+                repository.analyzeAndAddSource(metadata.first, metadata.second, uri.toString(), metadata.third) {
+                    withContext(Dispatchers.IO) {
+                        val application = getApplication<Application>()
+                        val file = java.io.File.createTempFile("context-", ".pdf", application.cacheDir)
+                        try {
+                            file.writeBytes(metadata.third)
+                            val pages = android.graphics.pdf.PdfRenderer(android.os.ParcelFileDescriptor.open(file,
+                                android.os.ParcelFileDescriptor.MODE_READ_ONLY)).use { it.pageCount }
+                            val reader = com.myothuonion.languagetalk.util.PdfPageReader(application)
+                            var readableCharacters = 0
+                            val text = buildString {
+                                appendLine("Extracted source: first ${minOf(pages, 20)} of $pages pages only. Other pages are not supplied.")
+                                for (page in 0 until minOf(pages, 20)) {
+                                    val data = reader.render(file, file.nameWithoutExtension, page)
+                                    readableCharacters += data.layer.text.trim().length
+                                    try { appendLine("Page ${page + 1}:\n${data.layer.text}") }
+                                    finally { data.bitmap.recycle() }
+                                    if (length > 55000) break
+                                }
+                            }
+                            require(readableCharacters >= 10) { "PDF မှာ စာသားမဖတ်နိုင်ပါ။ Gemini သို့မဟုတ် ပုံတစ်ပုံချင်း ထည့်ပါ။" }
+                            text.take(60000)
+                        } finally { file.delete() }
+                    }
+                }
                 _work.update { it.copy(status = "Context imported") }
             } catch (e: Exception) {
                 _work.update { it.copy(error = friendlyError(e), status = "Import failed") }

@@ -96,7 +96,8 @@ data class LearningProgressEntity(
     val updatedAt: Long = System.currentTimeMillis(),
     val answerPattern: String = "",
     val answerExample: String = "",
-    val answerHint: String = ""
+    val answerHint: String = "",
+    val assistedCurrent: Boolean = false
 ) {
     fun state() = com.myothuonion.languagetalk.model.PracticeState(goal, stage, targetSentence, completed, summary, lastCorrection)
 }

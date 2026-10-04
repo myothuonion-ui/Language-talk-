@@ -145,8 +145,11 @@ private fun ApiProfileDialog(initial: AiProfile, config: AiConfiguration, viewMo
                 Text("သုံးမယ်", Modifier.weight(1f), fontSize = 13.sp)
                 Switch(profile.enabled, { profile = profile.copy(enabled = it) })
             }
-            ModelField("Text model", profile.textModel, AiPlans.models(profile, AiTask.CONVERSATION) + catalogs[profile.id].orEmpty()) {
-                profile = profile.copy(textModel = it)
+            val textCatalog = catalogs[profile.id].orEmpty().filterNot {
+                profile.format == ApiFormat.GEMINI && (it.contains("tts") || it.contains("live") || it.contains("embedding"))
+            }
+            ModelField("Text model", profile.textModel, AiPlans.models(profile, AiTask.CONVERSATION) + textCatalog) {
+                profile = profile.copy(textModel = it, taskDefaults = false)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 OutlinedButton({ viewModel.testApi(profile, key) }, enabled = profile.id !in busy && (key.isNotBlank() || viewModel.apiConfigured(profile.id))) { Text("Test text") }

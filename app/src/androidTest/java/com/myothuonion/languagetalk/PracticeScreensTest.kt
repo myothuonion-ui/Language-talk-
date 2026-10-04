@@ -31,6 +31,17 @@ class PracticeScreensTest {
         compose.onNodeWithTag("practice-books").assertIsDisplayed()
         compose.onNodeWithTag("practice-live").assertIsDisplayed()
         capture("practice")
+        compose.onNodeWithTag("practice-live").performClick()
+        compose.onNodeWithTag("guided-mode").assertIsSelected()
+        compose.onNodeWithTag("open-mode").performClick()
+        compose.onNodeWithTag("open-mode").assertIsSelected()
+        capture("live-setup")
+        compose.onNodeWithTag("ai-picker-CONVERSATION").performClick()
+        compose.onNodeWithText("ပင်မ API").assertIsDisplayed()
+        capture("conversation-ai-choice")
+        compose.onNodeWithText("ပိတ်မယ်").performClick()
+        compose.activity.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitUntil(10000) { compose.onAllNodesWithTag("practice-hub").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("practice-hub").performScrollToNode(hasTestTag("practice-daily"))
         compose.onNodeWithTag("practice-daily").performClick()
         compose.onNodeWithTag("start-today").assertIsDisplayed()

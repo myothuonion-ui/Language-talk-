@@ -15,6 +15,8 @@ import com.myothuonion.languagetalk.model.AiConfiguration
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 private val Context.dataStore by preferencesDataStore(name = "language_talk_settings", produceMigrations = { listOf(GeminiSettingsMigration()) })
 
@@ -41,6 +43,7 @@ data class AppSettings(
 )
 
 class SettingsStore(private val context: Context) {
+    private val updateMutex = Mutex()
     val settings: Flow<AppSettings> = context.dataStore.data.map { prefs ->
         AppSettings(
             displayName = prefs[DISPLAY_NAME] ?: "Myo Min Thu",
@@ -63,14 +66,30 @@ class SettingsStore(private val context: Context) {
             autoSpeak = prefs[AUTO_SPEAK] ?: true,
             darkTheme = prefs[DARK_THEME] ?: false,
             ai = prefs[AI_CONFIG]?.let { raw -> runCatching { Json.decodeFromString<AiConfiguration>(raw) }.getOrNull() }
-                ?: AiConfiguration()
+                ?: AiConfiguration(profiles = com.myothuonion.languagetalk.model.builtInAiProfiles().map { profile ->
+                    if (profile.id == "gemini") profile.copy(
+                        textModel = GeminiModels.normalize(prefs[GEMINI_MODEL].orEmpty(), GeminiTask.TEXT),
+                        speechModel = GeminiModels.normalize(prefs[GEMINI_TTS_MODEL].orEmpty(), GeminiTask.SPEECH),
+                        liveModel = GeminiModels.normalize(prefs[LIVE_MODEL].orEmpty(), GeminiTask.LIVE),
+                        taskDefaults = GeminiModels.normalize(prefs[GEMINI_MODEL].orEmpty(), GeminiTask.TEXT) == GeminiModels.TEXT)
+                    else profile
+                })
         )
     }
 
-    suspend fun update(transform: (AppSettings) -> AppSettings) {
-        val changed = transform(settings.first())
+    suspend fun update(transform: (AppSettings) -> AppSettings) = updateMutex.withLock {
+        val previous = settings.first()
+        val changed = transform(previous)
         val value = changed.copy(geminiModel = GeminiModels.normalize(changed.geminiModel, GeminiTask.TEXT),
             geminiTtsModel = GeminiModels.normalize(changed.geminiTtsModel, GeminiTask.SPEECH), liveModel = GeminiModels.normalize(changed.liveModel, GeminiTask.LIVE))
+        val configuration = if (changed.ai != previous.ai) value.ai else value.ai.copy(profiles = value.ai.profiles.map { profile ->
+            if (profile.id == "gemini") profile.copy(
+                textModel = if (value.geminiModel != previous.geminiModel) value.geminiModel else profile.textModel,
+                taskDefaults = if (value.geminiModel != previous.geminiModel) false else profile.taskDefaults,
+                speechModel = if (value.geminiTtsModel != previous.geminiTtsModel) value.geminiTtsModel else profile.speechModel,
+                liveModel = if (value.liveModel != previous.liveModel) value.liveModel else profile.liveModel)
+            else profile
+        })
         context.dataStore.edit { prefs ->
             prefs[DISPLAY_NAME] = value.displayName
             prefs[EXPLANATION_LANGUAGE] = value.explanationLanguage
@@ -90,7 +109,7 @@ class SettingsStore(private val context: Context) {
             prefs[DEFAULT_SPEAK_CORRECTIONS] = value.defaultSpeakCorrections
             prefs[AUTO_SPEAK] = value.autoSpeak
             prefs[DARK_THEME] = value.darkTheme
-            prefs[AI_CONFIG] = Json.encodeToString(value.ai)
+            prefs[AI_CONFIG] = Json.encodeToString(configuration)
         }
     }
 

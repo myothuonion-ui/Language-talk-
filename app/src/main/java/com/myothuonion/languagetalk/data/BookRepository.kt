@@ -123,7 +123,8 @@ class BookRepository(private val context: Context, val store: BookStore, private
             correction and explanation should contain ONE concise useful correction in Myanmar.
             Leave reply, followUpQuestion, targetSentence, nextTargetSentence, memoryFact and memoryEvidence empty.
             SOURCE: ${section.sourceText}
-        """.trimIndent(), text.ifBlank { "Evaluate my audio attempt." }, audio, assessmentOnly = true)
+        """.trimIndent(), text.ifBlank { "Evaluate my audio attempt." }, audio, assessmentOnly = true,
+            audioEvaluationRequired = section.kind == "PRONUNCIATION")
         val heard = reply.heardText.ifBlank { if (audio == null) text else "" }
         val command = BookEngine.command(heard)
         val feedback = listOf(reply.correction, reply.explanation).filter(String::isNotBlank).distinct().joinToString("\n")

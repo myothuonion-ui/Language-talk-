@@ -54,4 +54,18 @@ class PracticeEngineTest {
         val reply = TutorReply("안녕하세요.", correction = "Correction", speechText = "Correction")
         assertEquals("안녕하세요.", reply.speech(false))
     }
+    @Test fun anAssistedAnswerRequiresAnotherIndependentAttempt() {
+        val state = PracticeState(stage = "APPLY", targetSentence = "물 주세요.")
+        val claimedPass = PracticeAssessment(assessment = "PASSED")
+        val assisted = PracticeEngine.ground(state, claimedPass, "물 주세요.", true, PracticeMode.GUIDED)
+        assertEquals(0, PracticeEngine.advance(state, assisted, PracticeMode.GUIDED).completed)
+        val independent = PracticeEngine.ground(state, claimedPass, "물 주세요.", false, PracticeMode.GUIDED)
+        assertEquals(1, PracticeEngine.advance(state, independent, PracticeMode.GUIDED).completed)
+    }
+    @Test fun aClaimedPassWithoutAnyLearnerResponseCannotAdvance() {
+        val state = PracticeState(stage = "REPEAT", targetSentence = "안녕하세요.")
+        val grounded = PracticeEngine.ground(state, PracticeAssessment(assessment = "PASSED"), "", false, PracticeMode.GUIDED)
+        assertEquals("UNSURE", grounded.assessment)
+        assertEquals("REPEAT", PracticeEngine.advance(state, grounded, PracticeMode.GUIDED).stage)
+    }
 }

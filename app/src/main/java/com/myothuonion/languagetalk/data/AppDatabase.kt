@@ -31,6 +31,7 @@ abstract class AppDatabase : RoomDatabase() {
                 listOf("answerPattern", "answerExample", "answerHint").forEach {
                     database.execSQL("ALTER TABLE learning_progress ADD COLUMN $it TEXT NOT NULL DEFAULT ''")
                 }
+                database.execSQL("ALTER TABLE learning_progress ADD COLUMN assistedCurrent INTEGER NOT NULL DEFAULT 0")
             }
         }
 

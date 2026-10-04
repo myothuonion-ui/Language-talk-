@@ -1,3 +1,16 @@
+# v0.8.0 — Guided practice and flexible APIs
+
+- Open Practice with three cards: original book lessons, Live conversation and a small daily lesson.
+- Teach the Korean pattern, Myanmar grammar and two words before daily practice; keep independent application and checkpoints separate from help.
+- Add matching answer frames, optional examples and on-demand Open conversation help. Assisted application does not count as independent mastery.
+- Keep generated speech Korean only and display Myanmar teaching as text.
+- Add Gemini, NVIDIA, OpenAI, native Claude Messages, direct DeepSeek, extra named keys and custom HTTPS profiles.
+- Configure providers/models per feature or chat, with same-key backups, ordered provider fallback and independent two-AI review.
+- Support the voice pipeline with Gemini/OpenAI transcription and speech; native Live remains Gemini.
+- Route personal source imports through the selected document AI; extract up to the first 20 PDF pages for text-only providers and label partial coverage.
+- Preserve existing books, reader, personal context and progress with database v4 migration and portable backup.
+- Extend provider HTTP/routing, learner-assessment and Android navigation/upgrade tests. Real account access and language quality still require the user's configured key.
+
 # v0.7.1 — Reader and lesson layout fixes
 
 - Open dictionary results fully above system navigation, with scroll and keyboard-safe spacing.

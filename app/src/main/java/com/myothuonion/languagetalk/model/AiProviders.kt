@@ -36,7 +36,8 @@ data class AiProfile(
     val transcribeModel: String = "",
     val liveModel: String = "",
     val voice: String = "coral",
-    val audioEndpoints: Boolean = false
+    val audioEndpoints: Boolean = false,
+    val taskDefaults: Boolean = true
 ) {
     fun supports(task: AiTask): Boolean = when (task) {
         AiTask.LIVE -> kind == AiProviderKind.GEMINI && format == ApiFormat.GEMINI && liveModel.isNotBlank()
@@ -93,9 +94,9 @@ object AiPlans {
                 listOf(profile.textModel) + profile.textBackups else listOf(profile.transcribeModel)
             AiTask.LIVE -> listOf(profile.liveModel, "gemini-3.8-live-extended-thinking")
             else -> when {
-                profile.id == "gemini" && task in setOf(AiTask.TRANSLATE, AiTask.READER) ->
+                profile.id == "gemini" && profile.taskDefaults && task in setOf(AiTask.TRANSLATE, AiTask.READER) ->
                     listOf("gemini-3.5-flash-lite", profile.textModel) + profile.textBackups
-                profile.id == "nvidia" && task in setOf(AiTask.BOOK, AiTask.COACH, AiTask.DOCUMENT) ->
+                profile.id == "nvidia" && profile.taskDefaults && task in setOf(AiTask.BOOK, AiTask.COACH, AiTask.DOCUMENT) ->
                     listOf("z-ai/glm-5.3", "moonshotai/kimi-k3", profile.textModel) + profile.textBackups
                 else -> listOf(profile.textModel) + profile.textBackups
             }

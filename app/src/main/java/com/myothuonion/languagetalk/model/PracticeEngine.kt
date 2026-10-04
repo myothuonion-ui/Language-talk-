@@ -28,6 +28,16 @@ data class PracticeAssessment(
 )
 
 object PracticeEngine {
+    fun ground(state: PracticeState, result: PracticeAssessment, heard: String,
+        assisted: Boolean, mode: PracticeMode): PracticeAssessment = when {
+        heard.isBlank() && state.stage != "INTRO" && result.assessment == "PASSED" ->
+            result.copy(assessment = "UNSURE")
+        mode == PracticeMode.GUIDED && state.stage == "APPLY" && assisted && result.assessment == "PASSED" ->
+            result.copy(assessment = "RETRY",
+                note = "အကူအညီနဲ့ ပြောနိုင်ပြီ။ အခု အကူအညီမပါဘဲ နောက်တစ်ကြိမ် ပြောကြည့်မယ်။")
+        else -> result
+    }
+
     fun advance(state: PracticeState, result: PracticeAssessment, mode: PracticeMode): PracticeState {
         val note = result.note.trim().take(500)
         val updated = state.copy(
