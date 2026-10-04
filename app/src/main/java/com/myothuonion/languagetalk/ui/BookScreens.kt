@@ -91,7 +91,7 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
     val finished = BookEngine.finished(book, state)
     val canControl = !ui.busy && !live.connected && !ui.recording
     var answer by remember(book.id, state.chapter, state.section, state.activity) { mutableStateOf("") }
-    var hint by remember(book.id, state.chapter, state.section, state.activity) { mutableStateOf(false) }
+    var hint by remember(book.id, state.chapter, state.section, state.activity) { mutableStateOf(section.kind == "DIALOGUE") }
     var script by remember(book.id, state.chapter, state.section) { mutableStateOf(false) }
     var english by remember(book.id, state.chapter, state.section) { mutableStateOf(false) }
     var keys by remember(book.id, state.chapter, state.section) { mutableStateOf(false) }
@@ -196,7 +196,7 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
                     Column(Modifier.fillMaxWidth().padding(15.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                         Text(if (section.exercises.isNotEmpty()) "လေ့ကျင့်ခန်း ${state.activity + 1}/${section.exercises.size}" else "မင်းအလှည့် · ${BookEngine.role(section, state)}", fontWeight = FontWeight.Bold)
                         if (section.exercises.isNotEmpty()) Text(target.prompt, fontSize = 17.sp)
-                        if ((section.kind == "DIALOGUE") || hint) Text(target.text, fontSize = 22.sp, color = Mint)
+                        if (hint) Text(target.text, fontSize = 22.sp, color = Mint)
                         else Text("အဖြေကို မကြည့်ဘဲ အရင်ကြိုးစားပါ")
                         if (english && section.turns.isNotEmpty()) Text(section.turns[state.activity].english)
                         Row {
