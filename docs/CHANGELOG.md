@@ -1,3 +1,15 @@
+# v0.7.0 — Korean Coach and integrated reader
+
+- Simplify navigation to Books / Practice / Me with warm green styling and compact voice, reader and key settings; keep technical controls under Advanced.
+- Import private PDFs with saved page, bookmarks, zoom, Text mode and Day/Sepia/Night appearance.
+- Long-press a word or drag a phrase for Myanmar lookup inside the reader; support bundled Korean/Latin OCR, lemma, grammar, listening, sentence meanings and saved words.
+- Add 48 original units across six app stages, preserving the 70 source-faithful TTMIK chapters.
+- Control listening, shadowing, guided reply, role swap, no-hint reply, transfer and a distinct checkpoint. Uncertain input and voice commands cannot advance progress.
+- Add adaptive placement estimates, factory/social/daily/discussion topics, spaced speaking reviews, daily goals and saved practice recordings.
+- Use explicit learner context and recent practice for continuity; fictional dialogue identities are never stored as personal facts.
+- Extend portable backup with learning and reader metadata. Keep imported PDFs separately; new Coach audio files are local and excluded from JSON.
+- Add curriculum/controller checks and Android 10/15 OCR selection, lookup, backup, migration, audio and screen verification.
+
 # v0.6.0 — Built-in book courses
 
 - Bundle the two supplied TTMIK PDFs and page-linked Beginner 40 / Intermediate 30 chapter courses.
