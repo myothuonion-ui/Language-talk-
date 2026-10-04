@@ -24,11 +24,18 @@ class PracticeScreensTest {
 
     @Test fun homeReviewContextAndSavedVoiceSettingsAreAccessible() {
         compose.waitUntil(10000) { compose.onAllNodesWithText("My Books").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(15000) { compose.onAllNodesWithTag("open-books").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("My Books").assertIsDisplayed()
         capture("home")
         compose.onNodeWithText("Practice", useUnmergedTree = true).performClick()
         compose.onNodeWithTag("start-today").assertIsDisplayed()
         capture("practice")
+        compose.onNodeWithTag("start-today").performClick()
+        compose.waitUntil(10000) { compose.onAllNodesWithTag("coach-lesson").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("coach-task").assertIsDisplayed()
+        capture("coach-lesson")
+        compose.activity.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitUntil(10000) { compose.onAllNodesWithTag("start-today").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Me", useUnmergedTree = true).performClick()
         compose.onNodeWithText("My Context").performClick()
         compose.onNodeWithText("Save profile").assertIsDisplayed()
