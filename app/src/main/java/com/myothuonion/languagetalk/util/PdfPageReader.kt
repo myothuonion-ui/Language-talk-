@@ -14,6 +14,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
@@ -53,20 +56,21 @@ class PdfPageReader(context: Context) {
         try {
             val saved = File(cache, id + "-" + index + ".json")
             val layer = if (saved.isFile) runCatching { json.decodeFromString<PdfTextLayer>(saved.readText()) }.getOrNull() else null
-            if (layer != null) return@withContext ReadablePdfPage(bitmap, layer)
+            if (layer != null) { currentCoroutineContext().ensureActive(); return@withContext ReadablePdfPage(bitmap, layer) }
             val korean = TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build())
             val latin = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
             try {
                 val useLatin = native.isNotBlank() && native.none { it in '\uAC00'..'\uD7AF' }
                 val chosen = if (useLatin) latin else korean
-                var recognized = suspendCancellableCoroutine<com.google.mlkit.vision.text.Text> { continuation ->
+                var recognized = withContext(NonCancellable) { suspendCancellableCoroutine<com.google.mlkit.vision.text.Text> { continuation ->
                     chosen.process(InputImage.fromBitmap(bitmap, 0)).addOnSuccessListener { if (continuation.isActive) continuation.resume(it) }
                         .addOnFailureListener { if (continuation.isActive) continuation.resumeWithException(it) }
-                }
-                if (recognized.text.isBlank() && !useLatin) recognized = suspendCancellableCoroutine { continuation ->
+                } }
+                if (recognized.text.isBlank() && !useLatin) recognized = withContext(NonCancellable) { suspendCancellableCoroutine { continuation ->
                     latin.process(InputImage.fromBitmap(bitmap, 0)).addOnSuccessListener { if (continuation.isActive) continuation.resume(it) }
                         .addOnFailureListener { if (continuation.isActive) continuation.resumeWithException(it) }
-                }
+                } }
+                currentCoroutineContext().ensureActive()
                 var number = 0
                 val words = recognized.textBlocks.flatMap { block -> block.lines.flatMap { line ->
                     val lineNumber = number++

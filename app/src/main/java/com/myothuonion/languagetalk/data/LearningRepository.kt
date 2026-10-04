@@ -51,6 +51,9 @@ class LearningRepository(private val context: Context, val store: LearningStore,
     }
     private suspend fun assess(task: CoachTask, text: String, audio: AudioPayload?): TutorReply {
         val profile = tutor.learningContext()
+        val previous = store.export().attempts.takeLast(12).joinToString("\n") {
+            "Practice task " + it.unitId + "/" + it.step + ": " + it.heard + " | Feedback: " + it.feedback
+        }.takeLast(5000)
         val result = tutor.bookResponse(
             """You are a bounded Korean speaking coach. Assess ONLY the current supplied task.
             Do not generate the next question or change the task. Never act out the learner's role.
@@ -65,7 +68,8 @@ class LearningRepository(private val context: Context, val store: LearningStore,
             Textbook/roleplay identities are fictional and never personal memory.
             The learner may explain listening meaning in Myanmar; other stages require Korean.
             Explicit learner context for relevance only, not facts to invent:
-            """ + profile, text.ifBlank { "Assess the recorded response to the supplied task." }, audio, assessmentOnly = true)
+            """ + profile + "\nPrevious practice for continuity only; it can be fictional, never assume personal facts:\n" + previous,
+            text.ifBlank { "Assess the recorded response to the supplied task." }, audio, assessmentOnly = true)
         return if (audio == null) result.copy(heardText = text.trim().take(4000)) else result
     }
     private fun feedback(result: TutorReply): String = listOf(result.correction, result.explanation, result.lessonNote)
@@ -137,7 +141,8 @@ class LearningRepository(private val context: Context, val store: LearningStore,
             ?.drop(80)?.forEach { it.delete(); File(speechCache, it.nameWithoutExtension + ".mime").delete() }
         audio
     }
-    suspend fun opening(slow: Boolean, reviewId: String? = null, placement: Boolean = false, unitId: String? = null): HandsFreeTurn {
+    suspend fun opening(slow: Boolean, reviewId: String? = null, placement: Boolean = false, unitId: String? = null,
+        correction: String = ""): HandsFreeTurn {
         val state = store.export()
         val unit = unitId?.let { id -> curriculum.first { it.id == id } } ?: currentUnit()
         val card = state.cards.firstOrNull { it.id == reviewId }
@@ -145,7 +150,9 @@ class LearningRepository(private val context: Context, val store: LearningStore,
             CoachTask(card.prompt, card.prompt, card.criterion, card.example, "", card.title)
             else CoachEngine.task(unit, CoachEngine.progress(state, unit.id).step)
         val spoken = task.spoken.ifBlank { task.prompt }
-        return HandsFreeTurn("", task.prompt, speech(spoken, slow))
+        val voiceText = if (correction.isNotBlank() && tutor.settings.first().defaultSpeakCorrections)
+            correction.take(500) + "\n" + spoken else spoken
+        return HandsFreeTurn("", task.prompt, speech(voiceText, slow))
     }
     fun recording(attempt: CoachAttempt): AudioPayload? {
         if (attempt.audioName.isBlank() || attempt.audioName != File(attempt.audioName).name) return null

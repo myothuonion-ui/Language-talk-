@@ -85,7 +85,7 @@ internal fun SimpleSettingsScreen(settings: AppSettings, credentials: Credential
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedButton({ viewModel.testGeminiKey(key.trim().takeIf { it.isNotEmpty() }) },
                         enabled = !credentials.checkingGemini && (key.isNotBlank() || credentials.geminiConfigured)) { Text("Test") }
-                    Button({ viewModel.replaceGeminiKey(key); key = "" }, enabled = !credentials.checkingGemini && key.isNotBlank()) { Text("သိမ်းမယ်") }
+                    Button({ viewModel.replaceGeminiKey(key) }, enabled = !credentials.checkingGemini && key.isNotBlank()) { Text("သိမ်းမယ်") }
                 }
             }
             if (credentials.checkingGemini) LinearProgressIndicator(Modifier.fillMaxWidth())

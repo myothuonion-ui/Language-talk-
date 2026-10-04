@@ -252,7 +252,7 @@ internal fun PdfReaderScreen(viewModel: ReaderViewModel, onBack: () -> Unit) {
         text = { Column(Modifier.heightIn(max = 340.dp).verticalScroll(rememberScrollState())) {
             if (book.bookmarks.isEmpty()) Text("Bookmark မရှိသေးပါ။")
             book.bookmarks.forEach { page -> TextButton({ viewModel.page(page); bookmarks = false }) { Text("စာမျက်နှာ " + (page + 1)) } }
-        },
+        } },
         confirmButton = { TextButton({ bookmarks = false }) { Text("ပိတ်") } })
     if (ui.selection.isNotBlank()) {
         var edit by remember(ui.selection) { mutableStateOf(false) }

@@ -28,6 +28,7 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
     val ui = _ui.asStateFlow()
     private var renderJob: Job? = null
     private var translateJob: Job? = null
+    private var audioJob: Job? = null
     init { viewModelScope.launch { runCatching { repository.initialize() }.onFailure { e -> _ui.update { it.copy(error = e.message) } } } }
     fun import(uri: Uri) = viewModelScope.launch {
         _ui.update { it.copy(loading = true, error = null) }
@@ -36,7 +37,7 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
         catch (failure: Exception) { _ui.update { it.copy(error = failure.message, loading = false) } }
     }
     fun open(id: String, page: Int? = null) {
-        renderJob?.cancel(); translateJob?.cancel(); player.stop()
+        renderJob?.cancel(); translateJob?.cancel(); audioJob?.cancel(); player.stop()
         renderJob = viewModelScope.launch {
             _ui.value = ReaderUiState(bookId = id, loading = true)
             try {
@@ -51,10 +52,10 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
     fun page(index: Int) = open(ui.value.bookId, index)
-    fun close() { renderJob?.cancel(); translateJob?.cancel(); player.stop(); _ui.value = ReaderUiState() }
-    fun dismissLookup() { translateJob?.cancel(); player.stop(); _ui.update { it.copy(selection = "", translation = null, translating = false, saved = false) } }
+    fun close() { renderJob?.cancel(); translateJob?.cancel(); audioJob?.cancel(); player.stop(); _ui.value = ReaderUiState() }
+    fun dismissLookup() { translateJob?.cancel(); audioJob?.cancel(); player.stop(); _ui.update { it.copy(selection = "", translation = null, translating = false, saved = false) } }
     fun lookup(text: String, sentence: String) {
-        translateJob?.cancel(); player.stop()
+        translateJob?.cancel(); audioJob?.cancel(); player.stop()
         if (text.isBlank()) return
         val id = ui.value.bookId; val page = ui.value.page
         _ui.update { it.copy(selection = text.take(1200), sentence = sentence.take(4000), translating = true, translation = null, saved = false, error = null) }
@@ -80,8 +81,15 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
     fun listen() {
         val text = ui.value.selection
         if (text.isBlank()) return
-        viewModelScope.launch {
-            try { player.play(app.learning.speech(text, true), onError = { e -> _ui.update { it.copy(error = e.message) } }) {} }
+        audioJob?.cancel()
+        val id = ui.value.bookId
+        val page = ui.value.page
+        audioJob = viewModelScope.launch {
+            try {
+                val audio = app.learning.speech(text, true)
+                if (ui.value.bookId == id && ui.value.page == page && ui.value.selection == text)
+                    player.play(audio, onError = { e -> _ui.update { it.copy(error = e.message) } }) {}
+            }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (failure: Exception) { _ui.update { it.copy(error = failure.message) } }
         }

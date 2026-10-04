@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import com.myothuonion.languagetalk.data.AppSettings
 import com.myothuonion.languagetalk.model.*
 import com.myothuonion.languagetalk.network.LivePhase
@@ -159,9 +160,9 @@ private fun CoachLessonScreen(viewModel: CoachViewModel, settings: AppSettings) 
     var answer by remember(unit.id, progress.step, ui.reviewId, state.placementIndex) { mutableStateOf("") }
     val canControl = !ui.busy && !live.connected && !ui.recording
     BackHandler { viewModel.closeLesson() }
-    DisposableEffect(Unit) {
+    LifecycleResumeEffect(Unit) {
         val start = android.os.SystemClock.elapsedRealtime()
-        onDispose { viewModel.stopAll(); viewModel.study((android.os.SystemClock.elapsedRealtime() - start) / 1000) }
+        onPauseOrDispose { viewModel.stopAll(); viewModel.study((android.os.SystemClock.elapsedRealtime() - start) / 1000) }
     }
     LazyColumn(Modifier.fillMaxSize().testTag("coach-lesson"), contentPadding = PaddingValues(22.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)) {

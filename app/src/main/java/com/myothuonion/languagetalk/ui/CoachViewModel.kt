@@ -132,7 +132,7 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
             if (finished()) HandsFreeTurn(ui.value.heard, ui.value.feedback,
                 repository.speech("수고하셨습니다.", current.slow))
             else {
-                val opening = repository.opening(current.slow, current.reviewId, current.placement, current.unitId)
+                val opening = repository.opening(current.slow, current.reviewId, current.placement, current.unitId, ui.value.feedback)
                 opening.copy(heardText = ui.value.heard, replyText = ui.value.feedback + "\n" + opening.replyText)
             }
         }
