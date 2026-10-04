@@ -160,7 +160,7 @@ class LearningRepository(private val context: Context, val store: LearningStore,
         val task = if (placement) placementTask() else if (card != null)
             CoachTask(card.prompt, card.prompt, card.criterion, card.example, "", card.title)
             else CoachEngine.task(unit, CoachEngine.progress(state, unit.id).step)
-        val spoken = task.spoken.ifBlank { task.prompt }
+        val spoken = CoachEngine.narration(task)
         val voiceText = if (correction.isNotBlank() && tutor.settings.first().defaultSpeakCorrections)
             correction.take(500) + "\n" + spoken else spoken
         return HandsFreeTurn("", task.prompt, speech(voiceText, slow))

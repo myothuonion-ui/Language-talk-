@@ -50,6 +50,8 @@ data class CoachTask(val spoken: String, val prompt: String, val criterion: Stri
 
 object CoachEngine {
     val levels = listOf("အစပြု · 한글", "Beginner", "Elementary", "Intermediate", "Upper-intermediate", "Advanced")
+    fun narration(task: CoachTask): String = if (task.spoken.isBlank() || task.spoken == task.prompt) task.prompt
+        else task.prompt + "\n" + task.spoken
     fun progress(state: LearningState, id: String) = state.units.firstOrNull { it.id == id } ?: UnitProgress(id)
     fun task(unit: LearningUnit, step: Int): CoachTask {
         val stage = CoachStep.entries[step.coerceIn(0, CoachStep.entries.lastIndex)]

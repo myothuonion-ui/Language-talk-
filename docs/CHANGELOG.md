@@ -3,6 +3,7 @@
 - Open dictionary results fully above system navigation, with scroll and keyboard-safe spacing.
 - Give reader actions and lesson input buttons equal widths so Myanmar labels remain readable.
 - Keep bookshelf level labels on one line.
+- Announce listening, shadowing and role-swap instructions before each sample during hands-free lessons.
 
 # v0.7.0 — Korean Coach and integrated reader
 
