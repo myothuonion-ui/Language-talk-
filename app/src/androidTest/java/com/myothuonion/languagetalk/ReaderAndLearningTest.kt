@@ -39,12 +39,13 @@ class ReaderAndLearningTest {
             drawColor(Color.WHITE)
             drawText("Hello reader", 90f, 160f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.BLACK; textSize = 62f })
         }
-        PdfDocument().use { pdf ->
+        val pdf = PdfDocument()
+        try {
             val page = pdf.startPage(PdfDocument.PageInfo.Builder(840, 840, 1).create())
             page.canvas.drawBitmap(image, 0f, 0f, null)
             pdf.finishPage(page)
             source.outputStream().use { pdf.writeTo(it) }
-        }
+        } finally { pdf.close() }
         image.recycle()
         val saved = runBlocking { app.learningStore.export() }
         try {
@@ -63,7 +64,7 @@ class ReaderAndLearningTest {
             compose.onNodeWithTag("read-" + book.id).performClick()
             compose.waitUntil(30000) { compose.onAllNodesWithContentDescription("PDF page 1").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithContentDescription("PDF page 1").performTouchInput {
-                longClick(Offset(size.width * (word.left + word.right) / 2, size.height * (word.top + word.bottom) / 2), 1100)
+                longClick(Offset(width * (word.left + word.right) / 2, height * (word.top + word.bottom) / 2), 1100)
             }
             compose.waitUntil(15000) { compose.onAllNodesWithText("မင်္ဂလာပါ").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithTag("pdf-reader").assertExists()
