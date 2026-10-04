@@ -49,7 +49,7 @@ import kotlinx.coroutines.withContext
 @Composable
 internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
     onBack: () -> Unit, onSettings: () -> Unit, onRead: ((String, Int) -> Unit)? = null,
-    onApply: (TutorConfig) -> Unit) {
+    aiViewModel: AppViewModel? = null, onApply: (TutorConfig) -> Unit) {
     val ui by viewModel.state.collectAsState()
     val shelf by viewModel.shelf.collectAsState()
     val live by viewModel.live.collectAsState()
@@ -103,6 +103,8 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
             Row(Modifier.statusBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton({ viewModel.close(); if (reviewOpen) reviewOpen = false else if (lessonOpen) lessonOpen = false else onBack() }) { Icon(Icons.Default.ArrowBack, "Back") }
                 Text(if (reviewOpen) "စာအုပ် · ပြန်လေ့ကျင့်ရန်" else if (lessonOpen) "${book.level} · Lesson ${state.chapter}" else "My Books", fontSize = 23.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.weight(1f))
+                aiViewModel?.let { AiTaskPicker(AiTask.BOOK, it) }
             }
         }
         ui.error?.let { error -> item { Text(error, color = MaterialTheme.colorScheme.error) } }

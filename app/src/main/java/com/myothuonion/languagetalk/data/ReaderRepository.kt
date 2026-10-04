@@ -91,7 +91,7 @@ class ReaderRepository(private val context: Context, val store: LearningStore,
             explanation: short Myanmar grammar explanation for this usage.
             assessment NONE; no questions, personal memories, invented book quotations, or next lesson.
             For sentences preserve tense and politeness; do not overstate ambiguous meanings.""",
-            "Selected: " + selected + "\nSurrounding sentence: " + context)
+            "Selected: " + selected + "\nSurrounding sentence: " + context, task = AiTask.READER)
         val value = ReaderTranslation(key, selected.trim(), result.targetSentence.take(400).ifBlank { selected.trim() },
             result.reply.trim().take(4000), result.explanation.take(1500), context)
         require(value.meaning.isNotBlank()) { "အဓိပ္ပာယ်မရသေးပါ။ ထပ်စမ်းပါ။" }

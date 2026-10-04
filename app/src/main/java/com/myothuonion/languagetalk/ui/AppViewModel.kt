@@ -20,6 +20,8 @@ import com.myothuonion.languagetalk.model.GeminiRouteStatus
 import com.myothuonion.languagetalk.model.KoreanNameResult
 import com.myothuonion.languagetalk.model.TranslationResult
 import com.myothuonion.languagetalk.model.TutorConfig
+import com.myothuonion.languagetalk.model.*
+import com.myothuonion.languagetalk.data.AiRouteStatus
 import com.myothuonion.languagetalk.network.GeminiLiveSession
 import com.myothuonion.languagetalk.network.HandsFreeRestSession
 import com.myothuonion.languagetalk.network.LivePhase
@@ -93,6 +95,15 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings()
     )
     val geminiRoute: StateFlow<GeminiRouteStatus> = repository.geminiRoute
+    val aiStatus: StateFlow<AiRouteStatus> = repository.ai.status
+    private val _apiStatus = MutableStateFlow<Map<String, String>>(emptyMap())
+    val apiStatus: StateFlow<Map<String, String>> = _apiStatus
+    private val _apiBusy = MutableStateFlow<Set<String>>(emptySet())
+    val apiBusy: StateFlow<Set<String>> = _apiBusy
+    private val _apiModels = MutableStateFlow<Map<String, List<String>>>(emptyMap())
+    val apiModels: StateFlow<Map<String, List<String>>> = _apiModels
+    private val _routeRevision = MutableStateFlow(0)
+    val routeRevision: StateFlow<Int> = _routeRevision
 
     private val _credentials = MutableStateFlow(
         CredentialState(
@@ -160,6 +171,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             } finally {
                 _work.update { it.copy(isSending = false) }
             }
+        }
+    }
+
+    fun openingMessage(chatId: Long) = viewModelScope.launch {
+        runWork("Preparing your first question…") {
+            repository.sendMessage(chatId, "Start my chosen topic with ONE short Korean question. Give a response pattern in Guided mode.",
+                opening = true)
         }
     }
 
@@ -284,7 +302,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 session.start()
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
-                _liveState.value = LiveState(phase = LivePhase.ERROR, error = friendlyError(e))
+                if (generation == liveGeneration) startReliableLive(chatId, "Native Live မရလို့ voice pipeline ပြောင်းနေတယ်")
             }
         }
     }
@@ -451,6 +469,61 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 refreshLiveContext()
             }
         }
+    }
+
+    fun apiConfigured(id: String) = repository.ai.configured(id)
+    fun effectiveRoute(task: AiTask, chatId: Long? = null) =
+        repository.ai.sessionRoute(task, chatId) ?: settings.value.ai.routes[task] ?: AiRoutePrefs()
+    fun saveApi(profile: AiProfile, key: String) = viewModelScope.launch {
+        runWork("Saving API…") {
+            repository.saveAiProfile(profile, key)
+            _apiStatus.update { it + (profile.id to "သိမ်းထားပြီးပြီ · Test နဲ့ စစ်နိုင်ပါတယ်") }
+            _credentials.update { it.copy(geminiConfigured = repository.hasGeminiKey(), nvidiaConfigured = repository.hasNvidiaKey()) }
+            _routeRevision.update { it + 1 }
+        }
+    }
+    fun removeApi(id: String) = viewModelScope.launch {
+        runWork("Removing key…") {
+            repository.removeAiProfile(id)
+            _apiStatus.update { it + (id to "Key ဖယ်ပြီးပြီ") }
+            _credentials.update { it.copy(geminiConfigured = repository.hasGeminiKey(), nvidiaConfigured = repository.hasNvidiaKey()) }
+            _routeRevision.update { it + 1 }
+        }
+    }
+    fun testApi(profile: AiProfile, key: String = "") {
+        if (profile.id in _apiBusy.value) return
+        viewModelScope.launch {
+            _apiBusy.update { it + profile.id }
+            _apiStatus.update { it + (profile.id to "Text request နဲ့ စမ်းနေတယ်…") }
+            try {
+                _apiStatus.update { it + (profile.id to repository.ai.test(profile, key)) }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (failure: Exception) { _apiStatus.update { it + (profile.id to friendlyError(failure)) } }
+            finally { _apiBusy.update { it - profile.id } }
+        }
+    }
+    fun loadApiModels(profile: AiProfile) = viewModelScope.launch {
+        try {
+            val models = repository.ai.modelList(profile)
+            _apiModels.update { it + (profile.id to models) }
+            _apiStatus.update { it + (profile.id to "Model list ${models.size} ခု · model တစ်ခုချင်း access ကို Test လုပ်ပါ") }
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (failure: Exception) { _apiStatus.update { it + (profile.id to friendlyError(failure)) } }
+    }
+    fun saveRoute(task: AiTask, route: AiRoutePrefs, featureDefault: Boolean, chatId: Long? = null) = viewModelScope.launch {
+        runWork("Saving AI choice…") {
+            repository.saveAiRoute(task, route, featureDefault, chatId)
+            _routeRevision.update { it + 1 }
+            refreshLiveContext()
+        }
+    }
+    fun helpWithAnswer() {
+        val chatId = currentChatId.value ?: return
+        val question = liveState.value.aiCaption.ifBlank {
+            liveState.value.lines.lastOrNull { it.speaker == com.myothuonion.languagetalk.network.LiveSpeaker.AI }?.text
+                ?: messages.value.lastOrNull { it.role == "ASSISTANT" }?.content.orEmpty()
+        }
+        viewModelScope.launch { runWork("Preparing an answer pattern…") { repository.answerHelp(chatId, question) } }
     }
 
     fun replaceGeminiKey(candidate: String) {

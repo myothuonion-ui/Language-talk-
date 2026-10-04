@@ -36,10 +36,11 @@ import java.time.LocalDate
 
 @Composable
 internal fun CoachScreen(viewModel: CoachViewModel, settings: AppSettings, onBooks: () -> Unit,
-    onConversation: () -> Unit, onSettings: () -> Unit) {
+    onConversation: () -> Unit, onSettings: () -> Unit, onBack: (() -> Unit)? = null, aiViewModel: AppViewModel? = null) {
     val ui by viewModel.ui.collectAsState()
     val state by viewModel.learning.collectAsState()
-    if (ui.open) { CoachLessonScreen(viewModel, settings); return }
+    if (ui.open) { CoachLessonScreen(viewModel, settings, aiViewModel); return }
+    onBack?.let { BackHandler(onBack = it) }
     var chooseLevel by remember { mutableStateOf(false) }
     var topic by rememberSaveable { mutableStateOf("All") }
     var chooseTopic by remember { mutableStateOf(false) }
@@ -50,6 +51,10 @@ internal fun CoachScreen(viewModel: CoachViewModel, settings: AppSettings, onBoo
         verticalArrangement = Arrangement.spacedBy(18.dp)) {
         item {
             Column(Modifier.statusBarsPadding()) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    onBack?.let { IconButton(it) { Icon(Icons.Default.ArrowBack, "Back") } }
+                    Spacer(Modifier.weight(1f)); aiViewModel?.let { AiTaskPicker(AiTask.COACH, it) }
+                }
                 Text("YOUR KOREAN", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
                 Text("တစ်နေ့ နည်းနည်းစီ", fontSize = 29.sp, fontWeight = FontWeight.SemiBold)
                 Text("နားလည်ပြီး ကိုယ်တိုင်ပြောနိုင်အောင်", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -61,7 +66,7 @@ internal fun CoachScreen(viewModel: CoachViewModel, settings: AppSettings, onBoo
                     Text("ဒီနေ့လေ့ကျင့်မယ်", fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
                     Text("ပြန်လေ့ကျင့်ရန် " + due + " ခု · သင်ခန်းစာ တစ်ဆင့်ချင်း")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        listOf(10, 20, 30).forEach { minutes -> FilterChip(state.dailyMinutes == minutes, { viewModel.minutes(minutes) },
+                        listOf(5, 10).forEach { minutes -> FilterChip(state.dailyMinutes == minutes, { viewModel.minutes(minutes) },
                             label = { Text(minutes.toString() + " min") }) }
                     }
                     LinearProgressIndicator(progress = { (today.toFloat() / (state.dailyMinutes * 60)).coerceIn(0f, 1f) },
@@ -126,7 +131,7 @@ internal fun CoachScreen(viewModel: CoachViewModel, settings: AppSettings, onBoo
 }
 
 @Composable
-private fun CoachLessonScreen(viewModel: CoachViewModel, settings: AppSettings) {
+private fun CoachLessonScreen(viewModel: CoachViewModel, settings: AppSettings, aiViewModel: AppViewModel? = null) {
     val ui by viewModel.ui.collectAsState()
     val state by viewModel.learning.collectAsState()
     val live by viewModel.live.collectAsState()
@@ -172,18 +177,60 @@ private fun CoachLessonScreen(viewModel: CoachViewModel, settings: AppSettings) 
                 IconButton(viewModel::closeLesson) { Icon(Icons.Default.ArrowBack, "Back") }
                 Text(if (ui.placement) "အဆင့်စစ်ဆေးမှု" else if (ui.reviewId != null) "ပြန်လေ့ကျင့်မယ်" else unit.title,
                     fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.weight(1f)); aiViewModel?.let { AiTaskPicker(AiTask.COACH, it) }
             }
             Text(if (ui.placement) CoachEngine.levels[state.placementLevel] else task.canDo,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         if (!ui.placement && card == null) item {
-            LinearProgressIndicator(progress = { if (completed) 1f else progress.step.toFloat() / CoachStep.entries.size }, modifier = Modifier.fillMaxWidth())
-            Text(CoachStep.entries[progress.step].label + " · " + (progress.step + 1) + " / " + CoachStep.entries.size,
-                color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
+            val stage = if (ui.teaching) 0 else if (progress.step <= CoachStep.ROLE_SWAP.ordinal) 1 else 2
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("သင်ယူ", "အတူပြော", "ကိုယ်တိုင်သုံး").forEachIndexed { index, label ->
+                    Surface(color = if (stage == index) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+                        shape = RoundedCornerShape(14.dp), modifier = Modifier.weight(1f)) {
+                        Text(label, Modifier.padding(vertical = 10.dp), fontSize = 12.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            fontWeight = if (index == stage) FontWeight.SemiBold else FontWeight.Normal)
+                    }
+                }
+            }
+            Text(if (ui.teaching) "အရင်နားလည်အောင် လေ့လာမယ်" else CoachStep.entries[progress.step].label,
+                color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
         }
         if (ui.busy) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
         ui.error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
-        if (completed) {
+        if (ui.teaching && !ui.placement && card == null && !completed) {
+            item {
+                Card(shape = RoundedCornerShape(24.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
+                    Column(Modifier.fillMaxWidth().padding(22.dp), verticalArrangement = Arrangement.spacedBy(11.dp)) {
+                        Text("ဒီနေ့သုံးနိုင်မယ့် စကားပုံစံ", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                        Text(unit.pattern, fontSize = 25.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag("coach-task"))
+                        Text(unit.explanation, fontSize = 14.sp, lineHeight = 26.sp)
+                        HorizontalDivider()
+                        Text(unit.example, fontSize = 23.sp, lineHeight = 34.sp)
+                        Text(unit.meaning, fontSize = 14.sp, lineHeight = 26.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            OutlinedButton({ viewModel.slow(true); viewModel.listen(unit.example) }, enabled = canControl) { Icon(Icons.Default.VolumeUp, null); Text("နှေးနှေး") }
+                            OutlinedButton({ viewModel.slow(false); viewModel.listen(unit.example) }, enabled = canControl) { Text("ပုံမှန်") }
+                        }
+                    }
+                }
+            }
+            if (unit.words.isNotEmpty()) item {
+                Text("အရင်သိထားမယ့် ဝေါဟာရ", fontWeight = FontWeight.SemiBold)
+                unit.words.take(3).forEach { word ->
+                    Row(Modifier.fillMaxWidth().padding(vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(word.korean, Modifier.weight(1f), fontSize = 20.sp)
+                        Text(word.myanmar, Modifier.weight(1.5f), fontSize = 13.sp, lineHeight = 22.sp)
+                    }
+                }
+            }
+            item {
+                Text("အခုမှ မင်းကို မေးမယ်။ အကူအညီပုံစံနဲ့ အတူပြောပြီး နောက်မှ ကိုယ့်စကားနဲ့ အသုံးချမယ်။", fontSize = 13.sp, lineHeight = 24.sp)
+                Button(viewModel::beginPractice, enabled = canControl,
+                    modifier = Modifier.fillMaxWidth().height(54.dp).testTag("begin-supported-practice")) { Text("နားလည်ပြီ · အတူပြောမယ်") }
+            }
+        } else if (completed) {
             item {
                 Icon(Icons.Default.CheckCircle, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.primary)
                 Text(if (ui.placement) "စတင်သင့်တဲ့အဆင့်: " + CoachEngine.levels[state.level] else "ဒီလေ့ကျင့်မှု ပြီးပါပြီ။",
@@ -202,7 +249,9 @@ private fun CoachLessonScreen(viewModel: CoachViewModel, settings: AppSettings) 
                             if (helpAllowed) TextButton({ hint = !hint }) { Text(if (hint) "အကူအညီဖျောက်" else "အကူအညီ") }
                         }
                         if (hint && helpAllowed) {
-                            if (task.example.isNotBlank()) Text(task.example, fontSize = 21.sp)
+                            if (progress.step == CoachStep.GUIDED.ordinal && card == null)
+                                AnswerPatternCard(unit.answerPattern.ifBlank { unit.pattern }, task.example, unit.meaning)
+                            else if (task.example.isNotBlank()) Text(task.example, fontSize = 21.sp)
                             if (task.hint.isNotBlank()) Text(task.hint, lineHeight = 26.sp)
                             if (card == null) { Text(unit.pattern, color = MaterialTheme.colorScheme.primary); Text(unit.explanation, fontSize = 13.sp, lineHeight = 23.sp) }
                         }
@@ -210,6 +259,9 @@ private fun CoachLessonScreen(viewModel: CoachViewModel, settings: AppSettings) 
                 }
             }
             if (unit.level == 0 && hint && ui.reviewId == null && !ui.placement) item { HangulPractice(viewModel) }
+            if (!ui.placement && card == null && helpAllowed) item {
+                TextButton(viewModel::showTeaching, enabled = canControl) { Text("ရှင်းပြချက်ကို ပြန်လေ့လာမယ်") }
+            }
             item {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(ui.slow, { viewModel.slow(true) }, label = { Text("Slow") }, enabled = canControl)

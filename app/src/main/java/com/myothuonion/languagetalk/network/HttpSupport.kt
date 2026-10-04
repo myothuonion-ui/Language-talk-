@@ -21,6 +21,6 @@ suspend fun Call.await(): Response = suspendCancellableCoroutine { continuation 
     })
 }
 
-class AiApiException(message: String, val statusCode: Int? = null) : Exception(message)
+class AiApiException(message: String, val statusCode: Int? = null, val providerWide: Boolean = false) : Exception(message)
 
 data class AudioPayload(val bytes: ByteArray, val mimeType: String)

@@ -15,7 +15,8 @@ import kotlinx.coroutines.launch
 
 data class CoachUiState(val open: Boolean = false, val unitId: String = "", val reviewId: String? = null,
     val placement: Boolean = false, val busy: Boolean = false, val recording: Boolean = false,
-    val slow: Boolean = true, val heard: String = "", val feedback: String = "", val error: String? = null)
+    val slow: Boolean = true, val heard: String = "", val feedback: String = "", val error: String? = null,
+    val teaching: Boolean = false)
 
 class CoachViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = (application as LanguageTalkApplication).learning
@@ -48,12 +49,12 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
         val card = CoachEngine.due(state, System.currentTimeMillis()).firstOrNull()
         val unit = repository.currentUnit()
         repository.select(unit.id)
-        _ui.value = CoachUiState(open = true, unitId = unit.id, reviewId = card?.id, slow = state.level < 3)
+        _ui.value = CoachUiState(open = true, unitId = unit.id, reviewId = card?.id, slow = state.level < 3, teaching = card == null)
     } }
     fun openUnit(id: String) { stopVoice(); work {
         repository.select(id)
         val unit = curriculum.first { it.id == id }
-        _ui.value = CoachUiState(open = true, unitId = id, slow = unit.level < 3)
+        _ui.value = CoachUiState(open = true, unitId = id, slow = unit.level < 3, teaching = true)
     } }
     fun level(value: Int) { stopVoice(); work { repository.chooseLevel(value) } }
     fun placement() { stopVoice(); work {
@@ -65,10 +66,12 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
     } }
     fun next() { stopVoice(); work {
         val unit = repository.currentUnit()
-        _ui.value = CoachUiState(open = true, unitId = unit.id, slow = unit.level < 3)
+        _ui.value = CoachUiState(open = true, unitId = unit.id, slow = unit.level < 3, teaching = true)
         repository.select(unit.id)
     } }
     fun restart() { stopVoice(); work { repository.restart(ui.value.unitId); _ui.update { it.copy(feedback = "", heard = "") } } }
+    fun beginPractice() { stopVoice(); _ui.update { it.copy(teaching = false, feedback = "", heard = "") } }
+    fun showTeaching() { stopVoice(); _ui.update { it.copy(teaching = true) } }
     fun closeLesson() { operation?.cancel(); generation++; stopVoice(); _ui.update { it.copy(open = false, busy = false, placement = false, reviewId = null) } }
     fun slow(value: Boolean) { stopVoice(); _ui.update { it.copy(slow = value) } }
     fun denyMicrophone() { _ui.update { it.copy(error = "Microphone permission ဖွင့်ပေးပါ။") } }
@@ -124,7 +127,7 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     fun startVoice(silenceMs: Int) {
-        if (ui.value.busy || live.value.connected) return
+        if (ui.value.busy || live.value.connected || ui.value.teaching) return
         stopVoice()
         val current = ui.value
         val created = HandsFreeRestSession(getApplication(), silenceMs,

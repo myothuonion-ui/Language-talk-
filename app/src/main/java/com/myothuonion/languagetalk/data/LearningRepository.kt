@@ -70,7 +70,7 @@ class LearningRepository(private val context: Context, val store: LearningStore,
             The learner may explain listening meaning in Myanmar; other stages require Korean.
             Explicit learner context for relevance only, not facts to invent:
             """ + profile + "\nPrevious practice for continuity only; it can be fictional, never assume personal facts:\n" + previous,
-            text.ifBlank { "Assess the recorded response to the supplied task." }, audio, assessmentOnly = true)
+            text.ifBlank { "Assess the recorded response to the supplied task." }, audio, assessmentOnly = true, task = AiTask.COACH)
         return if (audio == null) result.copy(heardText = text.trim().take(4000)) else result
     }
     private fun feedback(result: TutorReply): String = listOf(result.correction, result.explanation, result.lessonNote)
@@ -161,8 +161,7 @@ class LearningRepository(private val context: Context, val store: LearningStore,
             CoachTask(card.prompt, card.prompt, card.criterion, card.example, "", card.title)
             else CoachEngine.task(unit, CoachEngine.progress(state, unit.id).step)
         val spoken = CoachEngine.narration(task)
-        val voiceText = if (correction.isNotBlank() && tutor.settings.first().defaultSpeakCorrections)
-            correction.take(500) + "\n" + spoken else spoken
+        val voiceText = VoiceText.korean(spoken).ifBlank { "다시 한번 말해 주세요." }
         return HandsFreeTurn("", task.prompt, speech(voiceText, slow))
     }
     fun recording(attempt: CoachAttempt): AudioPayload? {

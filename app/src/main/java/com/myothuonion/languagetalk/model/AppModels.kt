@@ -113,13 +113,16 @@ data class TutorReply(
     val memoryFact: String = "",
     val memoryEvidence: String = "",
     val speechText: String = "",
-    val nextTargetSentence: String = ""
+    val nextTargetSentence: String = "",
+    val answerPattern: String = "",
+    val answerExample: String = "",
+    val answerHint: String = ""
 ) {
     fun speech(includeCorrections: Boolean): String {
-        if (includeCorrections && speechText.isNotBlank()) return speechText.trim()
-        return listOf(reply.trim(), if (includeCorrections) correction.trim() else "",
-            if (includeCorrections && correction.isNotBlank()) explanation.trim() else "",
-            followUpQuestion.trim()).filter(String::isNotBlank).distinct().joinToString(" ")
+        val speech = if (speechText.isNotBlank()) speechText else
+            listOf(reply.trim(), if (includeCorrections) correction.trim() else "", followUpQuestion.trim())
+                .filter(String::isNotBlank).distinct().joinToString(" ")
+        return VoiceText.korean(speech)
     }
 
     val spokenText: String

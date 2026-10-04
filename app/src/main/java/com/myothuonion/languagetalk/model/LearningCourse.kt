@@ -7,8 +7,13 @@ data class LearningUnit(
     val id: String, val level: Int, val title: String, val goal: String, val topic: String,
     val pattern: String, val explanation: String, val question: String, val example: String,
     val meaning: String, val transfer: String, val criterion: String,
-    val check: String = "", val checkCriterion: String = ""
+    val check: String = "", val checkCriterion: String = "",
+    val words: List<LessonWord> = emptyList(),
+    val answerPattern: String = ""
 )
+
+@Serializable
+data class LessonWord(val korean: String, val myanmar: String)
 
 enum class CoachStep(val label: String) {
     LISTEN("နားထောင်"), SHADOW("လိုက်ပြော"), GUIDED("အဖြေပြော"),
@@ -38,7 +43,7 @@ data class ReaderTranslation(val key: String, val selected: String, val lemma: S
     val meaning: String, val grammar: String, val sentence: String)
 
 @Serializable
-data class LearningState(val level: Int = 0, val activeUnit: String = "", val dailyMinutes: Int = 20,
+data class LearningState(val level: Int = 0, val activeUnit: String = "", val dailyMinutes: Int = 10,
     val units: List<UnitProgress> = emptyList(), val cards: List<ReviewCard> = emptyList(),
     val attempts: List<CoachAttempt> = emptyList(), val books: List<ReaderBook> = emptyList(),
     val translations: List<ReaderTranslation> = emptyList(), val readerTheme: String = "DAY",
@@ -50,8 +55,7 @@ data class CoachTask(val spoken: String, val prompt: String, val criterion: Stri
 
 object CoachEngine {
     val levels = listOf("အစပြု · 한글", "Beginner", "Elementary", "Intermediate", "Upper-intermediate", "Advanced")
-    fun narration(task: CoachTask): String = if (task.spoken.isBlank() || task.spoken == task.prompt) task.prompt
-        else task.prompt + "\n" + task.spoken
+    fun narration(task: CoachTask): String = VoiceText.korean(task.spoken).ifBlank { "다시 한번 말해 주세요." }
     fun progress(state: LearningState, id: String) = state.units.firstOrNull { it.id == id } ?: UnitProgress(id)
     fun task(unit: LearningUnit, step: Int): CoachTask {
         val stage = CoachStep.entries[step.coerceIn(0, CoachStep.entries.lastIndex)]

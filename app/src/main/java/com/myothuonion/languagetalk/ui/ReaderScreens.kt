@@ -109,7 +109,7 @@ internal fun BookshelfScreen(viewModel: ReaderViewModel, onRead: (String) -> Uni
 }
 
 @Composable
-internal fun PdfReaderScreen(viewModel: ReaderViewModel, onBack: () -> Unit) {
+internal fun PdfReaderScreen(viewModel: ReaderViewModel, onBack: () -> Unit, aiViewModel: AppViewModel? = null) {
     val ui by viewModel.ui.collectAsState()
     val learning by viewModel.learning.collectAsState()
     val book = learning.books.firstOrNull { it.id == ui.bookId }
@@ -267,6 +267,7 @@ internal fun PdfReaderScreen(viewModel: ReaderViewModel, onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState()).padding(horizontal = 22.dp).padding(bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("한국어 / English → မြန်မာ", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                aiViewModel?.let { AiTaskPicker(com.myothuonion.languagetalk.model.AiTask.READER, it) }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (edit) OutlinedTextField(input, { input = it.take(1200) }, Modifier.weight(1f), label = { Text("ရွေးထားသောစာသား") })
                     else Text(ui.selection, Modifier.weight(1f), fontSize = 23.sp, fontWeight = FontWeight.SemiBold)

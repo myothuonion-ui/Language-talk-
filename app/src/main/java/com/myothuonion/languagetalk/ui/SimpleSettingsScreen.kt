@@ -19,7 +19,7 @@ import com.myothuonion.languagetalk.model.DefaultVoicePresets
 
 @Composable
 internal fun SimpleSettingsScreen(settings: AppSettings, credentials: CredentialState, viewModel: AppViewModel,
-    reader: ReaderViewModel, onBack: () -> Unit, onAdvanced: () -> Unit) {
+    reader: ReaderViewModel, onBack: () -> Unit, onAdvanced: () -> Unit, onApis: () -> Unit = {}) {
     val learning by reader.learning.collectAsState()
     var draft by remember(settings) { mutableStateOf(settings) }
     var connection by remember { mutableStateOf(!credentials.geminiConfigured) }
@@ -52,7 +52,7 @@ internal fun SimpleSettingsScreen(settings: AppSettings, credentials: Credential
                 FilterChip(draft.defaultPace == "SLOW", { save(draft.copy(defaultPace = "SLOW")) }, label = { Text("Slow") })
                 FilterChip(draft.defaultPace != "SLOW", { save(draft.copy(defaultPace = "NATURAL")) }, label = { Text("Natural") })
             }
-            Text("Grammar နဲ့ အဓိပ္ပာယ်ကို မြန်မာလို ရှင်းပြမယ်။", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("ကိုရီးယားအသံပဲ ပြောမယ်။ Grammar နဲ့ အဓိပ္ပာယ်ကို မြန်မာစာနဲ့ ရှင်းပြမယ်။", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("ကိုယ့်လေ့ကျင့်အသံ သိမ်းမယ်", Modifier.weight(1f)); Switch(draft.recordPractice, { save(draft.copy(recordPractice = it)) })
             }
@@ -71,6 +71,10 @@ internal fun SimpleSettingsScreen(settings: AppSettings, credentials: Credential
         }
         item {
             HorizontalDivider()
+            OutlinedButton(onApis, Modifier.fillMaxWidth().padding(top = 16.dp).testTag("open-ai-settings")) {
+                Icon(Icons.Default.AutoAwesome, null); Spacer(Modifier.width(8.dp))
+                Text("AI & APIs", Modifier.weight(1f)); Icon(Icons.Default.ChevronRight, null)
+            }
             Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("AI ချိတ်ဆက်မှု", fontSize = 19.sp, fontWeight = FontWeight.SemiBold)
@@ -92,6 +96,6 @@ internal fun SimpleSettingsScreen(settings: AppSettings, credentials: Credential
             if (credentials.geminiStatus.isNotBlank()) Text(credentials.geminiStatus, fontSize = 12.sp)
             TextButton(onAdvanced) { Text("Advanced settings"); Icon(Icons.Default.ChevronRight, null) }
         }
-        item { Text("Language Talk · v0.7.1", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        item { Text("Language Talk · v0.8.0", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
 }

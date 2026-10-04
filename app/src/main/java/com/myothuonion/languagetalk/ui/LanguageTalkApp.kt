@@ -116,6 +116,8 @@ import com.myothuonion.languagetalk.data.ChatEntity
 import com.myothuonion.languagetalk.data.KnowledgeSourceEntity
 import com.myothuonion.languagetalk.data.MemoryEntity
 import com.myothuonion.languagetalk.data.MessageEntity
+import com.myothuonion.languagetalk.data.LearningProgressEntity
+import com.myothuonion.languagetalk.data.AiRouteStatus
 import com.myothuonion.languagetalk.model.AppLanguage
 import com.myothuonion.languagetalk.model.BrainMode
 import com.myothuonion.languagetalk.model.CorrectionMode
@@ -124,6 +126,7 @@ import com.myothuonion.languagetalk.model.GeminiRouteStatus
 import com.myothuonion.languagetalk.model.TutorConfig
 import com.myothuonion.languagetalk.model.TutorRole
 import com.myothuonion.languagetalk.model.PracticeMode
+import com.myothuonion.languagetalk.model.AiTask
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -131,7 +134,7 @@ import java.util.Locale
 
 private enum class Screen {
     HOME, NEW_CHAT, HISTORY, CHAT_HUB, MEMORY, SETTINGS, MESSAGE_CHAT, LIVE_CHAT, NAME_STUDIO, QUICK_TRANSLATE, BOOKS,
-    LIBRARY, COACH, ME, READER, ADVANCED
+    LIBRARY, COACH, DAILY, ME, READER, ADVANCED, AI_SETTINGS
 }
 
 @Composable
@@ -143,6 +146,7 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
     LanguageTalkTheme(settings.darkTheme) {
         var screen by rememberSaveable { mutableStateOf(Screen.LIBRARY) }
         var readerReturn by rememberSaveable { mutableStateOf(Screen.LIBRARY) }
+        var bookReturn by rememberSaveable { mutableStateOf(Screen.LIBRARY) }
         val coachUi by coachViewModel.ui.collectAsState()
         val readerUi by readerViewModel.ui.collectAsState()
         val chats by viewModel.chats.collectAsState()
@@ -191,7 +195,7 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                 screen = Screen.READER
             }
         }
-        if (screen in listOf(Screen.SETTINGS, Screen.ADVANCED, Screen.MEMORY, Screen.HISTORY, Screen.CHAT_HUB)) {
+        if (screen in listOf(Screen.SETTINGS, Screen.ADVANCED, Screen.MEMORY, Screen.HISTORY)) {
             BackHandler { screen = if (screen == Screen.ADVANCED) Screen.SETTINGS else if (screen == Screen.CHAT_HUB) Screen.COACH else Screen.ME }
         }
 
@@ -208,12 +212,16 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                 when (screen) {
                     Screen.LIBRARY -> BookshelfScreen(readerViewModel,
                         onRead = { readBook(it, null) }, onStudy = { id ->
-                            viewModel.closeChat(); bookViewModel.selectBook(id); screen = Screen.BOOKS
+                            bookReturn = Screen.LIBRARY; viewModel.closeChat(); bookViewModel.selectBook(id); screen = Screen.BOOKS
                         })
-                    Screen.READER -> PdfReaderScreen(readerViewModel, onBack = { readerViewModel.close(); screen = readerReturn })
-                    Screen.COACH -> CoachScreen(coachViewModel, settings,
-                        onBooks = { screen = Screen.LIBRARY }, onConversation = { screen = Screen.CHAT_HUB },
+                    Screen.READER -> PdfReaderScreen(readerViewModel, onBack = { readerViewModel.close(); screen = readerReturn }, aiViewModel = viewModel)
+                    Screen.COACH -> PracticeHubScreen(settings,
+                        onBooks = { bookReturn = Screen.COACH; viewModel.closeChat(); screen = Screen.BOOKS },
+                        onLive = { screen = Screen.CHAT_HUB }, onDaily = { screen = Screen.DAILY },
                         onSettings = { screen = Screen.SETTINGS })
+                    Screen.DAILY -> CoachScreen(coachViewModel, settings,
+                        onBooks = { bookReturn = Screen.DAILY; screen = Screen.BOOKS }, onConversation = { screen = Screen.CHAT_HUB },
+                        onSettings = { screen = Screen.SETTINGS }, onBack = { screen = Screen.COACH }, aiViewModel = viewModel)
                     Screen.ME -> LearningProfileScreen(coachViewModel, settings,
                         onPractice = { screen = Screen.COACH }, onRead = { id, page -> readBook(id, page) },
                         onSettings = { screen = Screen.SETTINGS }, onContext = { screen = Screen.MEMORY },
@@ -229,7 +237,7 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                         onTranslate = { screen = Screen.QUICK_TRANSLATE }, onNames = { screen = Screen.NAME_STUDIO },
                         onBooks = { viewModel.closeChat(); screen = Screen.BOOKS })
                     Screen.BOOKS -> BookCoursesScreen(bookViewModel, settings,
-                        onBack = { screen = Screen.LIBRARY }, onSettings = { screen = Screen.SETTINGS },
+                        onBack = { screen = bookReturn }, onSettings = { screen = Screen.SETTINGS }, aiViewModel = viewModel,
                         onRead = { id, page -> readBook(id, page - 1) },
                         onApply = { config -> viewModel.createChat(config.copy(brainMode = settings.brainMode,
                             voiceName = settings.defaultVoiceName, voiceStyle = settings.defaultVoiceStyle,
@@ -244,19 +252,13 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                         onReview = { item -> viewModel.beginReview(item) { screen = Screen.LIVE_CHAT } },
                         onSpeak = { item -> viewModel.speak(item.chatId, item.sentence) },
                         onRecording = viewModel::playRecording, onStop = viewModel::stopSpeaking, onDeleteRecording = viewModel::deleteRecording)
-                    Screen.CHAT_HUB -> ChatHubScreen(
-                        chats = chats,
-                        onNewChat = { screen = Screen.NEW_CHAT },
-                        onMessageChat = { id ->
-                            if (id != null) openChat(id)
-                            else viewModel.createChat(TutorConfig()) { screen = Screen.MESSAGE_CHAT }
-                        },
-                        onLiveChat = { id ->
-                            if (id != null) openLiveChat(id)
-                            else viewModel.createChat(TutorConfig()) { screen = Screen.LIVE_CHAT }
-                        },
-                        onCustomize = { id -> viewModel.openChat(id); profileChatId = id }
-                    )
+                    Screen.CHAT_HUB -> LiveSetupScreen(settings, chats, viewModel,
+                        onBack = { screen = Screen.COACH }, onAdvanced = { screen = Screen.NEW_CHAT },
+                        onStart = { config, typing -> viewModel.createChat(config) { id ->
+                            screen = if (typing) Screen.MESSAGE_CHAT else Screen.LIVE_CHAT
+                            if (typing) viewModel.openingMessage(id)
+                        } },
+                        onResume = { id, typing -> if (typing) openChat(id) else openLiveChat(id) })
                     Screen.MEMORY -> ContextScreen(settings, allMemories, progress, sources, work,
                         onSaveSettings = viewModel::saveSettings, onAdd = viewModel::addMemory,
                         onEdit = viewModel::updateMemory, onToggle = viewModel::toggleMemory,
@@ -265,7 +267,9 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                         onImportSource = viewModel::importSource, onToggleSource = viewModel::toggleSource,
                         onDeleteSource = viewModel::deleteSource)
                     Screen.SETTINGS -> SimpleSettingsScreen(settings, credentials, viewModel, readerViewModel,
-                        onBack = { screen = Screen.ME }, onAdvanced = { screen = Screen.ADVANCED })
+                        onBack = { screen = Screen.ME }, onAdvanced = { screen = Screen.ADVANCED },
+                        onApis = { screen = Screen.AI_SETTINGS })
+                    Screen.AI_SETTINGS -> AiSettingsScreen(settings, viewModel, onBack = { screen = Screen.SETTINGS })
                     Screen.ADVANCED -> SettingsScreen(
                         settings = settings,
                         credentials = credentials,
@@ -289,7 +293,10 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                                 onMic = viewModel::toggleRecording,
                                 onSpeak = { text -> viewModel.speak(chat.id, text) },
                                 onStopSpeaking = viewModel::stopSpeaking,
-                                onCustomize = { profileChatId = chat.id }
+                                onCustomize = { profileChatId = chat.id },
+                                answerProgress = progress.firstOrNull { it.chatId == chat.id }, onHelp = viewModel::helpWithAnswer,
+                                aiChooser = { AiTaskPicker(AiTask.CONVERSATION, viewModel, chat.id) },
+                                aiStatus = viewModel.aiStatus.collectAsState().value
                             )
                         } else {
                             LoadingPane("Opening conversation…")
@@ -306,7 +313,10 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                                 onToggleMic = viewModel::toggleLiveMic,
                                 onStop = viewModel::stopLive,
                                 onBack = { screen = Screen.CHAT_HUB },
-                                onCustomize = { profileChatId = chat.id }
+                                onCustomize = { profileChatId = chat.id }, onHelp = viewModel::helpWithAnswer,
+                                onTextChat = { viewModel.stopLive(); openChat(chat.id) },
+                                aiChooser = { AiTaskPicker(AiTask.CONVERSATION, viewModel, chat.id) },
+                                aiStatus = viewModel.aiStatus.collectAsState().value
                             )
                         } else LoadingPane("Opening Live conversation…")
                     }
@@ -320,7 +330,8 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                         onBack = { viewModel.clearQuickTranslate(); screen = Screen.ME },
                         onTranslate = viewModel::translateText,
                         onMic = viewModel::toggleTranslateRecording,
-                        onListen = viewModel::speakToolText
+                        onListen = viewModel::speakToolText,
+                        aiChooser = { AiTaskPicker(AiTask.TRANSLATE, viewModel) }
                     )
                 }
             }
@@ -682,7 +693,11 @@ private fun ChatScreen(
     onMic: () -> Unit,
     onSpeak: (String) -> Unit,
     onStopSpeaking: () -> Unit,
-    onCustomize: () -> Unit
+    onCustomize: () -> Unit,
+    answerProgress: LearningProgressEntity? = null,
+    onHelp: () -> Unit = {},
+    aiChooser: @Composable () -> Unit = {},
+    aiStatus: AiRouteStatus = AiRouteStatus()
 ) {
     var input by rememberSaveable { mutableStateOf("") }
     val listState = rememberLazyListState()
@@ -714,6 +729,7 @@ private fun ChatScreen(
                     Text(work.status, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+            aiChooser()
             IconButton(onClick = { if (work.isSpeaking) onStopSpeaking() else onCustomize() }) {
                 Icon(if (work.isSpeaking) Icons.Default.Stop else Icons.Default.MoreHoriz, null)
             }
@@ -732,6 +748,11 @@ private fun ChatScreen(
             }
             items(messages, key = { it.id }) { message ->
                 MessageBubble(message, onSpeak)
+                if (message.id == messages.lastOrNull { it.role == "ASSISTANT" }?.id) {
+                    answerProgress?.let { AnswerPatternCard(it.answerPattern, it.answerExample, it.answerHint) }
+                    if (message.role == "ASSISTANT") TextButton(onHelp, enabled = !work.isSending) { Text("အဖြေပုံစံ အကူအညီ") }
+                    if (aiStatus.review.isNotBlank()) Text(aiStatus.review, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
             if (work.isSending) {
                 item { TypingBubble(work.status) }

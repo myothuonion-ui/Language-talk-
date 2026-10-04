@@ -39,7 +39,7 @@ object LiveProtocol {
                             put("parameters", buildJsonObject {
                                 put("type", JsonPrimitive("OBJECT"))
                                 put("properties", buildJsonObject {
-                                    listOf("heardText", "targetSentence", "assessment", "correction", "lessonNote", "voiceCommand", "memoryFact", "memoryEvidence", "nextTargetSentence").forEach {
+                                    listOf("heardText", "targetSentence", "assessment", "correction", "lessonNote", "voiceCommand", "memoryFact", "memoryEvidence", "nextTargetSentence", "answerPattern", "answerExample", "answerHint").forEach {
                                         put(it, buildJsonObject { put("type", JsonPrimitive("STRING")) })
                                     }
                                 })

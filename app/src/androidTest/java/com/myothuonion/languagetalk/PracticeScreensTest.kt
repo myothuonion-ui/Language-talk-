@@ -28,14 +28,22 @@ class PracticeScreensTest {
         compose.onNodeWithText("My Books").assertIsDisplayed()
         capture("home")
         compose.onNodeWithText("Practice", useUnmergedTree = true).performClick()
-        compose.onNodeWithTag("start-today").assertIsDisplayed()
+        compose.onNodeWithTag("practice-books").assertIsDisplayed()
+        compose.onNodeWithTag("practice-live").assertIsDisplayed()
         capture("practice")
+        compose.onNodeWithTag("practice-hub").performScrollToNode(hasTestTag("practice-daily"))
+        compose.onNodeWithTag("practice-daily").performClick()
+        compose.onNodeWithTag("start-today").assertIsDisplayed()
         compose.onNodeWithTag("start-today").performClick()
         compose.waitUntil(10000) { compose.onAllNodesWithTag("coach-lesson").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("coach-task").assertIsDisplayed()
+        compose.onNodeWithTag("coach-lesson").performScrollToNode(hasTestTag("begin-supported-practice"))
+        compose.onNodeWithTag("begin-supported-practice").assertIsDisplayed()
         capture("coach-lesson")
         compose.activity.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.waitUntil(10000) { compose.onAllNodesWithTag("start-today").fetchSemanticsNodes().isNotEmpty() }
+        compose.activity.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitUntil(10000) { compose.onAllNodesWithTag("practice-hub").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Me", useUnmergedTree = true).performClick()
         compose.onNodeWithText("My Context").performClick()
         compose.onNodeWithText("Save profile").assertIsDisplayed()
@@ -47,6 +55,12 @@ class PracticeScreensTest {
         compose.onNodeWithTag("simple-settings").assertExists()
         compose.onNodeWithText("အသံနဲ့ သင်ယူမှု").assertIsDisplayed()
         capture("api-settings")
+        compose.onNodeWithTag("simple-settings").performScrollToNode(hasTestTag("open-ai-settings"))
+        compose.onNodeWithTag("open-ai-settings").performClick()
+        compose.onNodeWithTag("ai-settings").assertExists()
+        compose.onNodeWithText("Gemini + NVIDIA").assertIsDisplayed()
+        capture("provider-settings")
+        compose.activity.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithTag("simple-settings").performScrollToNode(hasText("Advanced settings"))
         compose.onNodeWithText("Advanced settings").performClick()
         compose.onNodeWithTag("settings-list").performScrollToNode(hasText("My default voice preset"))

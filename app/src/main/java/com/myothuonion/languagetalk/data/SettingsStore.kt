@@ -11,6 +11,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import com.myothuonion.languagetalk.network.GeminiModels
 import com.myothuonion.languagetalk.network.GeminiTask
+import com.myothuonion.languagetalk.model.AiConfiguration
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 
 private val Context.dataStore by preferencesDataStore(name = "language_talk_settings", produceMigrations = { listOf(GeminiSettingsMigration()) })
 
@@ -32,7 +36,8 @@ data class AppSettings(
     val defaultSilenceMs: Int = 2000,
     val defaultSpeakCorrections: Boolean = true,
     val autoSpeak: Boolean = true,
-    val darkTheme: Boolean = false
+    val darkTheme: Boolean = false,
+    val ai: AiConfiguration = AiConfiguration()
 )
 
 class SettingsStore(private val context: Context) {
@@ -56,7 +61,9 @@ class SettingsStore(private val context: Context) {
             defaultSilenceMs = (prefs[DEFAULT_SILENCE_MS]?.toIntOrNull() ?: 2000).coerceIn(800, 4000),
             defaultSpeakCorrections = prefs[DEFAULT_SPEAK_CORRECTIONS] ?: true,
             autoSpeak = prefs[AUTO_SPEAK] ?: true,
-            darkTheme = prefs[DARK_THEME] ?: false
+            darkTheme = prefs[DARK_THEME] ?: false,
+            ai = prefs[AI_CONFIG]?.let { raw -> runCatching { Json.decodeFromString<AiConfiguration>(raw) }.getOrNull() }
+                ?: AiConfiguration()
         )
     }
 
@@ -83,10 +90,12 @@ class SettingsStore(private val context: Context) {
             prefs[DEFAULT_SPEAK_CORRECTIONS] = value.defaultSpeakCorrections
             prefs[AUTO_SPEAK] = value.autoSpeak
             prefs[DARK_THEME] = value.darkTheme
+            prefs[AI_CONFIG] = Json.encodeToString(value.ai)
         }
     }
 
     companion object {
+        private val AI_CONFIG = stringPreferencesKey("ai_configuration_v1")
         private val LEARNER_PROFILE = stringPreferencesKey("learner_profile")
         private val AUTO_LEARNING_MEMORY = booleanPreferencesKey("auto_learning_memory")
         private val RECORD_PRACTICE = booleanPreferencesKey("record_practice")

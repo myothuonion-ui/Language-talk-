@@ -37,11 +37,11 @@ jobs:
       - name: Unit tests, lint, APK, and device-test compilation
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest --stacktrace
       - name: Prepare APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.7.1.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.8.0.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: language-talk-v0.7.1-apk
-          path: language-talk-v0.7.1.apk
+          name: language-talk-v0.8.0-apk
+          path: language-talk-v0.8.0.apk
           if-no-files-found: error
           retention-days: 90
       - uses: actions/upload-artifact@v4
@@ -122,31 +122,33 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: language-talk-v0.7.1-apk
+          name: language-talk-v0.8.0-apk
       - uses: actions/download-artifact@v4
         with:
           name: language-talk-legacy-backup-windows
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.7.1
-          name: Language Talk AI v0.7.1
+          tag_name: v0.8.0
+          name: Language Talk AI v0.8.0
           body: |
-            Korean Coach + integrated PDF reader with a simpler Books / Practice / Me design.
+            Language Talk v0.8.0: clearer Korean practice and flexible AI connections.
 
-            - Import PDFs, saved reading position, bookmarks, pinch zoom, Text mode and Day/Sepia/Night
-            - Long-press words or drag phrases for Myanmar dictionary lookup on the same page
-            - Bundled Korean/Latin OCR for scanned pages; base forms, grammar, listening and saved words
-            - 48 original speaking units across six app stages, plus all 70 original TTMIK chapters
-            - Controlled listening, shadowing, role swap, independent practice and checkpoints
-            - Adaptive level estimate, work/social situations, spaced speaking review and progress
-            - Simple voice/reader/key settings; advanced options remain available
-            - Portable backup includes learning, saved words, dictionary cache and reader metadata
+            - Practice opens with Book lessons, Live conversation, and a small daily lesson
+            - Daily lessons teach the pattern, Myanmar meaning and vocabulary before practice
+            - Korean speech only; Myanmar grammar and corrections stay as text
+            - Guided answer frames, optional full examples, Open conversation and help on demand
+            - Gemini / NVIDIA / OpenAI / Claude / DeepSeek and custom API profiles
+            - Per-feature or per-chat model choices, ordered fallbacks, independent two-AI review
+            - Native Gemini Live plus hands-free transcription → chosen text AI → Korean speech
+            - Gemini and NVIDIA fallback defaults; paid API fallback requires enabling it
+            - Existing books, PDF reader, My Context and learning data preserved
 
-            BACK UP FIRST: Me → My Context → Export backup. CI debug signing keys change; if Android rejects an update, back up before uninstalling, then install, restore JSON and re-enter your key.
-            Imported PDF bytes and new Coach recordings are not embedded in the JSON; keep your source PDFs to reimport. Prior chat audio is still backed up.
-            Offline: books and cached lookups. New translations/assessments/AI audio require your key/network. Sample audio and feedback are AI-generated; app levels are learning estimates, not official certification.
-            Guide: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/LEARNING_READER.md
+            Add your own keys in Me → Settings → AI & APIs. Keys are encrypted locally and excluded from backups.
+            Text/API routing is covered by automated HTTP tests; account quotas, model access and language quality depend on your provider. Use Test text after adding a key.
+            Native Live currently uses Gemini. OpenAI supports the voice pipeline through file transcription and speech APIs; NVIDIA, Claude and DeepSeek are text brains.
+            Back up in Me → My Context → Export before installing if Android requests uninstall because of the earlier APK signing key. Restore JSON and re-enter keys afterward. Keep imported source PDFs.
+            Guide: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/AI_AND_PRACTICE.md
           files: |
-            language-talk-v0.7.1.apk
+            language-talk-v0.8.0.apk
             language-talk-legacy-backup-windows.exe
           make_latest: true

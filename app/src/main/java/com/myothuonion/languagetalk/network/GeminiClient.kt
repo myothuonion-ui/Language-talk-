@@ -330,7 +330,10 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private
                 memoryFact = obj.string("memoryFact"),
                 memoryEvidence = obj.string("memoryEvidence"),
                 speechText = obj.string("speechText"),
-                nextTargetSentence = obj.string("nextTargetSentence")
+                nextTargetSentence = obj.string("nextTargetSentence"),
+                answerPattern = obj.string("answerPattern"),
+                answerExample = obj.string("answerExample"),
+                answerHint = obj.string("answerHint")
             )
         }.getOrElse { throw AiApiException("Gemini returned invalid structured tutoring data") }
     }
@@ -385,7 +388,7 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private
     private fun tutorReplySchema() = buildJsonObject {
         put("type", JsonPrimitive("object"))
         put("properties", buildJsonObject {
-            listOf("reply", "heardText", "translation", "correction", "explanation", "followUpQuestion", "targetSentence", "assessment", "lessonNote", "voiceCommand", "memoryFact", "memoryEvidence", "speechText", "nextTargetSentence").forEach { key ->
+            listOf("reply", "heardText", "translation", "correction", "explanation", "followUpQuestion", "targetSentence", "assessment", "lessonNote", "voiceCommand", "memoryFact", "memoryEvidence", "speechText", "nextTargetSentence", "answerPattern", "answerExample", "answerHint").forEach { key ->
                 put(key, buildJsonObject { put("type", JsonPrimitive("string")) })
             }
         })
@@ -445,6 +448,7 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private
     companion object {
         private val HANGUL_NAME = Regex("^[가-힣·-]+$")
         fun defaultHttpClient() = OkHttpClient.Builder()
+            .followRedirects(false).followSslRedirects(false)
             .callTimeout(35, TimeUnit.SECONDS)
             .connectTimeout(25, TimeUnit.SECONDS)
             .readTimeout(35, TimeUnit.SECONDS)

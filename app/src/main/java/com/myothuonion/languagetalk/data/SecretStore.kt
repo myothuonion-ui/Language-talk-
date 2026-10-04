@@ -22,6 +22,21 @@ class SecretStore(context: Context) {
         get() = decrypt(preferences.getString(NVIDIA_KEY, null))
         set(value) = saveEncrypted(NVIDIA_KEY, value)
 
+    fun apiKey(profileId: String): String = when (profileId) {
+        "gemini" -> geminiApiKey
+        "nvidia" -> nvidiaApiKey
+        else -> decrypt(preferences.getString("profile_$profileId", null))
+    }
+
+    fun setApiKey(profileId: String, value: String) {
+        require(profileId.matches(Regex("[a-zA-Z0-9_-]{1,80}")))
+        when (profileId) {
+            "gemini" -> geminiApiKey = value.trim()
+            "nvidia" -> nvidiaApiKey = value.trim()
+            else -> saveEncrypted("profile_$profileId", value.trim())
+        }
+    }
+
     private fun saveEncrypted(name: String, value: String) {
         if (value.isBlank()) {
             preferences.edit().remove(name).apply()

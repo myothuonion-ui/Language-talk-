@@ -454,7 +454,8 @@ internal fun QuickTranslateScreen(
     onBack: () -> Unit,
     onTranslate: (String) -> Unit,
     onMic: () -> Unit,
-    onListen: (String) -> Unit
+    onListen: (String) -> Unit,
+    aiChooser: @Composable () -> Unit = {}
 ) {
     var input by rememberSaveable { mutableStateOf("") }
     var details by rememberSaveable { mutableStateOf(false) }
@@ -464,6 +465,7 @@ internal fun QuickTranslateScreen(
     }
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         ToolTopBar("Quick Translate", onBack, applyStatusBars = false)
+        Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp), horizontalArrangement = Arrangement.End) { aiChooser() }
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)

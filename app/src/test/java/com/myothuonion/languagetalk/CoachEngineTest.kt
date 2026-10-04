@@ -67,13 +67,13 @@ class CoachEngineTest {
         assertTrue(check.criterion.contains("coffee"))
         assertTrue(check.example.isEmpty() && check.hint.isEmpty())
     }
-    @Test fun handsFreeNarrationIncludesStageInstructionsBeforeTheKoreanSample() {
+    @Test fun handsFreeNarrationSpeaksOnlyKoreanWhileInstructionsStayOnScreen() {
         val unit = LearningUnit("1", 1, "intro", "goal", "Social", "pattern", "explain",
             "이름이 뭐예요?", "저는 민수예요.", "ကျွန်တော်က မင်ဆူပါ။", "소개해 보세요.", "Introduce a name")
         listOf(CoachStep.LISTEN, CoachStep.SHADOW, CoachStep.ROLE_SWAP).forEach { stage ->
             val task = CoachEngine.task(unit, stage.ordinal)
-            assertTrue(CoachEngine.narration(task).startsWith(task.prompt + "\n"))
-            assertTrue(CoachEngine.narration(task).endsWith(unit.example))
+            assertEquals(unit.example, CoachEngine.narration(task))
+            assertFalse(CoachEngine.narration(task).contains("နားထောင်"))
         }
         val question = CoachEngine.task(unit, CoachStep.GUIDED.ordinal)
         assertEquals(unit.question, CoachEngine.narration(question))

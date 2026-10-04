@@ -13,7 +13,18 @@
     "transfer": "처음 만난 동료에게 인사해 보세요.",
     "criterion": "Greet a new coworker politely. A memorized greeting is sufficient.",
     "check": "새 선생님에게 정중하게 인사해 보세요.",
-    "checkCriterion": "Greet a new teacher politely."
+    "checkCriterion": "Greet a new teacher politely.",
+    "words": [
+      {
+        "korean": "안녕하세요.",
+        "myanmar": "မင်္ဂလာပါ"
+      },
+      {
+        "korean": "인사",
+        "myanmar": "နှုတ်ဆက်ခြင်း"
+      }
+    ],
+    "answerPattern": "안녕하세요."
   },
   {
     "id": "course-0-2",
@@ -29,7 +40,18 @@
     "transfer": "새로운 친구에게 자기 이름을 말해 보세요.",
     "criterion": "Introduce a name in polite Korean. Accept the learner actual name; never memorize fictional Minsu as identity.",
     "check": "새 동료에게 자신의 이름을 말해 보세요.",
-    "checkCriterion": "Introduce the learner name with an appropriate polite ending."
+    "checkCriterion": "Introduce the learner name with an appropriate polite ending.",
+    "words": [
+      {
+        "korean": "저",
+        "myanmar": "ကျွန်တော်/ကျွန်မ"
+      },
+      {
+        "korean": "이름",
+        "myanmar": "နာမည်"
+      }
+    ],
+    "answerPattern": "저는 [နာမည်]예요 / 이에요."
   },
   {
     "id": "course-0-3",
@@ -45,7 +67,18 @@
     "transfer": "좋아하는 음료를 하나 말해 보세요.",
     "criterion": "Say which drink you like politely; check meaning and audio cautiously.",
     "check": "좋아하는 음식이나 음료를 말해 보세요.",
-    "checkCriterion": "Say which food or drink you like in a polite Korean sentence."
+    "checkCriterion": "Say which food or drink you like in a polite Korean sentence.",
+    "words": [
+      {
+        "korean": "커피",
+        "myanmar": "ကော်ဖီ"
+      },
+      {
+        "korean": "좋아하다",
+        "myanmar": "ကြိုက်သည်"
+      }
+    ],
+    "answerPattern": "네, [ကြိုက်တဲ့အရာ] 좋아해요."
   },
   {
     "id": "course-0-4",
@@ -61,7 +94,18 @@
     "transfer": "처음 만난 사람에게 어느 나라 사람인지 말해 보세요.",
     "criterion": "State nationality using polite Korean. Accept any explicitly provided nationality.",
     "check": "자신이 어느 나라 사람인지 소개해 보세요.",
-    "checkCriterion": "State a nationality using a complete polite Korean sentence."
+    "checkCriterion": "State a nationality using a complete polite Korean sentence.",
+    "words": [
+      {
+        "korean": "미얀마",
+        "myanmar": "မြန်မာနိုင်ငံ"
+      },
+      {
+        "korean": "사람",
+        "myanmar": "လူ"
+      }
+    ],
+    "answerPattern": "저는 [နိုင်ငံ] 사람이에요."
   },
   {
     "id": "course-0-5",
@@ -77,7 +121,18 @@
     "transfer": "친구가 식사했는지 물어보세요.",
     "criterion": "Ask whether someone has eaten, or respond to the question appropriately.",
     "check": "동료가 점심을 먹었는지 물어보세요.",
-    "checkCriterion": "Ask politely whether a coworker has had lunch."
+    "checkCriterion": "Ask politely whether a coworker has had lunch.",
+    "words": [
+      {
+        "korean": "밥",
+        "myanmar": "ထမင်း"
+      },
+      {
+        "korean": "먹다",
+        "myanmar": "စားသည်"
+      }
+    ],
+    "answerPattern": "네, [စားခဲ့တဲ့အရာ] 먹었어요."
   },
   {
     "id": "course-0-6",
@@ -93,7 +148,18 @@
     "transfer": "무슨 언어를 공부하는지 말해 보세요.",
     "criterion": "Say which language you study; preserve polite speech.",
     "check": "요즘 배우는 것을 한 가지 말해 보세요.",
-    "checkCriterion": "Name something you are studying or learning in polite Korean."
+    "checkCriterion": "Name something you are studying or learning in polite Korean.",
+    "words": [
+      {
+        "korean": "한국어",
+        "myanmar": "ကိုရီးယားဘာသာစကား"
+      },
+      {
+        "korean": "공부하다",
+        "myanmar": "လေ့လာသည်"
+      }
+    ],
+    "answerPattern": "네, [လေ့လာတဲ့ဘာသာ] 공부해요."
   },
   {
     "id": "course-0-7",
@@ -109,7 +175,18 @@
     "transfer": "도움을 받은 뒤 감사 인사를 해 보세요.",
     "criterion": "Thank a person politely after receiving help.",
     "check": "동료가 길을 알려 줬어요. 감사 인사를 해 보세요.",
-    "checkCriterion": "Thank a coworker politely for directions."
+    "checkCriterion": "Thank a coworker politely for directions.",
+    "words": [
+      {
+        "korean": "같이",
+        "myanmar": "အတူတူ"
+      },
+      {
+        "korean": "감사합니다",
+        "myanmar": "ကျေးဇူးတင်ပါတယ်"
+      }
+    ],
+    "answerPattern": "네, 감사합니다."
   },
   {
     "id": "course-0-8",
@@ -125,7 +202,18 @@
     "transfer": "동료의 말을 못 들었어요. 다시 말해 달라고 해 보세요.",
     "criterion": "Ask for repetition politely, rather than pretending to understand.",
     "check": "설명을 이해하지 못했어요. 천천히 말해 달라고 부탁해 보세요.",
-    "checkCriterion": "Ask someone politely to speak slowly."
+    "checkCriterion": "Ask someone politely to speak slowly.",
+    "words": [
+      {
+        "korean": "다시",
+        "myanmar": "ထပ်ပြီး"
+      },
+      {
+        "korean": "말하다",
+        "myanmar": "ပြောသည်"
+      }
+    ],
+    "answerPattern": "[လုပ်ပေးစေချင်တဲ့အရာ] 주세요."
   },
   {
     "id": "course-1-1",
@@ -141,7 +229,18 @@
     "transfer": "새 팀원에게 이름과 인사를 해 보세요.",
     "criterion": "Introduce a name and greet politely; personal name may differ.",
     "check": "처음 만난 이웃에게 인사하고 이름을 말해 보세요.",
-    "checkCriterion": "Greet a new neighbor and introduce a name politely."
+    "checkCriterion": "Greet a new neighbor and introduce a name politely.",
+    "words": [
+      {
+        "korean": "저",
+        "myanmar": "ကျွန်တော်/ကျွန်မ"
+      },
+      {
+        "korean": "안녕하세요",
+        "myanmar": "မင်္ဂလာပါ"
+      }
+    ],
+    "answerPattern": "안녕하세요. 저는 [နာမည်]입니다."
   },
   {
     "id": "course-1-2",
@@ -157,7 +256,18 @@
     "transfer": "편의점에서 우유가 있는지 물어보세요.",
     "criterion": "Ask if milk is available using 있어요 or an equivalent polite expression.",
     "check": "가게에서 물이 있는지 물어보세요.",
-    "checkCriterion": "Ask whether water is available using an appropriate polite expression."
+    "checkCriterion": "Ask whether water is available using an appropriate polite expression.",
+    "words": [
+      {
+        "korean": "물",
+        "myanmar": "ရေ"
+      },
+      {
+        "korean": "있다",
+        "myanmar": "ရှိသည်"
+      }
+    ],
+    "answerPattern": "네, [ရှိတဲ့အရာ] 있어요. / 아니요, 없어요."
   },
   {
     "id": "course-1-3",
@@ -173,7 +283,18 @@
     "transfer": "내일 일을 시작하는 시간을 물어보세요.",
     "criterion": "Ask when work starts. Accept any valid polite time question.",
     "check": "동료에게 점심시간이 몇 시인지 물어보세요.",
-    "checkCriterion": "Ask politely what time the lunch break starts."
+    "checkCriterion": "Ask politely what time the lunch break starts.",
+    "words": [
+      {
+        "korean": "아홉",
+        "myanmar": "ကိုး"
+      },
+      {
+        "korean": "일하다",
+        "myanmar": "အလုပ်လုပ်သည်"
+      }
+    ],
+    "answerPattern": "[အချိန်]에 일해요."
   },
   {
     "id": "course-1-4",
@@ -189,7 +310,18 @@
     "transfer": "직장에서 식당이 어디에 있는지 물어보세요.",
     "criterion": "Ask where the canteen is in polite Korean.",
     "check": "회사에서 사무실이 어디에 있는지 물어보세요.",
-    "checkCriterion": "Ask the location of an office in polite Korean."
+    "checkCriterion": "Ask the location of an office in polite Korean.",
+    "words": [
+      {
+        "korean": "화장실",
+        "myanmar": "အိမ်သာ"
+      },
+      {
+        "korean": "저쪽",
+        "myanmar": "ဟိုဘက်"
+      }
+    ],
+    "answerPattern": "[နေရာ]은/는 [တည်နေရာ]에 있어요."
   },
   {
     "id": "course-1-5",
@@ -205,7 +337,18 @@
     "transfer": "식당에서 음식을 두 개 주문해 보세요.",
     "criterion": "Order food with a quantity; accept different foods and appropriate counters.",
     "check": "카페에서 커피 두 잔을 주문해 보세요.",
-    "checkCriterion": "Order two cups of coffee politely using an appropriate counter."
+    "checkCriterion": "Order two cups of coffee politely using an appropriate counter.",
+    "words": [
+      {
+        "korean": "김밥",
+        "myanmar": "ထမင်းလိပ်"
+      },
+      {
+        "korean": "하나",
+        "myanmar": "တစ်ခု"
+      }
+    ],
+    "answerPattern": "[အစားအစာ] 하나 주세요."
   },
   {
     "id": "course-1-6",
@@ -221,7 +364,18 @@
     "transfer": "동료에게 펜을 빌려 달라고 해 보세요.",
     "criterion": "Politely ask to borrow a pen; accept 빌려 주세요 and equivalents.",
     "check": "동료에게 장갑을 달라고 부탁해 보세요.",
-    "checkCriterion": "Ask a coworker for gloves politely."
+    "checkCriterion": "Ask a coworker for gloves politely.",
+    "words": [
+      {
+        "korean": "장갑",
+        "myanmar": "လက်အိတ်"
+      },
+      {
+        "korean": "주다",
+        "myanmar": "ပေးသည်"
+      }
+    ],
+    "answerPattern": "[လိုချင်တဲ့အရာ] 주세요."
   },
   {
     "id": "course-1-7",
@@ -237,7 +391,18 @@
     "transfer": "동료에게 좋아하는 음식을 물어보세요.",
     "criterion": "Ask a coworker what food they like politely.",
     "check": "새 친구에게 좋아하는 음료를 물어보세요.",
-    "checkCriterion": "Ask a friend politely which drink they like."
+    "checkCriterion": "Ask a friend politely which drink they like.",
+    "words": [
+      {
+        "korean": "김치",
+        "myanmar": "ကင်ချီ"
+      },
+      {
+        "korean": "좋아하다",
+        "myanmar": "ကြိုက်သည်"
+      }
+    ],
+    "answerPattern": "저는 [အရာ]을/를 좋아해요."
   },
   {
     "id": "course-1-8",
@@ -253,7 +418,18 @@
     "transfer": "쉬는 날에 하는 일을 말해 보세요.",
     "criterion": "Describe a day-off activity with a complete polite sentence.",
     "check": "퇴근 후에 보통 무엇을 하는지 말해 보세요.",
-    "checkCriterion": "Describe a usual after-work activity in a complete polite sentence."
+    "checkCriterion": "Describe a usual after-work activity in a complete polite sentence.",
+    "words": [
+      {
+        "korean": "집",
+        "myanmar": "အိမ်"
+      },
+      {
+        "korean": "공부하다",
+        "myanmar": "လေ့လာသည်"
+      }
+    ],
+    "answerPattern": "[နေရာ]에서 [လုပ်ဆောင်မှု]해요."
   },
   {
     "id": "course-2-1",
@@ -269,7 +445,18 @@
     "transfer": "지난 주말에 한 일을 말해 보세요.",
     "criterion": "Describe a past action using a suitable past tense.",
     "check": "어제 퇴근 후에 한 일을 말해 보세요.",
-    "checkCriterion": "Describe a past action with an appropriate past tense."
+    "checkCriterion": "Describe a past action with an appropriate past tense.",
+    "words": [
+      {
+        "korean": "어제",
+        "myanmar": "မနေ့က"
+      },
+      {
+        "korean": "만나다",
+        "myanmar": "တွေ့သည်"
+      }
+    ],
+    "answerPattern": "어제 [လူ]을/를 만났어요."
   },
   {
     "id": "course-2-2",
@@ -285,7 +472,18 @@
     "transfer": "다음 휴일 계획을 말해 보세요.",
     "criterion": "State a future plan with a natural future expression.",
     "check": "다음 주에 할 일을 말해 보세요.",
-    "checkCriterion": "State a future plan in a complete polite Korean sentence."
+    "checkCriterion": "State a future plan in a complete polite Korean sentence.",
+    "words": [
+      {
+        "korean": "내일",
+        "myanmar": "မနက်ဖြန်"
+      },
+      {
+        "korean": "시장",
+        "myanmar": "ဈေး"
+      }
+    ],
+    "answerPattern": "내일 [နေရာ]에 갈 거예요."
   },
   {
     "id": "course-2-3",
@@ -301,7 +499,18 @@
     "transfer": "지시가 모호해요. 어떤 물건인지 확인해 보세요.",
     "criterion": "Ask for clarification of an ambiguous item in polite Korean.",
     "check": "동료가 저것을 옮기라고 했어요. 어느 물건인지 확인해 보세요.",
-    "checkCriterion": "Politely clarify which item a coworker means."
+    "checkCriterion": "Politely clarify which item a coworker means.",
+    "words": [
+      {
+        "korean": "상자",
+        "myanmar": "သေတ္တာ"
+      },
+      {
+        "korean": "말씀",
+        "myanmar": "ပြောစကားကို ရိုသေစွာခေါ်ခြင်း"
+      }
+    ],
+    "answerPattern": "[အရာ] 말씀이세요?"
   },
   {
     "id": "course-2-4",
@@ -317,7 +526,18 @@
     "transfer": "아직 혼자 못 하는 일을 동료에게 말해 보세요.",
     "criterion": "Explain an inability and optionally request help politely.",
     "check": "혼자 할 수 있는 일과 도움이 필요한 일을 말해 보세요.",
-    "checkCriterion": "Explain one ability and one inability or need for help politely."
+    "checkCriterion": "Explain one ability and one inability or need for help politely.",
+    "words": [
+      {
+        "korean": "하다",
+        "myanmar": "လုပ်သည်"
+      },
+      {
+        "korean": "할 수 있다",
+        "myanmar": "လုပ်နိုင်သည်"
+      }
+    ],
+    "answerPattern": "네, [လုပ်ဆောင်မှု]할 수 있어요."
   },
   {
     "id": "course-2-5",
@@ -333,7 +553,18 @@
     "transfer": "잠깐 쉬어도 되는지 물어보세요.",
     "criterion": "Ask permission to take a short break.",
     "check": "잠깐 전화를 받아도 되는지 물어보세요.",
-    "checkCriterion": "Ask permission politely to take a short phone call."
+    "checkCriterion": "Ask permission politely to take a short phone call.",
+    "words": [
+      {
+        "korean": "앉다",
+        "myanmar": "ထိုင်သည်"
+      },
+      {
+        "korean": "되다",
+        "myanmar": "ဖြစ်သည်/ရသည်"
+      }
+    ],
+    "answerPattern": "네, [လုပ်ဆောင်မှု]도 돼요."
   },
   {
     "id": "course-2-6",
@@ -349,7 +580,18 @@
     "transfer": "동료에게 퇴근 후 함께 커피를 마시자고 해 보세요.",
     "criterion": "Invite a coworker to coffee after work politely.",
     "check": "친구에게 주말에 같이 식사하자고 제안해 보세요.",
-    "checkCriterion": "Invite a friend to eat together on the weekend."
+    "checkCriterion": "Invite a friend to eat together on the weekend.",
+    "words": [
+      {
+        "korean": "같이",
+        "myanmar": "အတူတူ"
+      },
+      {
+        "korean": "먹다",
+        "myanmar": "စားသည်"
+      }
+    ],
+    "answerPattern": "네, 같이 [လုပ်ဆောင်မှု]해요."
   },
   {
     "id": "course-2-7",
@@ -365,7 +607,18 @@
     "transfer": "오늘 외출하지 않은 이유를 말해 보세요.",
     "criterion": "Give a reason with a natural causal connection.",
     "check": "약속에 늦은 이유를 설명해 보세요.",
-    "checkCriterion": "Explain a reason for being late using a natural causal expression."
+    "checkCriterion": "Explain a reason for being late using a natural causal expression.",
+    "words": [
+      {
+        "korean": "피곤하다",
+        "myanmar": "ပင်ပန်းသည်"
+      },
+      {
+        "korean": "집",
+        "myanmar": "အိမ်"
+      }
+    ],
+    "answerPattern": "[အကြောင်းရင်း]아서/어서 [ရလဒ်]."
   },
   {
     "id": "course-2-8",
@@ -381,7 +634,18 @@
     "transfer": "약속에 못 가요. 이유와 다른 시간을 말해 보세요.",
     "criterion": "Politely reschedule with a reason and an alternative time.",
     "check": "약속 시간에 못 가요. 다른 시간을 정중히 제안해 보세요.",
-    "checkCriterion": "Politely propose a new appointment time and explain why the original time is unsuitable."
+    "checkCriterion": "Politely propose a new appointment time and explain why the original time is unsuitable.",
+    "words": [
+      {
+        "korean": "약속",
+        "myanmar": "ချိန်းဆိုမှု"
+      },
+      {
+        "korean": "토요일",
+        "myanmar": "စနေနေ့"
+      }
+    ],
+    "answerPattern": "[ချိန်းဆိုမှု]을/를 [အချိန်သစ်]로 바꿀 수 있을까요?"
   },
   {
     "id": "course-3-1",
@@ -397,7 +661,18 @@
     "transfer": "처음 해 본 일과 느낌을 말해 보세요.",
     "criterion": "Describe an experience and a feeling with connected Korean sentences.",
     "check": "처음 한국 음식을 먹어 본 경험과 느낌을 말해 보세요.",
-    "checkCriterion": "Describe an experience trying Korean food and how it felt; clearly hypothetical experience is acceptable."
+    "checkCriterion": "Describe an experience trying Korean food and how it felt; clearly hypothetical experience is acceptable.",
+    "words": [
+      {
+        "korean": "만들다",
+        "myanmar": "ပြုလုပ်သည်"
+      },
+      {
+        "korean": "김밥",
+        "myanmar": "ထမင်းလိပ်"
+      }
+    ],
+    "answerPattern": "네, [လုပ်ဆောင်မှု]아/어 본 적이 있어요."
   },
   {
     "id": "course-3-2",
@@ -413,7 +688,18 @@
     "transfer": "오늘 업무에서 끝난 일과 남은 일을 보고해 보세요.",
     "criterion": "Report completed and remaining tasks clearly and politely.",
     "check": "오늘 끝낸 일과 아직 해야 할 일을 동료에게 설명해 보세요.",
-    "checkCriterion": "Report both completed work and remaining work coherently."
+    "checkCriterion": "Report both completed work and remaining work coherently.",
+    "words": [
+      {
+        "korean": "포장",
+        "myanmar": "ထုပ်ပိုးခြင်း"
+      },
+      {
+        "korean": "정리",
+        "myanmar": "ရှင်းလင်းစီစဉ်ခြင်း"
+      }
+    ],
+    "answerPattern": "[ပြီးသွားတာ]은/는 끝났고 [ကျန်တာ]이/가 남았어요."
   },
   {
     "id": "course-3-3",
@@ -429,7 +715,18 @@
     "transfer": "업무 중 문제가 생긴 순서를 설명해 보세요.",
     "criterion": "Explain an event sequence; do not give hazardous repair instructions.",
     "check": "가상의 작업 중 문제가 생겼어요. 무슨 일을 하다가 어떻게 문제가 생겼는지 설명해 보세요.",
-    "checkCriterion": "Describe the sequence of a hypothetical problem during an ongoing action."
+    "checkCriterion": "Describe the sequence of a hypothetical problem during an ongoing action.",
+    "words": [
+      {
+        "korean": "기계",
+        "myanmar": "စက်"
+      },
+      {
+        "korean": "멈추다",
+        "myanmar": "ရပ်သွားသည်"
+      }
+    ],
+    "answerPattern": "[လုပ်နေခဲ့တာ]다가 [ဖြစ်သွားတာ]."
   },
   {
     "id": "course-3-4",
@@ -445,7 +742,18 @@
     "transfer": "동료에게 전달받은 지시를 말해 보세요.",
     "criterion": "Relay an instruction using appropriate reported speech and politeness.",
     "check": "상사가 내일까지 상자를 정리하라고 했어요. 동료에게 그 지시를 전달해 보세요.",
-    "checkCriterion": "Faithfully report the instruction to organize boxes by tomorrow using appropriate reported speech."
+    "checkCriterion": "Faithfully report the instruction to organize boxes by tomorrow using appropriate reported speech.",
+    "words": [
+      {
+        "korean": "준비하다",
+        "myanmar": "ပြင်ဆင်သည်"
+      },
+      {
+        "korean": "내일까지",
+        "myanmar": "မနက်ဖြန်အထိ"
+      }
+    ],
+    "answerPattern": "[လုပ်ဆောင်မှု]라고 하셨어요."
   },
   {
     "id": "course-3-5",
@@ -461,7 +769,18 @@
     "transfer": "일정이 바뀌면 어떻게 할지 말해 보세요.",
     "criterion": "Explain a conditional plan using natural Korean.",
     "check": "내일 비가 오면 약속을 어떻게 바꿀지 말해 보세요.",
-    "checkCriterion": "State a conditional plan for changing an appointment if it rains tomorrow."
+    "checkCriterion": "State a conditional plan for changing an appointment if it rains tomorrow.",
+    "words": [
+      {
+        "korean": "비",
+        "myanmar": "မိုး"
+      },
+      {
+        "korean": "오다",
+        "myanmar": "လာသည်/ရွာသည်"
+      }
+    ],
+    "answerPattern": "[အခြေအနေ]면 [လုပ်မယ့်အရာ]."
   },
   {
     "id": "course-3-6",
@@ -477,7 +796,18 @@
     "transfer": "친구에게 두 교통수단 중 하나를 추천하고 이유를 말해 보세요.",
     "criterion": "Recommend one option with a reason, without demanding exact wording.",
     "check": "친구에게 한국어 공부 방법을 추천하고 이유를 말해 보세요.",
-    "checkCriterion": "Recommend a study method politely with a relevant reason."
+    "checkCriterion": "Recommend a study method politely with a relevant reason.",
+    "words": [
+      {
+        "korean": "지하철",
+        "myanmar": "မြေအောက်ရထား"
+      },
+      {
+        "korean": "가다",
+        "myanmar": "သွားသည်"
+      }
+    ],
+    "answerPattern": "[လုပ်ဆောင်မှု]는 게 좋겠어요."
   },
   {
     "id": "course-3-7",
@@ -493,7 +823,18 @@
     "transfer": "상사에게 확인을 부탁해 보세요.",
     "criterion": "Request a supervisor confirmation using an appropriate polite register.",
     "check": "상사에게 내일 일정 확인을 정중히 부탁해 보세요.",
-    "checkCriterion": "Ask a supervisor to confirm tomorrow schedule using an appropriate respectful register."
+    "checkCriterion": "Ask a supervisor to confirm tomorrow schedule using an appropriate respectful register.",
+    "words": [
+      {
+        "korean": "팀장님",
+        "myanmar": "အဖွဲ့ခေါင်းဆောင်"
+      },
+      {
+        "korean": "말씀드리다",
+        "myanmar": "ရိုသေစွာပြောတင်ပြသည်"
+      }
+    ],
+    "answerPattern": "네, [လူ]께 말씀드렸어요."
   },
   {
     "id": "course-3-8",
@@ -509,7 +850,18 @@
     "transfer": "전화로 날짜와 시간을 다시 확인해 보세요.",
     "criterion": "Confirm a date and a time clearly over a phone call.",
     "check": "전화에서 금요일 세 시라는 말을 들었어요. 날짜와 시간을 다시 확인해 보세요.",
-    "checkCriterion": "Confirm the supplied day and time, Friday at three, politely during a phone call."
+    "checkCriterion": "Confirm the supplied day and time, Friday at three, politely during a phone call.",
+    "words": [
+      {
+        "korean": "오후",
+        "myanmar": "မွန်းလွဲပိုင်း"
+      },
+      {
+        "korean": "세 시",
+        "myanmar": "သုံးနာရီ"
+      }
+    ],
+    "answerPattern": "[နေ့/အချိန်]가 맞나요?"
   },
   {
     "id": "course-4-1",
@@ -525,7 +877,18 @@
     "transfer": "초대를 정중히 거절하고 다른 날을 제안해 보세요.",
     "criterion": "Decline politely with a reason and an alternative.",
     "check": "주말 초대를 정중히 거절하고 만날 수 있는 다른 날을 제안해 보세요.",
-    "checkCriterion": "Decline an invitation politely with a reason and a concrete alternative."
+    "checkCriterion": "Decline an invitation politely with a reason and a concrete alternative.",
+    "words": [
+      {
+        "korean": "오늘",
+        "myanmar": "ဒီနေ့"
+      },
+      {
+        "korean": "일",
+        "myanmar": "အလုပ်"
+      }
+    ],
+    "answerPattern": "[ပထမအချက်]기는 하지만 [ဆန့်ကျင်ဘက်အချက်]."
   },
   {
     "id": "course-4-2",
@@ -541,7 +904,18 @@
     "transfer": "회의에서 다른 의견을 이유와 함께 제시해 보세요.",
     "criterion": "Disagree respectfully with a clear supporting reason.",
     "check": "회의에서 제안에 정중히 반대하고 다른 방법을 설명해 보세요.",
-    "checkCriterion": "Disagree respectfully and explain an alternative with a supporting reason."
+    "checkCriterion": "Disagree respectfully and explain an alternative with a supporting reason.",
+    "words": [
+      {
+        "korean": "의견",
+        "myanmar": "ထင်မြင်ချက်"
+      },
+      {
+        "korean": "방법",
+        "myanmar": "နည်းလမ်း"
+      }
+    ],
+    "answerPattern": "[သဘောထား]은/는 이해하지만 [ကိုယ့်အကြံ]."
   },
   {
     "id": "course-4-3",
@@ -557,7 +931,18 @@
     "transfer": "일정에 생긴 문제와 대안을 설명해 보세요.",
     "criterion": "Explain an unexpected problem and propose a practical alternative.",
     "check": "버스가 늦었어요. 약속 상대에게 상황과 도착 계획을 설명해 보세요.",
-    "checkCriterion": "Explain an unexpected delay and propose a practical next action."
+    "checkCriterion": "Explain an unexpected delay and propose a practical next action.",
+    "words": [
+      {
+        "korean": "버스",
+        "myanmar": "ဘတ်စ်ကား"
+      },
+      {
+        "korean": "늦다",
+        "myanmar": "နောက်ကျသည်"
+      }
+    ],
+    "answerPattern": "[အကြောင်းရင်း]는 바람에 [မကောင်းတဲ့ရလဒ်]."
   },
   {
     "id": "course-4-4",
@@ -573,7 +958,18 @@
     "transfer": "업무 변화와 필요한 대응을 연결해서 설명해 보세요.",
     "criterion": "Connect a workplace change to a justified response in clear Korean.",
     "check": "주문량이 줄었어요. 작업 계획을 어떻게 바꿀지 이유와 함께 말해 보세요.",
-    "checkCriterion": "Connect a change in orders with a justified response in clear Korean."
+    "checkCriterion": "Connect a change in orders with a justified response in clear Korean.",
+    "words": [
+      {
+        "korean": "주문",
+        "myanmar": "အော်ဒါ"
+      },
+      {
+        "korean": "작업",
+        "myanmar": "လုပ်ငန်းဆောင်တာ"
+      }
+    ],
+    "answerPattern": "[ပြောင်းလဲမှု]는 만큼 [လိုအပ်တဲ့အရာ]."
   },
   {
     "id": "course-4-5",
@@ -589,7 +985,18 @@
     "transfer": "어려운 업무 용어 하나를 쉬운 말로 설명해 보세요.",
     "criterion": "Paraphrase a concept using simpler Korean without relying on Myanmar.",
     "check": "협업이라는 말을 쉬운 한국어로 설명해 보세요.",
-    "checkCriterion": "Explain collaboration in simple Korean without relying on Myanmar."
+    "checkCriterion": "Explain collaboration in simple Korean without relying on Myanmar.",
+    "words": [
+      {
+        "korean": "쉽게",
+        "myanmar": "လွယ်ကူစွာ"
+      },
+      {
+        "korean": "방법",
+        "myanmar": "နည်းလမ်း"
+      }
+    ],
+    "answerPattern": "쉽게 말하면 [ရိုးရိုးရှင်းပြချက်]이에요."
   },
   {
     "id": "course-4-6",
@@ -605,7 +1012,18 @@
     "transfer": "두 선택의 장단점을 비교하고 하나를 골라 보세요.",
     "criterion": "Compare two options, giving a benefit or limitation and a choice.",
     "check": "버스와 지하철의 장단점을 비교하고 하나를 골라 이유를 말해 보세요.",
-    "checkCriterion": "Compare two transport options and justify a choice."
+    "checkCriterion": "Compare two transport options and justify a choice.",
+    "words": [
+      {
+        "korean": "빠르다",
+        "myanmar": "မြန်သည်"
+      },
+      {
+        "korean": "비용",
+        "myanmar": "ကုန်ကျစရိတ်"
+      }
+    ],
+    "answerPattern": "[ပထမအရာ]은/는 [လက္ခဏာ] 반면에 [ဒုတိယအရာ]."
   },
   {
     "id": "course-4-7",
@@ -621,7 +1039,18 @@
     "transfer": "들은 공지의 핵심과 출처를 짧게 전달해 보세요.",
     "criterion": "Summarize a supplied or clearly hypothetical announcement; do not invent current news as fact.",
     "check": "공지: 내일 회의는 오전 열 시이고 장소는 이 층입니다. 핵심을 동료에게 전달해 보세요.",
-    "checkCriterion": "Summarize the supplied announcement faithfully: meeting tomorrow at ten in the morning on the second floor."
+    "checkCriterion": "Summarize the supplied announcement faithfully: meeting tomorrow at ten in the morning on the second floor.",
+    "words": [
+      {
+        "korean": "안내",
+        "myanmar": "အသိပေးလမ်းညွှန်ချက်"
+      },
+      {
+        "korean": "다음 주",
+        "myanmar": "နောက်အပတ်"
+      }
+    ],
+    "answerPattern": "[သတင်းရင်းမြစ်]에 따르면 [အချက်အလက်]다고 해요."
   },
   {
     "id": "course-4-8",
@@ -637,7 +1066,18 @@
     "transfer": "서로 다른 일정 요구를 고려해 타협안을 제안해 보세요.",
     "criterion": "Propose a feasible compromise acknowledging both sides.",
     "check": "오늘 일찍 퇴근해야 하지만 동료는 도움이 필요해요. 타협안을 제안해 보세요.",
-    "checkCriterion": "Acknowledge both needs and propose a workable compromise."
+    "checkCriterion": "Acknowledge both needs and propose a workable compromise.",
+    "words": [
+      {
+        "korean": "오늘",
+        "myanmar": "ဒီနေ့"
+      },
+      {
+        "korean": "확인하다",
+        "myanmar": "အတည်ပြုစစ်ဆေးသည်"
+      }
+    ],
+    "answerPattern": "[အရာတစ်ခု]는 대신에 [အခြားရွေးချယ်မှု]면 어떨까요?"
   },
   {
     "id": "course-5-1",
@@ -653,7 +1093,18 @@
     "transfer": "직장 생활 개선안을 제시하고 두 가지 근거를 들어 보세요.",
     "criterion": "Present an opinion with at least two coherent reasons; evaluate register and organization.",
     "check": "한국어를 함께 공부하는 모임을 제안하고 두 가지 장점을 설명해 보세요.",
-    "checkCriterion": "Present a study-group proposal with two coherent supporting reasons."
+    "checkCriterion": "Present a study-group proposal with two coherent supporting reasons.",
+    "words": [
+      {
+        "korean": "교육",
+        "myanmar": "သင်တန်းပညာပေးခြင်း"
+      },
+      {
+        "korean": "협업",
+        "myanmar": "ပူးပေါင်းလုပ်ဆောင်ခြင်း"
+      }
+    ],
+    "answerPattern": "제 생각에는 [အမြင်]. 그 이유는 [အကြောင်းရင်း]입니다."
   },
   {
     "id": "course-5-2",
@@ -669,7 +1120,18 @@
     "transfer": "제안에 대한 반대 의견을 인정하고 근거를 들어 답해 보세요.",
     "criterion": "Acknowledge a counterargument and answer it without insulting the other speaker.",
     "check": "동료가 교육에는 시간이 너무 많이 든다고 해요. 그 의견을 인정하고 자신의 근거를 말해 보세요.",
-    "checkCriterion": "Acknowledge the time-cost counterargument and respond respectfully with a reason."
+    "checkCriterion": "Acknowledge the time-cost counterargument and respond respectfully with a reason.",
+    "words": [
+      {
+        "korean": "물론",
+        "myanmar": "သေချာတာပေါ့/တကယ်တော့"
+      },
+      {
+        "korean": "미루다",
+        "myanmar": "ရွှေ့ဆိုင်းသည်"
+      }
+    ],
+    "answerPattern": "물론 [လက်ခံတဲ့အချက်]. 그렇다고 해서 [ကန့်သတ်ချက်]."
   },
   {
     "id": "course-5-3",
@@ -685,7 +1147,18 @@
     "transfer": "모호한 답변을 받았을 때 상대의 의도를 정중히 확인해 보세요.",
     "criterion": "Clarify an indirect or ambiguous intention politely; acknowledge context dependence.",
     "check": "상대가 이번 주는 좀 바쁘네요라고 했어요. 의도를 단정하지 말고 정중히 확인해 보세요.",
-    "checkCriterion": "Clarify an ambiguous intention politely without assuming it means rejection."
+    "checkCriterion": "Clarify an ambiguous intention politely without assuming it means rejection.",
+    "words": [
+      {
+        "korean": "다른 날",
+        "myanmar": "တခြားနေ့"
+      },
+      {
+        "korean": "바꾸다",
+        "myanmar": "ပြောင်းသည်"
+      }
+    ],
+    "answerPattern": "[ကြားလိုက်တဲ့အကြောင်း]라는 말씀이신가요?"
   },
   {
     "id": "course-5-4",
@@ -701,7 +1174,18 @@
     "transfer": "친구에게 부탁하는 말과 상사에게 부탁하는 말을 각각 해 보세요.",
     "criterion": "Give two appropriate versions of a request, one to a friend and one to a supervisor.",
     "check": "자료를 보내 달라는 부탁을 친구와 상사에게 각각 해 보세요.",
-    "checkCriterion": "Give two natural requests for materials with appropriate different registers."
+    "checkCriterion": "Give two natural requests for materials with appropriate different registers.",
+    "words": [
+      {
+        "korean": "시간",
+        "myanmar": "အချိန်"
+      },
+      {
+        "korean": "감사하다",
+        "myanmar": "ကျေးဇူးတင်သည်"
+      }
+    ],
+    "answerPattern": "[အခြေအနေ] 때 [တောင်းဆိုချက်] 주시면 감사하겠습니다."
   },
   {
     "id": "course-5-5",
@@ -717,7 +1201,18 @@
     "transfer": "가상의 업무 문제, 영향, 해결 제안을 순서대로 발표해 보세요.",
     "criterion": "Organize a short presentation containing problem, impact, and proposed response.",
     "check": "가상의 작업 지연 문제를 설명하고 영향과 개선안을 짧게 발표해 보세요.",
-    "checkCriterion": "Organize a short presentation covering a hypothetical delay, impact, and proposal."
+    "checkCriterion": "Organize a short presentation covering a hypothetical delay, impact, and proposal.",
+    "words": [
+      {
+        "korean": "우선",
+        "myanmar": "ပထမဦးဆုံး"
+      },
+      {
+        "korean": "대안",
+        "myanmar": "အခြားဖြေရှင်းနည်း"
+      }
+    ],
+    "answerPattern": "우선 [ပထမအချက်]. 다음으로 [ဒုတိယအချက်]. 마지막으로 [နောက်ဆုံးအချက်]."
   },
   {
     "id": "course-5-6",
@@ -733,7 +1228,18 @@
     "transfer": "안내: 다음 달부터 교육 시간이 늘고 신청은 금요일까지입니다. 핵심을 요약하고 자신의 의견을 덧붙여 보세요.",
     "criterion": "Summarize supplied announcement only, separating its facts from the learner opinion.",
     "check": "공지: 다음 달부터 수업은 오후 일곱 시에 시작하고 신청은 월요일까지입니다. 사실을 요약한 뒤 의견을 덧붙여 보세요.",
-    "checkCriterion": "Faithfully summarize the supplied announcement: classes start at seven p.m. next month and applications are due Monday. Clearly separate opinion from facts."
+    "checkCriterion": "Faithfully summarize the supplied announcement: classes start at seven p.m. next month and applications are due Monday. Clearly separate opinion from facts.",
+    "words": [
+      {
+        "korean": "요지",
+        "myanmar": "အဓိကဆိုလိုရင်း"
+      },
+      {
+        "korean": "마감",
+        "myanmar": "နောက်ဆုံးသတ်မှတ်ရက်"
+      }
+    ],
+    "answerPattern": "요지는 [အဓိကအချက်]이며, [နောက်အချက်]입니다."
   },
   {
     "id": "course-5-7",
@@ -749,7 +1255,18 @@
     "transfer": "오해를 인정하고 자신의 의도와 앞으로의 행동을 설명해 보세요.",
     "criterion": "Repair a misunderstanding, recognizing the other feeling and giving an appropriate apology or clarification.",
     "check": "친구가 약속을 잊었다고 생각해 속상해해요. 오해를 풀고 다음 행동을 설명해 보세요.",
-    "checkCriterion": "Recognize the other feeling, clarify the misunderstanding, and propose a next action respectfully."
+    "checkCriterion": "Recognize the other feeling, clarify the misunderstanding, and propose a next action respectfully.",
+    "words": [
+      {
+        "korean": "의도",
+        "myanmar": "ရည်ရွယ်ချက်"
+      },
+      {
+        "korean": "표현",
+        "myanmar": "ပြောဆိုဖော်ပြပုံ"
+      }
+    ],
+    "answerPattern": "[မရည်ရွယ်ခဲ့တဲ့အရာ]려는 의도는 아니었어요. [ဝန်ခံချက်/တောင်းပန်ချက်]."
   },
   {
     "id": "course-5-8",
@@ -765,6 +1282,17 @@
     "transfer": "가상의 일정 충돌을 설명하고 대안을 비교한 뒤 합의를 확인해 보세요.",
     "criterion": "Independently explain a schedule conflict, compare alternatives, and check agreement in natural, appropriate Korean.",
     "check": "두 사람이 같은 휴가 날짜를 원해요. 가상의 상황을 설명하고 대안을 비교한 뒤 합의를 확인해 보세요.",
-    "checkCriterion": "Independently explain a hypothetical leave conflict, compare alternatives, and confirm agreement in appropriate Korean."
+    "checkCriterion": "Independently explain a hypothetical leave conflict, compare alternatives, and confirm agreement in appropriate Korean.",
+    "words": [
+      {
+        "korean": "변경",
+        "myanmar": "ပြောင်းလဲခြင်း"
+      },
+      {
+        "korean": "검토하다",
+        "myanmar": "စိစစ်သုံးသပ်သည်"
+      }
+    ],
+    "answerPattern": "[ကိုယ့်အဆို] → [အကြောင်းပြချက်] → [အခြားနည်းလမ်း] → [အတည်ပြုမေးခွန်း]"
   }
 ]

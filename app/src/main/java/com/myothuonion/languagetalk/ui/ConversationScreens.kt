@@ -91,6 +91,7 @@ import androidx.core.content.ContextCompat
 import com.myothuonion.languagetalk.data.ChatEntity
 import com.myothuonion.languagetalk.data.MemoryEntity
 import com.myothuonion.languagetalk.data.LearningProgressEntity
+import com.myothuonion.languagetalk.data.AiRouteStatus
 import com.myothuonion.languagetalk.model.PracticeMode
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.mutableIntStateOf
@@ -381,7 +382,11 @@ internal fun LiveChatScreen(
     onToggleMic: () -> Unit,
     onStop: () -> Unit,
     onBack: () -> Unit,
-    onCustomize: () -> Unit
+    onCustomize: () -> Unit,
+    onHelp: () -> Unit = {},
+    onTextChat: () -> Unit = {},
+    aiChooser: @Composable () -> Unit = {},
+    aiStatus: AiRouteStatus = AiRouteStatus()
 ) {
     val context = LocalContext.current
     var permissionDenied by rememberSaveable(chat.id) { mutableStateOf(false) }
@@ -440,6 +445,7 @@ internal fun LiveChatScreen(
                         )
                     }
                 }
+                aiChooser()
                 IconButton(onClick = onCustomize) {
                     Icon(Icons.Default.Tune, "Behavior and memory", tint = Color.White.copy(alpha = .82f))
                 }
@@ -501,6 +507,15 @@ internal fun LiveChatScreen(
                         )
                     }
                 }
+                progress?.let { item ->
+                    Spacer(Modifier.height(14.dp))
+                    AnswerPatternCard(item.answerPattern, item.answerExample, item.answerHint, dark = true)
+                    if (item.lastCorrection.isNotBlank() || item.answerHint.isBlank() && item.summary.isNotBlank())
+                        Text(item.lastCorrection.ifBlank { item.summary.takeLast(600) }, color = Color.White.copy(alpha = .8f),
+                            fontSize = 13.sp, lineHeight = 23.sp, modifier = Modifier.padding(top = 8.dp))
+                }
+                TextButton(onHelp) { Text("အဖြေပုံစံ အကူအညီ", color = Mint) }
+                if (aiStatus.review.isNotBlank()) Text(aiStatus.review, color = Color.White.copy(alpha = .6f), fontSize = 11.sp)
 
                 if (permissionDenied || state.phase == LivePhase.ERROR) {
                     Text(
@@ -520,6 +535,7 @@ internal fun LiveChatScreen(
                         modifier = Modifier.padding(top = 10.dp),
                         shape = RoundedCornerShape(30.dp)
                     ) { Text("ပြန်ချိတ်မယ်") }
+                    TextButton(onTextChat) { Text("စာနဲ့ ဆက်ပြောမယ်", color = Mint) }
                 }
             }
 

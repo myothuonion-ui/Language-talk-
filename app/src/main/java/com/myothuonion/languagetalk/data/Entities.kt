@@ -93,7 +93,10 @@ data class LearningProgressEntity(
     val completed: Int = 0,
     val summary: String = "",
     val lastCorrection: String = "",
-    val updatedAt: Long = System.currentTimeMillis()
+    val updatedAt: Long = System.currentTimeMillis(),
+    val answerPattern: String = "",
+    val answerExample: String = "",
+    val answerHint: String = ""
 ) {
     fun state() = com.myothuonion.languagetalk.model.PracticeState(goal, stage, targetSentence, completed, summary, lastCorrection)
 }
