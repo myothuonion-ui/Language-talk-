@@ -14,7 +14,8 @@ import java.security.MessageDigest
 import java.time.LocalDate
 import java.util.UUID
 
-data class CoachResult(val heard: String, val feedback: String, val passed: Boolean, val uncertain: Boolean)
+data class CoachResult(val heard: String, val feedback: String, val passed: Boolean, val uncertain: Boolean,
+    val command: String = "")
 
 class LearningRepository(private val context: Context, val store: LearningStore, private val tutor: TutorRepository) {
     private val mutex = Mutex()
@@ -94,7 +95,17 @@ class LearningRepository(private val context: Context, val store: LearningStore,
         val note = feedback(result)
         val passed = CoachEngine.passed(result.assessment, heard, result.voiceCommand)
         val unsure = heard.isBlank() || result.assessment !in setOf("PASSED", "RETRY")
-        if (result.voiceCommand.isNotBlank()) return@withLock CoachResult(heard, note, false, true)
+        if (result.voiceCommand.isNotBlank()) {
+            val response = when (result.voiceCommand) {
+                "SLOW" -> "နှေးနှေး ပြန်ပြောပေးမယ်။"
+                "NORMAL" -> "ပုံမှန်အရှိန်နဲ့ ပြန်ပြောပေးမယ်။"
+                "EXPLAIN" -> if (!placement && (card != null || progress.step <= CoachStep.ROLE_SWAP.ordinal))
+                    card?.grammar?.ifBlank { card.meaning } ?: (unit.explanation + "\n" + task.hint)
+                    else "ဒီအဆင့်က အကူအညီမပါဘဲ စစ်ဆေးတဲ့အဆင့်ပါ။ အရင်အဆင့်ကို ပြန်လေ့လာချင်ရင် သင်ခန်းစာပြန်စနိုင်ပါတယ်။"
+                else -> "ဒီအဆင့်ကိုပဲ ပြန်ပြောပေးမယ်။"
+            }
+            return@withLock CoachResult(heard, response, false, true, result.voiceCommand)
+        }
         val now = System.currentTimeMillis()
         val audioName = if (audio != null && tutor.settings.first().recordPractice) withContext(Dispatchers.IO) {
             val name = UUID.randomUUID().toString() + if (audio.mimeType.contains("wav")) ".wav" else ".m4a"

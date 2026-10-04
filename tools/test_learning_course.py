@@ -8,7 +8,7 @@ class LearningCourseTests(unittest.TestCase):
         for level in range(6):
             self.assertEqual(8, sum(unit['level'] == level for unit in units))
         for unit in units:
-            for key in ('goal','question','example','meaning','transfer','criterion','explanation','pattern'):
+            for key in ('goal','question','example','meaning','transfer','criterion','explanation','pattern','check','checkCriterion'):
                 self.assertTrue(unit[key].strip(), (unit['id'], key))
             self.assertTrue(any(0x1000 <= ord(c) <= 0x109f for c in unit['explanation']))
             self.assertTrue(any(0xac00 <= ord(c) <= 0xd7af for c in unit['question']))
@@ -19,6 +19,8 @@ class LearningCourseTests(unittest.TestCase):
         for unit in units:
             self.assertNotEqual(unit['question'], unit['transfer'])
             self.assertNotEqual(unit['example'], unit['transfer'])
+            self.assertNotEqual(unit['check'], unit['transfer'])
+            self.assertNotEqual(unit['check'], unit['question'])
 
 if __name__ == '__main__':
     unittest.main()

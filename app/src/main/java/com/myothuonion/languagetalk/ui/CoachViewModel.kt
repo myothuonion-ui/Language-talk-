@@ -75,7 +75,8 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
     private suspend fun assess(text: String = "", audio: AudioPayload? = null) {
         val current = ui.value
         val result = repository.answer(text, audio, current.reviewId, current.placement, current.unitId.takeIf { it.isNotBlank() })
-        _ui.update { it.copy(heard = result.heard, feedback = result.feedback) }
+        _ui.update { it.copy(heard = result.heard, feedback = result.feedback,
+            slow = when (result.command) { "SLOW" -> true; "NORMAL" -> false; else -> it.slow }) }
     }
     fun send(text: String) {
         if (text.isBlank() || ui.value.busy || live.value.connected || ui.value.recording) return
@@ -130,9 +131,9 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
             opening = { repository.opening(current.slow, current.reviewId, current.placement, current.unitId) }) { audio ->
             assess(audio = audio)
             if (finished()) HandsFreeTurn(ui.value.heard, ui.value.feedback,
-                repository.speech("수고하셨습니다.", current.slow))
+                repository.speech("수고하셨습니다.", ui.value.slow))
             else {
-                val opening = repository.opening(current.slow, current.reviewId, current.placement, current.unitId, ui.value.feedback)
+                val opening = repository.opening(ui.value.slow, current.reviewId, current.placement, current.unitId, ui.value.feedback)
                 opening.copy(heardText = ui.value.heard, replyText = ui.value.feedback + "\n" + opening.replyText)
             }
         }

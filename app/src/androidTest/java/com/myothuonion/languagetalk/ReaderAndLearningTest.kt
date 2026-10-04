@@ -7,10 +7,10 @@ import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.myothuonion.languagetalk.data.BackupCodec
 import com.myothuonion.languagetalk.model.*
 import com.myothuonion.languagetalk.util.PdfPageReader
@@ -27,10 +27,14 @@ class ReaderAndLearningTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
     private val app get() = compose.activity.application as LanguageTalkApplication
     private fun capture(name: String) {
+        compose.waitForIdle()
         val directory = File(app.getExternalFilesDir(null), "screenshots").apply { mkdirs() }
+        // A modal sheet uses its own window; capture the displayed page and sheet together.
+        val screenshot = requireNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
         File(directory, name + ".png").outputStream().use {
-            compose.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
+            screenshot.compress(Bitmap.CompressFormat.PNG, 100, it)
         }
+        screenshot.recycle()
     }
     @Test fun scannedPdfCanBeImportedSelectedTranslatedFromCacheAndSavedWithoutLeavingReader() {
         val source = File(app.cacheDir, "QA scan.pdf")
@@ -60,7 +64,8 @@ class ReaderAndLearningTest {
                 .joinToString("") { "%02x".format(it.toInt() and 255) }
             runBlocking { app.learningStore.update { it.copy(translations = listOf(
                 ReaderTranslation(key, word.text, "hello", "မင်္ဂလာပါ", "နုတ်ဆက်စကား", word.sentence))) } }
-            compose.waitUntil(15000) { compose.onAllNodesWithTag("read-" + book.id).fetchSemanticsNodes().isNotEmpty() }
+            compose.waitUntil(15000) { compose.onAllNodesWithTag("bookshelf").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithTag("bookshelf").performScrollToNode(hasTestTag("read-" + book.id))
             compose.onNodeWithTag("read-" + book.id).performClick()
             compose.waitUntil(30000) { compose.onAllNodesWithContentDescription("PDF page 1").fetchSemanticsNodes().isNotEmpty() }
             compose.onNodeWithContentDescription("PDF page 1").performTouchInput {

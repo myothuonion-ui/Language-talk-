@@ -183,8 +183,10 @@ internal fun PdfReaderScreen(viewModel: ReaderViewModel, onBack: () -> Unit) {
                                         if (text.isNotBlank()) {
                                             val a = min(anchor, rangeEnd).coerceIn(0, text.lastIndex)
                                             val b = max(anchor, rangeEnd).coerceIn(a, text.lastIndex)
-                                            val start = text.lastIndexOf(' ', a).let { if (it < 0) 0 else it + 1 }
-                                            val end = text.indexOf(' ', b + 1).let { if (it < 0) text.length else it }
+                                            var start = a
+                                            while (start > 0 && !text[start - 1].isWhitespace()) start--
+                                            var end = b + 1
+                                            while (end < text.length && !text[end].isWhitespace()) end++
                                             textSelection = text.substring(start, end).trim()
                                             viewModel.lookup(textSelection, text.substring(max(0, start - 200), min(text.length, end + 200)))
                                         }

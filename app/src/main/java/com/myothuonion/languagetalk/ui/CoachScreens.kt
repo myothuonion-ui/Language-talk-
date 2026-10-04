@@ -159,6 +159,7 @@ private fun CoachLessonScreen(viewModel: CoachViewModel, settings: AppSettings) 
     var typing by rememberSaveable { mutableStateOf(false) }
     var answer by remember(unit.id, progress.step, ui.reviewId, state.placementIndex) { mutableStateOf("") }
     val canControl = !ui.busy && !live.connected && !ui.recording
+    val helpAllowed = !ui.placement && (card != null || progress.step <= CoachStep.ROLE_SWAP.ordinal)
     BackHandler { viewModel.closeLesson() }
     LifecycleResumeEffect(Unit) {
         val start = android.os.SystemClock.elapsedRealtime()
@@ -198,9 +199,9 @@ private fun CoachLessonScreen(viewModel: CoachViewModel, settings: AppSettings) 
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                             FilledTonalIconButton({ viewModel.listen(task.spoken) }, enabled = canControl) { Icon(Icons.Default.VolumeUp, "Listen to sample") }
                             Text("AI နမူနာအသံ", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            TextButton({ hint = !hint }) { Text(if (hint) "အကူအညီဖျောက်" else "အကူအညီ") }
+                            if (helpAllowed) TextButton({ hint = !hint }) { Text(if (hint) "အကူအညီဖျောက်" else "အကူအညီ") }
                         }
-                        if (hint) {
+                        if (hint && helpAllowed) {
                             if (task.example.isNotBlank()) Text(task.example, fontSize = 21.sp)
                             if (task.hint.isNotBlank()) Text(task.hint, lineHeight = 26.sp)
                             if (card == null) { Text(unit.pattern, color = MaterialTheme.colorScheme.primary); Text(unit.explanation, fontSize = 13.sp, lineHeight = 23.sp) }
@@ -238,7 +239,7 @@ private fun CoachLessonScreen(viewModel: CoachViewModel, settings: AppSettings) 
                 Row(Modifier.horizontalScroll(rememberScrollState())) {
                     TextButton({ viewModel.listen(task.spoken) }, enabled = canControl) { Text("ပြန်ပြော") }
                     TextButton({ viewModel.slow(true); viewModel.listen(task.spoken) }, enabled = canControl) { Text("နှေးနှေးပြော") }
-                    TextButton({ hint = true; viewModel.explain(task) }, enabled = canControl) { Text("မြန်မာလိုရှင်း") }
+                    if (helpAllowed) TextButton({ hint = true; viewModel.explain(task) }, enabled = canControl) { Text("မြန်မာလိုရှင်း") }
                 }
             }
         }

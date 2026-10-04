@@ -60,17 +60,83 @@ DATA = [
 ('သွယ်ဝိုက်သော အဓိပ္ပာယ်', 'တိုက်ရိုက်မပြောထားသော ရည်ရွယ်ချက်ကို အတည်ပြုနိုင်မယ်။', 'Social', '…라는 말씀이신가요?', 'အရိပ်အမြွက်ကို အမြဲတမ်းအတိအကျ မသတ်မှတ်နိုင်လို့ ရည်ရွယ်ချက်ကို ယဉ်ကျေးစွာ ပြန်စစ်ပါ။', '오늘은 조금 어렵겠네요. 이 말에 어떻게 답하시겠어요?', '다른 날로 바꾸자는 말씀이신가요?', 'အခြားနေ့သို့ ပြောင်းဖို့ဆိုလိုတာလား။', '모호한 답변을 받았을 때 상대의 의도를 정중히 확인해 보세요.', 'Clarify an indirect or ambiguous intention politely; acknowledge context dependence.'),
 ('စကားအသုံးအနှုန်း ပြောင်းခြင်း', 'အကြောင်းအရာတူကို သူငယ်ချင်းနဲ့အထက်လူကြီးအတွက် ပြောင်းပြောနိုင်မယ်။', 'Social', '해체 / 해요체 / 하십시오체', 'ပြောသူဆက်ဆံရေးနှင့်အခြေအနေအပေါ် မူတည်ပြီး စကားအဆုံးသတ်နှင့် စကားလုံးရွေးပါ။', '상사에게 확인을 요청해 보시겠어요?', '시간이 괜찮으실 때 확인해 주시면 감사하겠습니다.', 'အချိန်အဆင်ပြေတဲ့အခါ စစ်ပေးရင် ကျေးဇူးတင်ပါမယ်။', '친구에게 부탁하는 말과 상사에게 부탁하는 말을 각각 해 보세요.', 'Give two appropriate versions of a request, one to a friend and one to a supervisor.'),
 ('စနစ်တကျ တင်ပြခြင်း', 'ပြဿနာ၊အကျိုးသက်ရောက်မှု၊အဆိုပြုချက်ကို တင်ပြနိုင်မယ်။', 'Factory', '우선 … 다음으로 … 마지막으로 …', 'နားထောင်သူလိုက်နိုင်အောင် အပိုင်းလိုက်တင်ပြပြီး နောက်ဆုံးအရေးကြီးချက်ကို အကျဉ်းချုပ်ပါ။', '개선 제안을 간단히 발표해 주시겠어요?', '우선 현재 문제를 설명하겠습니다. 다음으로 대안을 비교하겠습니다.', 'ပထမ လက်ရှိပြဿနာကို ရှင်းပြပါမယ်။ နောက် ရွေးချယ်စရာတွေကို နှိုင်းယှဉ်ပါမယ်။', '가상의 업무 문제, 영향, 해결 제안을 순서대로 발표해 보세요.', 'Organize a short presentation containing problem, impact, and proposed response.'),
-('သတင်းနဲ့ အမြင် ခွဲပြောခြင်း', 'အကြောင်းအရာကို အကျဉ်းချုပ်ပြီး ကိုယ့်အမြင်ဖြည့်နိုင်မယ်။', 'Discussion', '요지는 … / 제 의견은 …', 'အရင်းအမြစ်ကပြောထားတာ၊ ကိုယ့်ကောက်ချက်၊ မသေချာတဲ့အချက်ကို ခွဲဖော်ပြပါ။', '이 안내를 요약해 보세요: 다음 달부터 교육 시간이 늘고 신청은 금요일까지입니다.', '안내의 요지는 교육 시간이 늘어난다는 것이며, 신청 마감은 금요일입니다.', 'ကြေညာချက်ရဲ့ အဓိကအချက်က သင်တန်းချိန်တိုးမယ်၊ လျှောက်ထားရမယ့်နောက်ဆုံးနေ့က သောကြာနေ့ပါ။', '주어진 안내의 핵심을 요약하고 자신의 의견을 덧붙여 보세요.', 'Summarize supplied announcement only, separating its facts from the learner opinion.'),
+('သတင်းနဲ့ အမြင် ခွဲပြောခြင်း', 'အကြောင်းအရာကို အကျဉ်းချုပ်ပြီး ကိုယ့်အမြင်ဖြည့်နိုင်မယ်။', 'Discussion', '요지는 … / 제 의견은 …', 'အရင်းအမြစ်ကပြောထားတာ၊ ကိုယ့်ကောက်ချက်၊ မသေချာတဲ့အချက်ကို ခွဲဖော်ပြပါ။', '이 안내를 요약해 보세요: 다음 달부터 교육 시간이 늘고 신청은 금요일까지입니다.', '안내의 요지는 교육 시간이 늘어난다는 것이며, 신청 마감은 금요일입니다.', 'ကြေညာချက်ရဲ့ အဓိကအချက်က သင်တန်းချိန်တိုးမယ်၊ လျှောက်ထားရမယ့်နောက်ဆုံးနေ့က သောကြာနေ့ပါ။', '안내: 다음 달부터 교육 시간이 늘고 신청은 금요일까지입니다. 핵심을 요약하고 자신의 의견을 덧붙여 보세요.', 'Summarize supplied announcement only, separating its facts from the learner opinion.'),
 ('ခံစားချက်နှင့် ပြေလည်မှု', 'နားလည်မှုလွဲတာကို ညင်ညင်သာသာ ရှင်းနိုင်မယ်။', 'Social', '… 의도는 아니었어요', 'ရည်ရွယ်ချက်ကို ရှင်းပြပြီး တစ်ဖက်ခံစားချက်ကို အသိအမှတ်ပြုပါ။', '동료가 말투 때문에 속상해해요. 어떻게 말하시겠어요?', '불편하게 하려는 의도는 아니었어요. 제 표현이 거칠었다면 미안해요.', 'စိတ်အနှောင့်အယှက်ပေးဖို့ ရည်ရွယ်တာမဟုတ်ဘူး။ ပြောပုံကြမ်းသွားရင် တောင်းပန်ပါတယ်။', '오해를 인정하고 자신의 의도와 앞으로의 행동을 설명해 보세요.', 'Repair a misunderstanding, recognizing the other feeling and giving an appropriate apology or clarification.'),
 ('အဆင့်မြင့် စွမ်းရည်စစ်', 'အခြေအနေအသစ်မှာ ကိုယ်တိုင်ဆွေးနွေးနိုင်မယ်။', 'Discussion', '주장 → 근거 → 대안 → 확인', 'အကူအညီမပါဘဲ ရည်ရွယ်ချက်ကို ရှင်းပြ၊ အမြင်ကွာခြားမှုကို ကိုင်တွယ်၊ နောက်လုပ်ဆောင်ချက်ကို အတည်ပြုပါ။', '업무 일정 변경을 어떻게 협의하시겠어요?', '먼저 변경 이유를 설명하고 가능한 대안을 함께 검토하겠습니다.', 'အရင် ပြောင်းလဲရတဲ့အကြောင်းပြချက်ကို ရှင်းပြပြီး ဖြစ်နိုင်တဲ့အစားထိုးနည်းကို အတူစဉ်းစားပါမယ်။', '가상의 일정 충돌을 설명하고 대안을 비교한 뒤 합의를 확인해 보세요.', 'Independently explain a schedule conflict, compare alternatives, and check agreement in natural, appropriate Korean.'),
 ]
 ]
+# Independent checks: different from the guided question and the transfer practice.
+CHECKS = [
+[
+('새 선생님에게 정중하게 인사해 보세요.', 'Greet a new teacher politely.'),
+('새 동료에게 자신의 이름을 말해 보세요.', 'Introduce the learner name with an appropriate polite ending.'),
+('좋아하는 음식이나 음료를 말해 보세요.', 'Say which food or drink you like in a polite Korean sentence.'),
+('자신이 어느 나라 사람인지 소개해 보세요.', 'State a nationality using a complete polite Korean sentence.'),
+('동료가 점심을 먹었는지 물어보세요.', 'Ask politely whether a coworker has had lunch.'),
+('요즘 배우는 것을 한 가지 말해 보세요.', 'Name something you are studying or learning in polite Korean.'),
+('동료가 길을 알려 줬어요. 감사 인사를 해 보세요.', 'Thank a coworker politely for directions.'),
+('설명을 이해하지 못했어요. 천천히 말해 달라고 부탁해 보세요.', 'Ask someone politely to speak slowly.'),
+],
+[
+('처음 만난 이웃에게 인사하고 이름을 말해 보세요.', 'Greet a new neighbor and introduce a name politely.'),
+('가게에서 물이 있는지 물어보세요.', 'Ask whether water is available using an appropriate polite expression.'),
+('동료에게 점심시간이 몇 시인지 물어보세요.', 'Ask politely what time the lunch break starts.'),
+('회사에서 사무실이 어디에 있는지 물어보세요.', 'Ask the location of an office in polite Korean.'),
+('카페에서 커피 두 잔을 주문해 보세요.', 'Order two cups of coffee politely using an appropriate counter.'),
+('동료에게 장갑을 달라고 부탁해 보세요.', 'Ask a coworker for gloves politely.'),
+('새 친구에게 좋아하는 음료를 물어보세요.', 'Ask a friend politely which drink they like.'),
+('퇴근 후에 보통 무엇을 하는지 말해 보세요.', 'Describe a usual after-work activity in a complete polite sentence.'),
+],
+[
+('어제 퇴근 후에 한 일을 말해 보세요.', 'Describe a past action with an appropriate past tense.'),
+('다음 주에 할 일을 말해 보세요.', 'State a future plan in a complete polite Korean sentence.'),
+('동료가 저것을 옮기라고 했어요. 어느 물건인지 확인해 보세요.', 'Politely clarify which item a coworker means.'),
+('혼자 할 수 있는 일과 도움이 필요한 일을 말해 보세요.', 'Explain one ability and one inability or need for help politely.'),
+('잠깐 전화를 받아도 되는지 물어보세요.', 'Ask permission politely to take a short phone call.'),
+('친구에게 주말에 같이 식사하자고 제안해 보세요.', 'Invite a friend to eat together on the weekend.'),
+('약속에 늦은 이유를 설명해 보세요.', 'Explain a reason for being late using a natural causal expression.'),
+('약속 시간에 못 가요. 다른 시간을 정중히 제안해 보세요.', 'Politely propose a new appointment time and explain why the original time is unsuitable.'),
+],
+[
+('처음 한국 음식을 먹어 본 경험과 느낌을 말해 보세요.', 'Describe an experience trying Korean food and how it felt; clearly hypothetical experience is acceptable.'),
+('오늘 끝낸 일과 아직 해야 할 일을 동료에게 설명해 보세요.', 'Report both completed work and remaining work coherently.'),
+('가상의 작업 중 문제가 생겼어요. 무슨 일을 하다가 어떻게 문제가 생겼는지 설명해 보세요.', 'Describe the sequence of a hypothetical problem during an ongoing action.'),
+('상사가 내일까지 상자를 정리하라고 했어요. 동료에게 그 지시를 전달해 보세요.', 'Faithfully report the instruction to organize boxes by tomorrow using appropriate reported speech.'),
+('내일 비가 오면 약속을 어떻게 바꿀지 말해 보세요.', 'State a conditional plan for changing an appointment if it rains tomorrow.'),
+('친구에게 한국어 공부 방법을 추천하고 이유를 말해 보세요.', 'Recommend a study method politely with a relevant reason.'),
+('상사에게 내일 일정 확인을 정중히 부탁해 보세요.', 'Ask a supervisor to confirm tomorrow schedule using an appropriate respectful register.'),
+('전화에서 금요일 세 시라는 말을 들었어요. 날짜와 시간을 다시 확인해 보세요.', 'Confirm the supplied day and time, Friday at three, politely during a phone call.'),
+],
+[
+('주말 초대를 정중히 거절하고 만날 수 있는 다른 날을 제안해 보세요.', 'Decline an invitation politely with a reason and a concrete alternative.'),
+('회의에서 제안에 정중히 반대하고 다른 방법을 설명해 보세요.', 'Disagree respectfully and explain an alternative with a supporting reason.'),
+('버스가 늦었어요. 약속 상대에게 상황과 도착 계획을 설명해 보세요.', 'Explain an unexpected delay and propose a practical next action.'),
+('주문량이 줄었어요. 작업 계획을 어떻게 바꿀지 이유와 함께 말해 보세요.', 'Connect a change in orders with a justified response in clear Korean.'),
+('협업이라는 말을 쉬운 한국어로 설명해 보세요.', 'Explain collaboration in simple Korean without relying on Myanmar.'),
+('버스와 지하철의 장단점을 비교하고 하나를 골라 이유를 말해 보세요.', 'Compare two transport options and justify a choice.'),
+('공지: 내일 회의는 오전 열 시이고 장소는 이 층입니다. 핵심을 동료에게 전달해 보세요.', 'Summarize the supplied announcement faithfully: meeting tomorrow at ten in the morning on the second floor.'),
+('오늘 일찍 퇴근해야 하지만 동료는 도움이 필요해요. 타협안을 제안해 보세요.', 'Acknowledge both needs and propose a workable compromise.'),
+],
+[
+('한국어를 함께 공부하는 모임을 제안하고 두 가지 장점을 설명해 보세요.', 'Present a study-group proposal with two coherent supporting reasons.'),
+('동료가 교육에는 시간이 너무 많이 든다고 해요. 그 의견을 인정하고 자신의 근거를 말해 보세요.', 'Acknowledge the time-cost counterargument and respond respectfully with a reason.'),
+('상대가 이번 주는 좀 바쁘네요라고 했어요. 의도를 단정하지 말고 정중히 확인해 보세요.', 'Clarify an ambiguous intention politely without assuming it means rejection.'),
+('자료를 보내 달라는 부탁을 친구와 상사에게 각각 해 보세요.', 'Give two natural requests for materials with appropriate different registers.'),
+('가상의 작업 지연 문제를 설명하고 영향과 개선안을 짧게 발표해 보세요.', 'Organize a short presentation covering a hypothetical delay, impact, and proposal.'),
+('공지: 다음 달부터 수업은 오후 일곱 시에 시작하고 신청은 월요일까지입니다. 사실을 요약한 뒤 의견을 덧붙여 보세요.', 'Faithfully summarize the supplied announcement: classes start at seven p.m. next month and applications are due Monday. Clearly separate opinion from facts.'),
+('친구가 약속을 잊었다고 생각해 속상해해요. 오해를 풀고 다음 행동을 설명해 보세요.', 'Recognize the other feeling, clarify the misunderstanding, and propose a next action respectfully.'),
+('두 사람이 같은 휴가 날짜를 원해요. 가상의 상황을 설명하고 대안을 비교한 뒤 합의를 확인해 보세요.', 'Independently explain a hypothetical leave conflict, compare alternatives, and confirm agreement in appropriate Korean.'),
+]
+]
+
 FIELDS = ['title','goal','topic','pattern','explanation','question','example','meaning','transfer','criterion']
 units = []
 for level, rows in enumerate(DATA):
     for index, row in enumerate(rows):
         assert len(row) == len(FIELDS)
-        units.append(dict(id=f'course-{level}-{index+1}', level=level, **dict(zip(FIELDS,row))))
+        check, check_criterion = CHECKS[level][index]
+        units.append(dict(id=f'course-{level}-{index+1}', level=level, **dict(zip(FIELDS,row)),
+                          check=check, checkCriterion=check_criterion))
 if __name__ == '__main__':
     target = Path(__file__).resolve().parents[1] / 'app/src/main/assets/learning/curriculum.json'
     target.parent.mkdir(parents=True, exist_ok=True)

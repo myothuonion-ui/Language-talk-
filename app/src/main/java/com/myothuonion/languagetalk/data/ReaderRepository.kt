@@ -100,10 +100,15 @@ class ReaderRepository(private val context: Context, val store: LearningStore,
     }
     suspend fun saveWord(book: ReaderBook, page: Int, value: ReaderTranslation) {
         val id = "word-" + digest(book.id + "|" + page + "|" + value.key)
+        val korean = (value.lemma + value.selected).any { it in '\uAC00'..'\uD7AF' || it in '\u3131'..'\u318E' }
+        val prompt = if (korean) "이 단어로 자신의 문장을 만들어 보세요: " + value.lemma
+            else "이 뜻을 한국어 문장으로 표현해 보세요: " + value.meaning
+        val criterion = if (korean) "Use the word " + value.lemma + " correctly in a NEW Korean sentence."
+            else "Express this meaning in a NEW Korean sentence: " + value.meaning + ". Do not require the original English word."
         store.update { state ->
             if (state.cards.any { it.id == id }) state else state.copy(cards = (state.cards +
-                ReviewCard(id, value.lemma, "이 단어로 자신의 문장을 만들어 보세요: " + value.lemma,
-                    "Use the word " + value.lemma + " correctly in a NEW Korean sentence. Meaning: " + value.meaning + ". Accept conjugations and personal context.",
+                ReviewCard(id, value.lemma, prompt,
+                    criterion + " Meaning: " + value.meaning + ". Accept conjugations and personal context.",
                     value.selected, value.meaning, value.grammar, value.sentence, book.id, book.title, page,
                     "WORD", System.currentTimeMillis())).takeLast(5000))
         }

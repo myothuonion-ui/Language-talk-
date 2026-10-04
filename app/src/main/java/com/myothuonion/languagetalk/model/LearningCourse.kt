@@ -6,7 +6,8 @@ import kotlinx.serialization.Serializable
 data class LearningUnit(
     val id: String, val level: Int, val title: String, val goal: String, val topic: String,
     val pattern: String, val explanation: String, val question: String, val example: String,
-    val meaning: String, val transfer: String, val criterion: String
+    val meaning: String, val transfer: String, val criterion: String,
+    val check: String = "", val checkCriterion: String = ""
 )
 
 enum class CoachStep(val label: String) {
@@ -61,10 +62,17 @@ object CoachEngine {
             CoachStep.ROLE_SWAP -> CoachTask(unit.example, "အခု မင်းက မေးသူပါ။ ဒီအဖြေရအောင် ကိုရီးယားလို မေးခွန်းမေးပါ။",
                 "Ask an appropriate Korean question to elicit: " + unit.example + ". Model question: " + unit.question,
                 unit.question, "ဖြေသူကနေ မေးသူအဖြစ် အလှည့်လဲမယ်။", "မေးခွန်းကို ကိုယ်တိုင်မေးနိုင်ခြင်း")
-            CoachStep.TRANSFER, CoachStep.CHECK -> CoachTask(unit.transfer, unit.transfer,
-                unit.criterion + " Answer this NEW situation in Korean: " + unit.transfer + ". Do not demand the exact model wording.",
+            CoachStep.TRANSFER -> CoachTask(unit.transfer, unit.transfer,
+                unit.criterion + " Answer this NEW situation in Korean: " + unit.transfer + ". Related fictional practice context, only if needed: " + unit.question + ". Do not demand the exact model wording.",
                 "", "", unit.goal)
-            else -> CoachTask(unit.question, unit.question, unit.criterion + " Respond appropriately in Korean to: " + unit.question,
+            CoachStep.CHECK -> {
+                val prompt = unit.check.ifBlank { unit.transfer }
+                CoachTask(prompt, prompt, unit.checkCriterion.ifBlank { unit.criterion } +
+                    " Answer in Korean: " + prompt + ". Accept appropriate alternatives, without demanding model wording.", "", "", unit.goal)
+            }
+            else -> CoachTask(unit.question, unit.question,
+                "Respond appropriately in Korean to: " + unit.question + ". One possible answer: " + unit.example +
+                    ". Accept other semantically appropriate answers and personal details. Target pattern for this practice: " + unit.pattern,
                 unit.example, if (stage == CoachStep.GUIDED) unit.meaning else "", unit.goal)
         }
     }

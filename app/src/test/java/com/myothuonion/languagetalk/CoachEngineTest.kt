@@ -54,4 +54,17 @@ class CoachEngineTest {
         assertTrue(CoachEngine.task(unit, CoachStep.LISTEN.ordinal).criterion.contains(unit.meaning))
         assertEquals("", CoachEngine.task(unit, CoachStep.CHECK.ordinal).hint)
     }
+    @Test fun guidedAnswerUsesItsQuestionAndCheckHasAnIndependentSituation() {
+        val unit = LearningUnit("1", 1, "available", "goal", "Daily", "있어요", "explain",
+            "물 있어요?", "네, 물 있어요.", "ရေရှိတယ်။", "우유가 있는지 물어보세요.", "Ask if milk is available",
+            "커피가 있는지 물어보세요.", "Ask if coffee is available")
+        val guided = CoachEngine.task(unit, CoachStep.GUIDED.ordinal)
+        assertTrue(guided.criterion.contains(unit.question))
+        assertFalse(guided.criterion.contains("milk"))
+        val check = CoachEngine.task(unit, CoachStep.CHECK.ordinal)
+        assertEquals(unit.check, check.prompt)
+        assertNotEquals(CoachEngine.task(unit, CoachStep.TRANSFER.ordinal).prompt, check.prompt)
+        assertTrue(check.criterion.contains("coffee"))
+        assertTrue(check.example.isEmpty() && check.hint.isEmpty())
+    }
 }
