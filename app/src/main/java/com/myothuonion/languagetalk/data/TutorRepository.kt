@@ -222,10 +222,12 @@ class TutorRepository(
     }
 
     /** Book mode never writes fictional textbook identities to personal memory. */
-    suspend fun bookResponse(instruction: String, input: String, audio: AudioPayload? = null): TutorReply {
+    suspend fun bookResponse(instruction: String, input: String, audio: AudioPayload? = null,
+        assessmentOnly: Boolean = false): TutorReply {
         val current = settingsStore.settings.first()
         return withGeminiFallback("Book course", current.geminiModel, textModels(current.geminiModel)) { model ->
-            gemini.tutorReply(secrets.geminiApiKey, model, instruction, emptyList(), input, audio, temperature = 0.15)
+            gemini.tutorReply(secrets.geminiApiKey, model, instruction, emptyList(), input, audio,
+                temperature = 0.15, allowEmptyReply = assessmentOnly)
         }.value
     }
 

@@ -83,6 +83,24 @@ class GeminiHttpTest {
         assertNull(body["response_format"]!!.jsonObject["delivery"])
     }
 
+    @Test fun bookAudioAssessmentAcceptsTranscriptWithoutGeneratedReply() = runBlocking<Unit> {
+        enqueue(output(buildJsonArray { add(buildJsonObject {
+            put("type", "text")
+            put("text", """{"reply":"","assessment":"PASSED","heardText":"반갑습니다. 저는 이지연이에요."}""")
+        }) }))
+        val reply = client.tutorReply("test-key-only", GeminiModels.TEXT,
+            "Assess the audio. The app owns the next textbook line; leave reply empty.",
+            emptyList(), "Evaluate my audio attempt.", AudioPayload(byteArrayOf(1, 2, 3), "audio/mp4"),
+            temperature = 0.15, allowEmptyReply = true)
+        assertEquals("", reply.reply)
+        assertEquals("PASSED", reply.assessment)
+        assertEquals("반갑습니다. 저는 이지연이에요.", reply.heardText)
+        assertEquals("", reply.nextTargetSentence)
+        val body = Json.parseToJsonElement(server.takeRequest().body.readUtf8()).jsonObject
+        assertEquals(0.15, body["generation_config"]!!.jsonObject["temperature"]!!.jsonPrimitive.double, 0.001)
+        assertTrue(body["input"]!!.jsonArray.any { it.jsonObject["type"]!!.jsonPrimitive.content == "audio" })
+    }
+
     @Test fun modernQuotaFailureRoutesToAvailableModernModelNeverToLegacy() = runBlocking<Unit> {
         enqueue("""{"error":{"message":"Quota exhausted"}}""", 429)
         enqueue(replyResponse())

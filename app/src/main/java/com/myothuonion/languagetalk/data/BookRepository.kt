@@ -89,7 +89,7 @@ class BookRepository(private val context: Context, val store: BookStore, private
             new grammar topics, numerical pronunciation scores, or claims about the learner's identity.
             Explain how to approach exercises without revealing their answers first. Keep any additional
             explanation clearly separate from original book text. Put the explanation in reply;
-            leave followUpQuestion, assessment, memoryFact and memoryEvidence empty. No greeting.
+            set assessment to NONE; leave followUpQuestion, memoryFact and memoryEvidence empty. No greeting.
         """.trimIndent(), "${book.title}, chapter ${state.chapter}, pages ${section.pages.joinToString()}\nSOURCE:\n$source")
         val text = response.reply.trim().take(12000)
         require(text.isNotBlank()) { "မြန်မာရှင်းပြချက် မရပါ။ ထပ်စမ်းပါ" }
@@ -123,7 +123,7 @@ class BookRepository(private val context: Context, val store: BookStore, private
             correction and explanation should contain ONE concise useful correction in Myanmar.
             Leave reply, followUpQuestion, targetSentence, nextTargetSentence, memoryFact and memoryEvidence empty.
             SOURCE: ${section.sourceText}
-        """.trimIndent(), text.ifBlank { "Evaluate my audio attempt." }, audio)
+        """.trimIndent(), text.ifBlank { "Evaluate my audio attempt." }, audio, assessmentOnly = true)
         val heard = reply.heardText.ifBlank { if (audio == null) text else "" }
         val command = BookEngine.command(heard)
         val feedback = listOf(reply.correction, reply.explanation).filter(String::isNotBlank).distinct().joinToString("\n")

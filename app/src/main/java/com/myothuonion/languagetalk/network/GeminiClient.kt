@@ -36,7 +36,8 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private
         history: List<MessageEntity>,
         userText: String,
         audio: AudioPayload? = null,
-        temperature: Double = 0.7
+        temperature: Double = 0.7,
+        allowEmptyReply: Boolean = false
     ): TutorReply {
         requireKey(apiKey)
         val contents = buildJsonArray {
@@ -83,7 +84,7 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private
         }
 
         val text = postGenerate(apiKey, model, body)
-        return parseTutorReply(text)
+        return parseTutorReply(text, allowEmptyReply)
     }
 
     suspend fun finalizeWithReview(
@@ -309,14 +310,14 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private
         }
     }
 
-    internal fun parseTutorReply(raw: String): TutorReply {
+    internal fun parseTutorReply(raw: String, allowEmptyReply: Boolean = false): TutorReply {
         val clean = raw.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
         return runCatching {
             val obj = json.parseToJsonElement(clean).jsonObject
-            require(obj.string("reply").isNotBlank()) { "Missing tutor reply" }
+            require(allowEmptyReply || obj.string("reply").isNotBlank()) { "Missing tutor reply" }
             require(obj.string("assessment") in listOf("NONE", "PASSED", "RETRY", "UNSURE")) { "Invalid assessment" }
             TutorReply(
-                reply = obj.string("reply").ifBlank { clean },
+                reply = obj.string("reply"),
                 heardText = obj.string("heardText"),
                 translation = obj.string("translation"),
                 correction = obj.string("correction"),
