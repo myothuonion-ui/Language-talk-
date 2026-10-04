@@ -48,7 +48,8 @@ import kotlinx.coroutines.withContext
 
 @Composable
 internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
-    onBack: () -> Unit, onSettings: () -> Unit, onApply: (TutorConfig) -> Unit) {
+    onBack: () -> Unit, onSettings: () -> Unit, onRead: ((String, Int) -> Unit)? = null,
+    onApply: (TutorConfig) -> Unit) {
     val ui by viewModel.state.collectAsState()
     val shelf by viewModel.shelf.collectAsState()
     val live by viewModel.live.collectAsState()
@@ -267,7 +268,10 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
             }
         }
     }
-    if (pdfPage > 0) BookPdfDialog(book, pdfPage, viewModel, { pdfPage = 0 })
+    if (pdfPage > 0) {
+        if (onRead != null) LaunchedEffect(pdfPage) { onRead(book.id, pdfPage); pdfPage = 0 }
+        else BookPdfDialog(book, pdfPage, viewModel, { pdfPage = 0 })
+    }
 }
 
 @Composable

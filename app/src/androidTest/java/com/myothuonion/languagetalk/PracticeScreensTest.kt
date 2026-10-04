@@ -23,18 +23,25 @@ class PracticeScreensTest {
     }
 
     @Test fun homeReviewContextAndSavedVoiceSettingsAreAccessible() {
-        compose.onNodeWithText("My Books · Korean Conversations").assertIsDisplayed()
+        compose.waitUntil(10000) { compose.onAllNodesWithText("My Books").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("My Books").assertIsDisplayed()
         capture("home")
-        compose.onNodeWithText("Review", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("Review & recordings").assertIsDisplayed()
-        capture("review")
-        compose.onNodeWithText("My Context", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Practice", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("start-today").assertIsDisplayed()
+        capture("practice")
+        compose.onNodeWithText("Me", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("My Context").performClick()
         compose.onNodeWithText("Save profile").assertIsDisplayed()
         capture("context")
-        compose.onNodeWithText("Settings", useUnmergedTree = true).performClick()
-        compose.onNodeWithTag("settings-list").performScrollToNode(hasText("API keys"))
-        compose.onNodeWithText("Test").assertIsDisplayed()
+        compose.activity.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+        compose.onNodeWithTag("learning-profile").performScrollToNode(hasText("Settings"))
+        compose.onNodeWithText("Settings").performClick()
+        compose.onNodeWithTag("simple-settings").assertExists()
+        compose.onNodeWithText("အသံနဲ့ သင်ယူမှု").assertIsDisplayed()
         capture("api-settings")
+        compose.onNodeWithTag("simple-settings").performScrollToNode(hasText("Advanced settings"))
+        compose.onNodeWithText("Advanced settings").performClick()
         compose.onNodeWithTag("settings-list").performScrollToNode(hasText("My default voice preset"))
         compose.onNodeWithText("My default voice preset").assertIsDisplayed()
         capture("voice-settings")

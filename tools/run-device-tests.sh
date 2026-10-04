@@ -7,10 +7,10 @@ if [ "$test_status" -eq 0 ]; then
     # Reinstall and capture the UI while the emulator/app are still available.
     adb install -t app/build/outputs/apk/debug/app-debug.apk &&
         adb install -t app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk &&
-        adb shell am instrument -w -r -e class com.myothuonion.languagetalk.PracticeScreensTest,com.myothuonion.languagetalk.LiveErrorScreenTest,com.myothuonion.languagetalk.BookCoursesTest com.myothuonion.languagetalk.test/androidx.test.runner.AndroidJUnitRunner > ui-instrumentation.log
+        adb shell am instrument -w -r -e class com.myothuonion.languagetalk.PracticeScreensTest,com.myothuonion.languagetalk.LiveErrorScreenTest,com.myothuonion.languagetalk.BookCoursesTest,com.myothuonion.languagetalk.ReaderAndLearningTest com.myothuonion.languagetalk.test/androidx.test.runner.AndroidJUnitRunner > ui-instrumentation.log
     test_status=$?
     if [ "$test_status" -eq 0 ]; then
-        python3 -c 'from pathlib import Path; text = Path("ui-instrumentation.log").read_text(); print(text); assert "OK (4 tests)" in text, "UI capture test failed"'
+        python3 -c 'from pathlib import Path; text = Path("ui-instrumentation.log").read_text(); print(text); assert "OK (6 tests)" in text, "UI capture test failed"'
         test_status=$?
     fi
     if [ "$test_status" -eq 0 ]; then

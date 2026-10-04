@@ -5,6 +5,7 @@ package com.myothuonion.languagetalk.ui
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.BackHandler
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -50,6 +51,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
@@ -128,15 +130,21 @@ import java.util.Date
 import java.util.Locale
 
 private enum class Screen {
-    HOME, NEW_CHAT, HISTORY, CHAT_HUB, MEMORY, SETTINGS, MESSAGE_CHAT, LIVE_CHAT, NAME_STUDIO, QUICK_TRANSLATE, BOOKS
+    HOME, NEW_CHAT, HISTORY, CHAT_HUB, MEMORY, SETTINGS, MESSAGE_CHAT, LIVE_CHAT, NAME_STUDIO, QUICK_TRANSLATE, BOOKS,
+    LIBRARY, COACH, ME, READER, ADVANCED
 }
 
 @Composable
 fun LanguageTalkApp(viewModel: AppViewModel) {
     val bookViewModel: BookViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val coachViewModel: CoachViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val readerViewModel: ReaderViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
     val settings by viewModel.settings.collectAsState()
     LanguageTalkTheme(settings.darkTheme) {
-        var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
+        var screen by rememberSaveable { mutableStateOf(Screen.LIBRARY) }
+        var readerReturn by rememberSaveable { mutableStateOf(Screen.LIBRARY) }
+        val coachUi by coachViewModel.ui.collectAsState()
+        val readerUi by readerViewModel.ui.collectAsState()
         val chats by viewModel.chats.collectAsState()
         val currentId by viewModel.currentChatId.collectAsState()
         val messages by viewModel.messages.collectAsState()
@@ -171,18 +179,46 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
             viewModel.openChat(it)
             screen = Screen.LIVE_CHAT
         }
+        val readBook: (String, Int?) -> Unit = { id, page ->
+            viewModel.closeChat(); bookViewModel.close(); coachViewModel.stopAll()
+            readerReturn = screen
+            readerViewModel.open(id, page)
+            screen = Screen.READER
+        }
+        LaunchedEffect(readerUi.bookId) {
+            if (readerUi.bookId.isNotBlank() && screen == Screen.LIBRARY) {
+                readerReturn = Screen.LIBRARY
+                screen = Screen.READER
+            }
+        }
+        if (screen in listOf(Screen.SETTINGS, Screen.ADVANCED, Screen.MEMORY, Screen.HISTORY, Screen.CHAT_HUB)) {
+            BackHandler { screen = if (screen == Screen.ADVANCED) Screen.SETTINGS else if (screen == Screen.CHAT_HUB) Screen.COACH else Screen.ME }
+        }
 
         Scaffold(
             snackbarHost = { SnackbarHost(snackbar) },
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
-                if (screen in listOf(Screen.HOME, Screen.HISTORY, Screen.CHAT_HUB, Screen.MEMORY, Screen.SETTINGS)) {
-                    AppBottomBar(screen) { screen = it }
+                if (screen in listOf(Screen.LIBRARY, Screen.COACH, Screen.ME) && !coachUi.open) {
+                    AppBottomBar(screen) { coachViewModel.stopAll(); screen = it }
                 }
             }
         ) { padding ->
             Box(Modifier.fillMaxSize().padding(padding)) {
                 when (screen) {
+                    Screen.LIBRARY -> BookshelfScreen(readerViewModel,
+                        onRead = { readBook(it, null) }, onStudy = { id ->
+                            viewModel.closeChat(); bookViewModel.selectBook(id); screen = Screen.BOOKS
+                        })
+                    Screen.READER -> PdfReaderScreen(readerViewModel, onBack = { readerViewModel.close(); screen = readerReturn })
+                    Screen.COACH -> CoachScreen(coachViewModel, settings,
+                        onBooks = { screen = Screen.LIBRARY }, onConversation = { screen = Screen.CHAT_HUB },
+                        onSettings = { screen = Screen.SETTINGS })
+                    Screen.ME -> LearningProfileScreen(coachViewModel, settings,
+                        onPractice = { screen = Screen.COACH }, onRead = { id, page -> readBook(id, page) },
+                        onSettings = { screen = Screen.SETTINGS }, onContext = { screen = Screen.MEMORY },
+                        onHistory = { screen = Screen.HISTORY }, onTranslate = { screen = Screen.QUICK_TRANSLATE },
+                        onNames = { screen = Screen.NAME_STUDIO })
                     Screen.HOME -> LearningHomeScreen(settings, chats, progress, reviews,
                         onContinue = openLiveChat, onNew = { screen = Screen.NEW_CHAT },
                         onQuick = { config ->
@@ -193,14 +229,15 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                         onTranslate = { screen = Screen.QUICK_TRANSLATE }, onNames = { screen = Screen.NAME_STUDIO },
                         onBooks = { viewModel.closeChat(); screen = Screen.BOOKS })
                     Screen.BOOKS -> BookCoursesScreen(bookViewModel, settings,
-                        onBack = { screen = Screen.HOME }, onSettings = { screen = Screen.SETTINGS },
+                        onBack = { screen = Screen.LIBRARY }, onSettings = { screen = Screen.SETTINGS },
+                        onRead = { id, page -> readBook(id, page - 1) },
                         onApply = { config -> viewModel.createChat(config.copy(brainMode = settings.brainMode,
                             voiceName = settings.defaultVoiceName, voiceStyle = settings.defaultVoiceStyle,
                             speakingPace = settings.defaultPace, silenceMs = settings.defaultSilenceMs,
                             speakCorrections = settings.defaultSpeakCorrections)) { screen = Screen.LIVE_CHAT } })
                     Screen.NEW_CHAT -> NewChatScreen(
                         defaults = settings,
-                        onBack = { screen = Screen.HOME },
+                        onBack = { screen = Screen.COACH },
                         onStart = { config -> viewModel.createChat(config) { screen = Screen.LIVE_CHAT } }
                     )
                     Screen.HISTORY -> ReviewScreen(reviews, recordings,
@@ -227,7 +264,9 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                         onExport = viewModel::exportBackup, onRestore = viewModel::importBackup,
                         onImportSource = viewModel::importSource, onToggleSource = viewModel::toggleSource,
                         onDeleteSource = viewModel::deleteSource)
-                    Screen.SETTINGS -> SettingsScreen(
+                    Screen.SETTINGS -> SimpleSettingsScreen(settings, credentials, viewModel, readerViewModel,
+                        onBack = { screen = Screen.ME }, onAdvanced = { screen = Screen.ADVANCED })
+                    Screen.ADVANCED -> SettingsScreen(
                         settings = settings,
                         credentials = credentials,
                         geminiRoute = geminiRoute,
@@ -273,12 +312,12 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                     }
                     Screen.NAME_STUDIO -> NameStudioScreen(
                         state = nameStudio,
-                        onBack = { viewModel.clearNameStudio(); screen = Screen.HOME },
+                        onBack = { viewModel.clearNameStudio(); screen = Screen.ME },
                         onGenerate = viewModel::generateKoreanNames
                     )
                     Screen.QUICK_TRANSLATE -> QuickTranslateScreen(
                         state = quickTranslate,
-                        onBack = { viewModel.clearQuickTranslate(); screen = Screen.HOME },
+                        onBack = { viewModel.clearQuickTranslate(); screen = Screen.ME },
                         onTranslate = viewModel::translateText,
                         onMic = viewModel::toggleTranslateRecording,
                         onListen = viewModel::speakToolText
@@ -312,11 +351,9 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
 private fun AppBottomBar(screen: Screen, onSelect: (Screen) -> Unit) {
     NavigationBar(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f)) {
         listOf(
-            Triple(Screen.HOME, Icons.Default.Home, "Home"),
-            Triple(Screen.HISTORY, Icons.Default.History, "Review"),
-            Triple(Screen.CHAT_HUB, Icons.Default.ChatBubbleOutline, "Practice"),
-            Triple(Screen.MEMORY, Icons.Default.AutoAwesome, "My Context"),
-            Triple(Screen.SETTINGS, Icons.Default.Settings, "Settings")
+            Triple(Screen.LIBRARY, Icons.Default.MenuBook, "Books"),
+            Triple(Screen.COACH, Icons.Default.Mic, "Practice"),
+            Triple(Screen.ME, Icons.Default.Person, "Me")
         ).forEach { (target, icon, label) ->
             NavigationBarItem(
                 selected = screen == target,

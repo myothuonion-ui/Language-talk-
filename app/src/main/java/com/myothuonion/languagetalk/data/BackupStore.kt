@@ -13,6 +13,7 @@ import java.io.File
 import java.util.Base64
 import java.util.UUID
 import com.myothuonion.languagetalk.model.BookShelfState
+import com.myothuonion.languagetalk.model.LearningState
 
 @Serializable
 data class BackupPreferences(
@@ -43,7 +44,8 @@ data class LearningBackup(
     val reviews: List<ReviewItemEntity> = emptyList(),
     val audio: List<BackupAudio> = emptyList(),
     val preferences: BackupPreferences = BackupPreferences(),
-    val books: BookShelfState = BookShelfState()
+    val books: BookShelfState = BookShelfState(),
+    val learning: LearningState = LearningState()
 )
 
 object BackupCodec {
@@ -74,11 +76,12 @@ object BackupCodec {
 }
 
 class BackupStore(private val db: AppDatabase, private val settings: SettingsStore, private val recordings: File,
-    private val books: BookStore? = null) {
+    private val books: BookStore? = null, private val learning: LearningStore? = null) {
     suspend fun export(): ByteArray {
         val dao = db.dao()
         val preferences = settings.settings.first()
         val bookState = books?.export() ?: BookShelfState()
+        val learningState = learning?.export() ?: LearningState()
         val backup = db.withTransaction {
             val messages = dao.allMessages()
             val audio = messages.filter { it.audioPath.isNotBlank() && it.audioPath == File(it.audioPath).name }.mapNotNull { message ->
@@ -87,6 +90,7 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
             }
             LearningBackup(chats = dao.allChats(), messages = messages, memories = dao.allMemories(),
                 sources = dao.allSources().map { it.copy(uri = "") }, progress = dao.allProgress(), reviews = dao.allReviews(), audio = audio, books = bookState,
+                learning = learningState.copy(attempts = learningState.attempts.map { it.copy(audioName = "") }),
                 preferences = BackupPreferences(preferences.displayName, preferences.learnerProfile, preferences.globalBehavior,
                     preferences.defaultVoiceName, preferences.defaultVoiceStyle, preferences.defaultPace, preferences.defaultSilenceMs,
                     preferences.defaultSpeakCorrections, preferences.autoLearningMemory, preferences.recordPractice))
@@ -99,6 +103,7 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
     suspend fun restore(bytes: ByteArray): Int {
         val backup = BackupCodec.decode(bytes)
         books?.validateRestore(backup.books)
+        learning?.validateRestore(backup.learning)
         val stagedFiles = mutableListOf<File>()
         recordings.mkdirs()
         try {
@@ -129,6 +134,8 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
             defaultPace = prefs.pace, defaultSilenceMs = prefs.silenceMs.coerceIn(800, 4000), defaultSpeakCorrections = prefs.speakCorrections,
             autoLearningMemory = prefs.autoLearningMemory, recordPractice = prefs.recordPractice) }
         if (backup.books.progress.isNotEmpty() || backup.books.explanations.isNotEmpty()) books?.restore(backup.books)
+        if (backup.learning.units.isNotEmpty() || backup.learning.books.isNotEmpty() || backup.learning.cards.isNotEmpty() ||
+            backup.learning.placementDone || backup.learning.studySeconds.isNotEmpty()) learning?.restore(backup.learning)
         return backup.chats.size
     }
 }

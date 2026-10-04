@@ -51,7 +51,8 @@ class TutorRepository(
     private val secrets: SecretStore,
     private val gemini: GeminiClient,
     private val nvidia: NvidiaClient,
-    private val bookStore: BookStore? = null
+    private val bookStore: BookStore? = null,
+    private val learningStore: LearningStore? = null
 ) {
     private val turnMutex = Mutex()
     private val catalogMutex = Mutex()
@@ -61,7 +62,7 @@ class TutorRepository(
     val recordings = dao.observeRecordings()
     val progress = dao.observeProgress()
     val reviews = dao.observeReviews()
-    val backup by lazy { BackupStore(database, settingsStore, recordingDirectory, bookStore) }
+    val backup by lazy { BackupStore(database, settingsStore, recordingDirectory, bookStore, learningStore) }
     val chats = dao.observeChats()
     val memories = dao.observeGlobalMemories()
     val sources = dao.observeKnowledgeSources()
@@ -231,9 +232,15 @@ class TutorRepository(
         }.value
     }
 
-    suspend fun bookSpeech(text: String, slow: Boolean): AudioPayload {
+    suspend fun learningContext(): String {
         val current = settingsStore.settings.first()
-        return geminiSpeech(current.geminiTtsModel, text, current.defaultVoiceName,
+        val personal = dao.allMemories().filter { it.enabled && it.scopeChatId == null }
+        return (current.learnerProfile + "\n" + personal.joinToString("\n") { it.title + ": " + it.content }).take(6000)
+    }
+
+    suspend fun bookSpeech(text: String, slow: Boolean, voiceOverride: String? = null): AudioPayload {
+        val current = settingsStore.settings.first()
+        return geminiSpeech(current.geminiTtsModel, text, voiceOverride ?: current.defaultVoiceName,
             current.defaultVoiceStyle + if (slow) " Speak slowly and clearly. Read exactly the supplied text." else " Speak at a natural pace. Read exactly the supplied text.")
     }
 

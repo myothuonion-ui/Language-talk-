@@ -37,11 +37,11 @@ jobs:
       - name: Unit tests, lint, APK, and device-test compilation
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest --stacktrace
       - name: Prepare APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.6.0.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.7.0.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: language-talk-v0.6.0-apk
-          path: language-talk-v0.6.0.apk
+          name: language-talk-v0.7.0-apk
+          path: language-talk-v0.7.0.apk
           if-no-files-found: error
           retention-days: 90
       - uses: actions/upload-artifact@v4
@@ -54,6 +54,10 @@ jobs:
             app/build/reports/lint-results-debug.html
 
   device-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [29, 35]
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -72,7 +76,7 @@ jobs:
       - name: Test upgrade, restore, and screens on Android
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 29
+          api-level: ${{ matrix.api }}
           arch: x86_64
           profile: pixel_2
           disable-animations: true
@@ -80,7 +84,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: device-tests-and-screenshots
+          name: device-tests-and-screenshots-${{ matrix.api }}
           path: |
             app/build/reports/androidTests
             app/build/outputs/androidTest-results
@@ -118,32 +122,31 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: language-talk-v0.6.0-apk
+          name: language-talk-v0.7.0-apk
       - uses: actions/download-artifact@v4
         with:
           name: language-talk-legacy-backup-windows
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.6.0
-          name: Language Talk AI v0.6.0
+          tag_name: v0.7.0
+          name: Language Talk AI v0.7.0
           body: |
-            Built-in TTMIK Real-Life Korean Conversations: Beginner (40 chapters) and Intermediate (30 chapters).
+            Korean Coach + integrated PDF reader with a simpler Books / Practice / Me design.
 
-            - Both original user-supplied PDFs and all 70 page-linked chapters are included
-            - Exact dialogue turns, selectable roles, multiple characters and formal/casual scenes
-            - Original vocabulary, cultural tips, grammar, pronunciation and 507 exercises/answers
-            - Myanmar explanations generated with your configured Gemini key and cached locally
-            - Hands-free book practice, typed answers, Slow/Natural pace and existing custom voice settings
-            - Saved course/section/turn, corrections and review mistakes, included in portable backup
-            - Offline original-book reading with a page viewer; Korean Only review hides answers
-            - Extra personal application practice after a chapter, using its original grammar
+            - Import PDFs, saved reading position, bookmarks, pinch zoom, Text mode and Day/Sepia/Night
+            - Long-press words or drag phrases for Myanmar dictionary lookup on the same page
+            - Bundled Korean/Latin OCR for scanned pages; base forms, grammar, listening and saved words
+            - 48 original speaking units across six app stages, plus all 70 original TTMIK chapters
+            - Controlled listening, shadowing, role swap, independent practice and checkpoints
+            - Adaptive level estimate, work/social situations, spaced speaking review and progress
+            - Simple voice/reader/key settings; advanced options remain available
+            - Portable backup includes learning, saved words, dictionary cache and reader metadata
 
-            BACK UP FIRST: in your current app, My Context → Export backup before uninstalling. CI debug APKs use runner-generated signing keys; if Android rejects the update, install after backing up and uninstalling, restore your JSON and re-enter your API key.
-
-            Books and exact typed answers work offline. New Myanmar explanations and voice need your key/network. No personal provider keys are included in the APK, repository or CI.
-            Guide: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/BOOK_COURSES.md
-            Upgrade: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/UPGRADING.md
+            BACK UP FIRST: Me → My Context → Export backup. CI debug signing keys change; if Android rejects an update, back up before uninstalling, then install, restore JSON and re-enter your key.
+            Imported PDF bytes and new Coach recordings are not embedded in the JSON; keep your source PDFs to reimport. Prior chat audio is still backed up.
+            Offline: books and cached lookups. New translations/assessments/AI audio require your key/network. Sample audio and feedback are AI-generated; app levels are learning estimates, not official certification.
+            Guide: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/LEARNING_READER.md
           files: |
-            language-talk-v0.6.0.apk
+            language-talk-v0.7.0.apk
             language-talk-legacy-backup-windows.exe
           make_latest: true

@@ -1,3 +1,13 @@
+# Language Talk AI v0.7.0
+
+Simple Books / Practice / Me interface, integrated PDF reading with Myanmar dictionary lookup, and a six-stage Korean speaking coach.
+
+- [Download APK](https://github.com/myothuonion-ui/Language-talk-/releases/download/v0.7.0/language-talk-v0.7.0.apk)
+- [Release and complete source](https://github.com/myothuonion-ui/Language-talk-/releases/tag/v0.7.0)
+- [Korean Coach and PDF reader guide](docs/LEARNING_READER.md)
+
+48 original units complement the source-faithful 70 bundled TTMIK chapters. New translations, assessments and AI voice require your own configured key; books and cached lookups work offline. Back up from Me → My Context before upgrading. Keep original imported PDFs for reimport after reinstalling.
+
 # Language Talk AI v0.6.0
 
 ## Built-in books

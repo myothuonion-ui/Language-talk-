@@ -32,7 +32,7 @@ data class AppSettings(
     val defaultSilenceMs: Int = 2000,
     val defaultSpeakCorrections: Boolean = true,
     val autoSpeak: Boolean = true,
-    val darkTheme: Boolean = true
+    val darkTheme: Boolean = false
 )
 
 class SettingsStore(private val context: Context) {
@@ -56,7 +56,7 @@ class SettingsStore(private val context: Context) {
             defaultSilenceMs = (prefs[DEFAULT_SILENCE_MS]?.toIntOrNull() ?: 2000).coerceIn(800, 4000),
             defaultSpeakCorrections = prefs[DEFAULT_SPEAK_CORRECTIONS] ?: true,
             autoSpeak = prefs[AUTO_SPEAK] ?: true,
-            darkTheme = prefs[DARK_THEME] ?: true
+            darkTheme = prefs[DARK_THEME] ?: false
         )
     }
 
