@@ -58,6 +58,8 @@ class BuiltInBooksTest(unittest.TestCase):
         self.assertEqual(len(taxi[8]["turns"]), 14)
 
     def test_intermediate_formal_casual_and_multiple_speakers(self):
+        first_patterns = [s for s in self.intermediate["chapters"][0]["sections"] if s["kind"] == "GRAMMAR"]
+        self.assertEqual([[e["page"] for e in s["exercises"]] for s in first_patterns], [[19, 19], [21, 21], [23, 23]])
         split = self.intermediate["chapters"][1]["sections"]
         self.assertEqual([s["id"] for s in split], ["formal", "casual", "vocab", "pattern-1", "pattern-2", "pattern-3"])
         self.assertEqual({t["speaker"] for t in split[0]["turns"]}, {"미영", "수철"})
@@ -88,6 +90,7 @@ class BuiltInBooksTest(unittest.TestCase):
                             self.assertFalse(re.search("[가-힣]", turn["english"]))
                     for ex in section["exercises"]:
                         self.assertTrue(ex["prompt"] and ex["answer"])
+                        self.assertIn(ex["page"], section["pages"])
                         self.assertFalse("Answer Key" in ex["prompt"])
 
 

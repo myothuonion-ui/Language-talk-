@@ -43,6 +43,7 @@ import androidx.core.content.ContextCompat
 import com.myothuonion.languagetalk.data.AppSettings
 import com.myothuonion.languagetalk.model.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 
 @Composable
@@ -275,8 +276,9 @@ private fun BookPdfDialog(book: BookCourse, initialPage: Int, viewModel: BookVie
     var zoom by remember(page) { mutableFloatStateOf(1f) }
     var offset by remember(page) { mutableStateOf(Offset.Zero) }
     var error by remember(page) { mutableStateOf<String?>(null) }
-    val bitmap by produceState<Bitmap?>(null, book.id, page) {
-        value = try {
+    var bitmap by remember(book.id, page) { mutableStateOf<Bitmap?>(null) }
+    LaunchedEffect(book.id, page) {
+        bitmap = try {
             withContext(Dispatchers.IO) {
                 val file = viewModel.sourcePdf(book.id)
                 PdfRenderer(ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)).use { renderer ->
@@ -288,7 +290,8 @@ private fun BookPdfDialog(book: BookCourse, initialPage: Int, viewModel: BookVie
                     }
                 }
             }
-        } catch (failure: Exception) { error = failure.message; null }
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (failure: Exception) { error = failure.message; null }
     }
     val transform = rememberTransformableState { change, pan, _ -> zoom = (zoom * change).coerceIn(1f, 4f); offset += pan }
     Dialog(onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {

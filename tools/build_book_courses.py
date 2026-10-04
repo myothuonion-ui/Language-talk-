@@ -116,8 +116,7 @@ def exercises(text, keys, page):
         n = int(m[1])
         if n not in keys:
             continue
-        prompt = re.sub(r"_{3,}|\[\s+\]|……〉|…+〉", "", m[2])
-        prompt = " ".join(prompt.split()).strip()
+        prompt = " ".join(m[2].split()).strip()
         entries.append({"number": n, "prompt": prompt, "answer": keys[n], "page": page})
     assert len(entries) == len(keys), (page, len(entries), keys)
     return entries
@@ -231,10 +230,11 @@ def extract(path, book_id):
                 for line in clean_page(pages[p - 1]).splitlines():
                     m = re.fullmatch(r"\s*Pattern ([123])\.\s*", line)
                     if m:
-                        current = {"number": int(m[1]), "pages": [], "lines": []}
+                        current = {"number": int(m[1]), "pages": [], "lines": [], "linePages": []}
                         pattern_blocks.append(current)
                     if current:
                         current["lines"].append(line)
+                        current["linePages"].append(p)
                         if p not in current["pages"]:
                             current["pages"].append(p)
             assert len(pattern_blocks) == 3
@@ -244,8 +244,14 @@ def extract(path, book_id):
                 keytext = remainder.split("Applied Patterns", 1)[0]
                 keys = answers(keytext)
                 assert len(keys) == 2, (number, block["number"], keys)
+                original_exercises = exercises(extext, keys, block["pages"][0])
+                exercise_offset = source.index("Exercises") + len("Exercises")
+                question_pages = {int(m[1]): block["linePages"][source[:exercise_offset + m.start()].count("\n")]
+                                  for m in re.finditer(r"^[ \t]*([1-9])\.\s", extext, re.M)}
+                for exercise in original_exercises:
+                    exercise["page"] = question_pages[exercise["number"]]
                 sections.append(section("pattern-" + str(block["number"]), "Grammar Pattern " + str(block["number"]), "GRAMMAR", hide_key(source), block["pages"],
-                    exercise_list=exercises(extext, keys, block["pages"][0]), answer_text=keytext))
+                    exercise_list=original_exercises, answer_text=keytext))
         chapters.append({"number": number, "title": title, "category": category, "startPage": start,
                          "endPage": end, "sections": sections})
     return {"id": book_id, "title": "Real-Life Korean Conversations " + ("For Beginners" if beginner else "Intermediate"),

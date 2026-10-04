@@ -177,25 +177,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "저는 회사원 + -이에요/예요 = I am an office worker.",
+              "prompt": "저는 회사원 + -이에요/예요 ……〉 _________________________ = I am an office worker.",
               "answer": "저는 회사원이에요.",
               "page": 17
             },
             {
               "number": 2,
-              "prompt": "저는 엔지니어 + -이에요/예요 = I am a computer engineer.",
+              "prompt": "저는 엔지니어 + -이에요/예요 ……〉 _________________________ = I am a computer engineer.",
               "answer": "저는 엔지니어예요.",
               "page": 17
             },
             {
               "number": 3,
-              "prompt": "일하다 + -시- + -아/어/여요? = Do you work? (honorific)",
+              "prompt": "일하다 + -시- + -아/어/여요? ……〉 _________________________ = Do you work? (honorific)",
               "answer": "일하세요?",
               "page": 17
             },
             {
               "number": 4,
-              "prompt": "가르치다 + -시- + -아/어/여요? = Do you teach? (honorific)",
+              "prompt": "가르치다 + -시- + -아/어/여요? ……〉 _________________________ = Do you teach? (honorific)",
               "answer": "가르치세요?",
               "page": 17
             }
@@ -215,25 +215,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "일을",
+              "prompt": "일을 ……〉 [ ]",
               "answer": "이를",
               "page": 18
             },
             {
               "number": 2,
-              "prompt": "살아요",
+              "prompt": "살아요 ……〉 [ ]",
               "answer": "사라요",
               "page": 18
             },
             {
               "number": 3,
-              "prompt": "국가 (nation)",
+              "prompt": "국가 (nation) ……〉 [ ]",
               "answer": "국까",
               "page": 18
             },
             {
               "number": 4,
-              "prompt": "악기 (musical instrument)",
+              "prompt": "악기 (musical instrument) ……〉 [ ]",
               "answer": "악끼",
               "page": 18
             }
@@ -525,25 +525,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "저장하다 + -아/어/여 주세요 = Please save (it).",
+              "prompt": "저장하다 + -아/어/여 주세요 ……〉 = Please save (it). ____________________",
               "answer": "저장해 주세요.",
               "page": 25
             },
             {
               "number": 2,
-              "prompt": "알리다 + -아/어/여 주세요 = Please let (me) know.",
+              "prompt": "알리다 + -아/어/여 주세요 ……〉 = Please let (me) know. ____________________",
               "answer": "알려 주세요.",
               "page": 25
             },
             {
               "number": 3,
-              "prompt": "만나다 + -고 있어요 = I’m meeting now.",
+              "prompt": "만나다 + -고 있어요 ……〉 = I’m meeting now. ____________________",
               "answer": "만나고 있어요.",
               "page": 25
             },
             {
               "number": 4,
-              "prompt": "저장하다 + -고 있어요 = I’m saving (it) now.",
+              "prompt": "저장하다 + -고 있어요 ……〉 = I’m saving (it) now. ____________________",
               "answer": "저장하고 있어요.",
               "page": 25
             }
@@ -563,25 +563,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "난로 (heater, stove)",
+              "prompt": "난로 (heater, stove) ……〉 [ ]",
               "answer": "날로",
               "page": 26
             },
             {
               "number": 2,
-              "prompt": "분리하다 (to separate)",
+              "prompt": "분리하다 (to separate) ……〉 [ ]",
               "answer": "불리하다",
               "page": 26
             },
             {
               "number": 3,
-              "prompt": "잡는",
+              "prompt": "잡는 ……〉 [ ]",
               "answer": "잠는",
               "page": 26
             },
             {
               "number": 4,
-              "prompt": "갑니다",
+              "prompt": "갑니다 ……〉 [ ]",
               "answer": "감니다",
               "page": 26
             }
@@ -879,25 +879,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "결혼하다 + -자 = Let’s get married.",
+              "prompt": "결혼하다 + -자 ……〉 = Let’s get married. _______________________",
               "answer": "결혼하자.",
               "page": 33
             },
             {
               "number": 2,
-              "prompt": "끊다 + -자 = Let’s hang up.",
+              "prompt": "끊다 + -자 ……〉 = Let’s hang up. _______________________",
               "answer": "끊자.",
               "page": 33
             },
             {
               "number": 3,
-              "prompt": "오다 + -(으)ㄹ게(요) = I will come.",
+              "prompt": "오다 + -(으)ㄹ게(요) ……〉 = I will come. _______________________",
               "answer": "올게(요).",
               "page": 33
             },
             {
               "number": 4,
-              "prompt": "보다 + -(으)ㄹ게(요) = I will see.",
+              "prompt": "보다 + -(으)ㄹ게(요) ……〉 = I will see. _______________________",
               "answer": "볼게(요).",
               "page": 33
             }
@@ -917,25 +917,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "잘하다 (to be good at)",
+              "prompt": "잘하다 (to be good at) ……〉 [ ]",
               "answer": "자라다",
               "page": 34
             },
             {
               "number": 2,
-              "prompt": "일하다 (to work)",
+              "prompt": "일하다 (to work) ……〉 [ ]",
               "answer": "이라다",
               "page": 34
             },
             {
               "number": 3,
-              "prompt": "독하다 (to be potent, to be spiteful)",
+              "prompt": "독하다 (to be potent, to be spiteful) ……〉 [ ]",
               "answer": "도카다",
               "page": 34
             },
             {
               "number": 4,
-              "prompt": "시작하다 (to start)",
+              "prompt": "시작하다 (to start) ……〉 [ ]",
               "answer": "시자카다",
               "page": 34
             }
@@ -1234,25 +1234,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "토요일 + -(이)라서 = because it is Saturday",
+              "prompt": "토요일 + -(이)라서 ……〉 = because it is Saturday ______________________",
               "answer": "토요일이라서",
               "page": 41
             },
             {
               "number": 2,
-              "prompt": "세 시 + -(이)라서 = because it is 3 o’clock",
+              "prompt": "세 시 + -(이)라서 ……〉 = because it is 3 o’clock ______________________",
               "answer": "세 시라서",
               "page": 41
             },
             {
               "number": 3,
-              "prompt": "바쁘다 + -아/어/여서 = because I am busy",
+              "prompt": "바쁘다 + -아/어/여서 ……〉 = because I am busy ______________________",
               "answer": "바빠서",
               "page": 41
             },
             {
               "number": 4,
-              "prompt": "없다 + -아/어/여서 = because I don’t have",
+              "prompt": "없다 + -아/어/여서 ……〉 = because I don’t have _____________________",
               "answer": "없어서",
               "page": 42
             }
@@ -1272,25 +1272,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "갈 거야 (I am going to go)",
+              "prompt": "갈 거야 (I am going to go) ……〉 [ ]",
               "answer": "갈 꺼야",
               "page": 42
             },
             {
               "number": 2,
-              "prompt": "볼 거야 (I am going to see)",
+              "prompt": "볼 거야 (I am going to see) ……〉 [ ]",
               "answer": "볼 꺼야",
               "page": 42
             },
             {
               "number": 3,
-              "prompt": "꽃 (flower)",
+              "prompt": "꽃 (flower) ……〉 [ ]",
               "answer": "꼳",
               "page": 42
             },
             {
               "number": 4,
-              "prompt": "빛 (light)",
+              "prompt": "빛 (light) ……〉 [ ]",
               "answer": "빋",
               "page": 42
             }
@@ -1583,25 +1583,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "한잔하다 + -아/어/여도 돼(요) = You can have a drink. / It is ok for you to have a drink.",
+              "prompt": "한잔하다 + -아/어/여도 돼(요) ……〉 ___________________________ = You can have a drink. / It is ok for you to have a drink.",
               "answer": "한잔해도 돼(요).",
               "page": 49
             },
             {
               "number": 2,
-              "prompt": "가다 + -아/어/여도 돼(요) = You can go/leave. / It is ok for you to leave.",
+              "prompt": "가다 + -아/어/여도 돼(요) ……〉 ___________________________ = You can go/leave. / It is ok for you to leave.",
               "answer": "가도 돼(요).",
               "page": 49
             },
             {
               "number": 3,
-              "prompt": "만나다 + -(으)면 돼(요)? = So, all I have to do is meet?",
+              "prompt": "만나다 + -(으)면 돼(요)? ……〉 ___________________________ = So, all I have to do is meet?",
               "answer": "만나면 돼(요)?",
               "page": 49
             },
             {
               "number": 4,
-              "prompt": "하다 + -(으)면 돼(요)? = Is it ok if I just do (it)?",
+              "prompt": "하다 + -(으)면 돼(요)? ……〉 ___________________ = Is it ok if I just do (it)?",
               "answer": "하면 돼(요)?",
               "page": 50
             }
@@ -1621,13 +1621,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "많은 (a lot of)",
+              "prompt": "많은 (a lot of) ……〉 [ ]",
               "answer": "마는",
               "page": 50
             },
             {
               "number": 2,
-              "prompt": "끊을게 (I’ll hang up)",
+              "prompt": "끊을게 (I’ll hang up) ……〉 [ ]",
               "answer": "끄늘께",
               "page": 50
             }
@@ -1913,25 +1913,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "오다 + -지 마(요). = Don’t come.",
+              "prompt": "오다 + -지 마(요). ……〉 = Don’t come. ______________________",
               "answer": "오지 마(요).",
               "page": 57
             },
             {
               "number": 2,
-              "prompt": "입다 + -지 마(요). = Don’t wear (it).",
+              "prompt": "입다 + -지 마(요). ……〉 = Don’t wear (it). ______________________",
               "answer": "입지 마(요).",
               "page": 57
             },
             {
               "number": 3,
-              "prompt": "오다 + -아/어/여(요). = Come.",
+              "prompt": "오다 + -아/어/여(요). ……〉 = Come. ______________________",
               "answer": "와(요).",
               "page": 57
             },
             {
               "number": 4,
-              "prompt": "만나다 + -아/어/여(요). = Meet (me).",
+              "prompt": "만나다 + -아/어/여(요). ……〉 = Meet (me). ______________________",
               "answer": "만나(요).",
               "page": 57
             }
@@ -1951,25 +1951,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "그렇게 (like that, as such)",
+              "prompt": "그렇게 (like that, as such) ……〉 [ ]",
               "answer": "그러케",
               "page": 58
             },
             {
               "number": 2,
-              "prompt": "파랗고 (blue and...)",
+              "prompt": "파랗고 (blue and...) ……〉 [ ]",
               "answer": "파라코",
               "page": 58
             },
             {
               "number": 3,
-              "prompt": "한여름 (midsummer)",
+              "prompt": "한여름 (midsummer) ……〉 [ ]",
               "answer": "한녀름",
               "page": 58
             },
             {
               "number": 4,
-              "prompt": "맹장염 (appendicitis)",
+              "prompt": "맹장염 (appendicitis) ……〉 [ ]",
               "answer": "맹장념",
               "page": 58
             }
@@ -2255,25 +2255,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "오늘 + -보다 더 = more than today",
+              "prompt": "오늘 + -보다 더 ……〉 = more than today ______________________",
               "answer": "오늘보다 더",
               "page": 65
             },
             {
               "number": 2,
-              "prompt": "저녁 + -보다 더 = more than dinner",
+              "prompt": "저녁 + -보다 더 ……〉 = more than dinner ______________________",
               "answer": "저녁보다 더",
               "page": 65
             },
             {
               "number": 3,
-              "prompt": "하다 + -고 오다 = to come after doing",
+              "prompt": "하다 + -고 오다 ……〉 = to come after doing ______________________",
               "answer": "하고 오다",
               "page": 65
             },
             {
               "number": 4,
-              "prompt": "만나다 + -고 오다 = to come after meeting",
+              "prompt": "만나다 + -고 오다 ……〉 = to come after meeting ______________________",
               "answer": "만나고 오다",
               "page": 65
             }
@@ -2293,25 +2293,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "낮 (day, daytime)",
+              "prompt": "낮 (day, daytime) ……〉 [ ]",
               "answer": "낟",
               "page": 66
             },
             {
               "number": 2,
-              "prompt": "빚 (debt)",
+              "prompt": "빚 (debt) ……〉 [ ]",
               "answer": "빋",
               "page": 66
             },
             {
               "number": 3,
-              "prompt": "잊고 (forget and...)",
+              "prompt": "잊고 (forget and...) ……〉 [ ]",
               "answer": "읻꼬",
               "page": 66
             },
             {
               "number": 4,
-              "prompt": "빚과 (debt and...)",
+              "prompt": "빚과 (debt and...) ……〉 [ ]",
               "answer": "빋꽈",
               "page": 66
             }
@@ -2603,25 +2603,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "깨워 주다 + -(으)ㄹ 수 있어요 = I can wake (someone) up.",
+              "prompt": "깨워 주다 + -(으)ㄹ 수 있어요 ……〉 = I can wake (someone) up. __________________________________",
               "answer": "깨워 줄 수 있어요.",
               "page": 73
             },
             {
               "number": 2,
-              "prompt": "가다 + -(으)ㄹ 수 있어요 = I can go.",
+              "prompt": "가다 + -(으)ㄹ 수 있어요 ……〉 = I can go. __________________________________",
               "answer": "갈 수 있어요.",
               "page": 73
             },
             {
               "number": 3,
-              "prompt": "친구 + -하고 = with my friend",
+              "prompt": "친구 + -하고 ……〉 = with my friend ___________________________",
               "answer": "친구하고",
               "page": 73
             },
             {
               "number": 4,
-              "prompt": "아빠 + -하고 = with my dad",
+              "prompt": "아빠 + -하고 ……〉 = with my dad ___________________________",
               "answer": "아빠하고",
               "page": 73
             }
@@ -2641,25 +2641,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "버섯 (mushroom)",
+              "prompt": "버섯 (mushroom) ……〉 [ ]",
               "answer": "버섣",
               "page": 74
             },
             {
               "number": 2,
-              "prompt": "맛 (taste)",
+              "prompt": "맛 (taste) ……〉 [ ]",
               "answer": "맏",
               "page": 74
             },
             {
               "number": 3,
-              "prompt": "만날 수",
+              "prompt": "만날 수 ……〉 [ ]",
               "answer": "만날 쑤",
               "page": 74
             },
             {
               "number": 4,
-              "prompt": "볼 수",
+              "prompt": "볼 수 ……〉 [ ]",
               "answer": "볼 쑤",
               "page": 74
             }
@@ -2951,25 +2951,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "없다 + -아/어/여요? = Do you not have (it)?",
+              "prompt": "없다 + -아/어/여요? ……〉 = Do you not have (it)? ________________________",
               "answer": "없어요?",
               "page": 81
             },
             {
               "number": 2,
-              "prompt": "필요하다 + -아/어/여요? = Do you need (it)?",
+              "prompt": "필요하다 + -아/어/여요? ……〉 = Do you need (it)? ______________________",
               "answer": "필요해요?",
               "page": 81
             },
             {
               "number": 3,
-              "prompt": "당근 + -만 = carrots only",
+              "prompt": "당근 + -만 ……〉 = carrots only ______________________",
               "answer": "당근만",
               "page": 81
             },
             {
               "number": 4,
-              "prompt": "아저씨 + -만 = middle-aged men only",
+              "prompt": "아저씨 + -만 ……〉 = middle-aged men only ______________________",
               "answer": "아저씨만",
               "page": 81
             }
@@ -2989,13 +2989,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "넓게 (widely)",
+              "prompt": "넓게 (widely) ……〉 [ ]",
               "answer": "널께",
               "page": 82
             },
             {
               "number": 2,
-              "prompt": "넓고 (wide and...)",
+              "prompt": "넓고 (wide and...) ……〉 [ ]",
               "answer": "널꼬",
               "page": 82
             }
@@ -3287,25 +3287,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "치마 + -(이)랑 + 바지 = a skirt and pants",
+              "prompt": "치마 + -(이)랑 + 바지 ……〉 ___________________= a skirt and pants",
               "answer": "치마랑 바지",
               "page": 89
             },
             {
               "number": 2,
-              "prompt": "가족 + -(이)랑 + 친구 = family and a friend",
+              "prompt": "가족 + -(이)랑 + 친구 ……〉 ___________________ = family and a friend",
               "answer": "가족이랑 친구",
               "page": 89
             },
             {
               "number": 3,
-              "prompt": "이거 + -밖에 = nothing but this one / only this one",
+              "prompt": "이거 + -밖에 ……〉 ___________________ = nothing but this one / only this one",
               "answer": "이거밖에",
               "page": 89
             },
             {
               "number": 4,
-              "prompt": "친구 + -밖에 = nothing but a friend / only a friend",
+              "prompt": "친구 + -밖에 ……〉 ___________________ = nothing but a friend / only a friend",
               "answer": "친구밖에",
               "page": 89
             }
@@ -3325,13 +3325,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "값 (price)",
+              "prompt": "값 (price) ……〉 [ ]",
               "answer": "갑",
               "page": 90
             },
             {
               "number": 2,
-              "prompt": "값이 (the price is …)",
+              "prompt": "값이 (the price is …) ……〉 [ ]",
               "answer": "갑씨",
               "page": 90
             }
@@ -3623,25 +3623,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "사다 + -아/어/여도 돼요? = May I buy (it)?",
+              "prompt": "사다 + -아/어/여도 돼요? ……〉 = May I buy (it)? ________________________",
               "answer": "사도 돼요?",
               "page": 97
             },
             {
               "number": 2,
-              "prompt": "먹다 + -아/어/여도 돼요? = May I eat (it)?",
+              "prompt": "먹다 + -아/어/여도 돼요? ……〉 = May I eat (it)? ________________________",
               "answer": "먹어도 돼요?",
               "page": 97
             },
             {
               "number": 3,
-              "prompt": "공부하다 + -(으)세요 = Study, please.",
+              "prompt": "공부하다 + -(으)세요 ……〉 = Study, please. ________________________",
               "answer": "공부하세요.",
               "page": 97
             },
             {
               "number": 4,
-              "prompt": "기다리다 + -(으)세요 = Wait, please.",
+              "prompt": "기다리다 + -(으)세요……〉 = Wait, please. ________________________",
               "answer": "기다리세요.",
               "page": 97
             }
@@ -3661,13 +3661,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "조금은",
+              "prompt": "조금은 ……〉 [ ]",
               "answer": "조그믄",
               "page": 98
             },
             {
               "number": 2,
-              "prompt": "검은색",
+              "prompt": "검은색 ……〉 [ ]",
               "answer": "거믄색",
               "page": 98
             }
@@ -3971,25 +3971,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "드리다 + -고 싶어요 = I want to give (it).",
+              "prompt": "드리다 + -고 싶어요 ……〉 = I want to give (it). ___________________",
               "answer": "드리고 싶어요.",
               "page": 105
             },
             {
               "number": 2,
-              "prompt": "깎아 주다 + -고 싶어요 = I want to give a discount.",
+              "prompt": "깎아 주다 + -고 싶어요 ……〉 = I want to give a discount. ___________________",
               "answer": "깎아 주고 싶어요.",
               "page": 105
             },
             {
               "number": 3,
-              "prompt": "귀엽다 + -고 + 싸다 = to be cute and cheap",
+              "prompt": "귀엽다 + -고 + 싸다 ……〉 = to be cute and cheap ___________________",
               "answer": "귀엽고 싸다",
               "page": 105
             },
             {
               "number": 4,
-              "prompt": "크다 + -고 + 좋다 = to be big and good",
+              "prompt": "크다 + -고 + 좋다……〉 = to be big and good ___________________",
               "answer": "크고 좋다",
               "page": 105
             }
@@ -4009,25 +4009,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "볶아",
+              "prompt": "볶아 ……〉 [ ]",
               "answer": "보까",
               "page": 106
             },
             {
               "number": 2,
-              "prompt": "밖에",
+              "prompt": "밖에 ……〉 [ ]",
               "answer": "바께",
               "page": 106
             },
             {
               "number": 3,
-              "prompt": "웃다 (to smile, to laugh)",
+              "prompt": "웃다 (to smile, to laugh) ……〉 [ ]",
               "answer": "욷따",
               "page": 106
             },
             {
               "number": 4,
-              "prompt": "붓다 (to pour)",
+              "prompt": "붓다 (to pour) ……〉 [ ]",
               "answer": "붇따",
               "page": 106
             }
@@ -4331,25 +4331,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "안 싸다 + -네요 = (Oh, I see that) it is not cheap.",
+              "prompt": "안 싸다 + -네요 ……〉 = (Oh, I see that) it is not cheap. ___________________",
               "answer": "안 싸네요.",
               "page": 113
             },
             {
               "number": 2,
-              "prompt": "세일하다 + -네요 = (Oh, I see that) it is on sale.",
+              "prompt": "세일하다 + -네요 ……〉 = (Oh, I see that) it is on sale. ___________________",
               "answer": "세일하네요.",
               "page": 113
             },
             {
               "number": 3,
-              "prompt": "없다 + -(으)면 = if there is not",
+              "prompt": "없다 + -(으)면 ……〉 = if there is not ___________________",
               "answer": "없으면",
               "page": 113
             },
             {
               "number": 4,
-              "prompt": "배달하다 + -(으)면 = if you deliver",
+              "prompt": "배달하다 + -(으)면……〉 = if you deliver ___________________",
               "answer": "배달하면",
               "page": 113
             }
@@ -4369,25 +4369,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "국물 (soup)",
+              "prompt": "국물 (soup) ……〉 [ ]",
               "answer": "궁물",
               "page": 114
             },
             {
               "number": 2,
-              "prompt": "곡물 (grain, cereal)",
+              "prompt": "곡물 (grain, cereal) ……〉 [ ]",
               "answer": "공물",
               "page": 114
             },
             {
               "number": 3,
-              "prompt": "집문서 (house deed)",
+              "prompt": "집문서 (house deed) ……〉 [ ]",
               "answer": "짐문서",
               "page": 114
             },
             {
               "number": 4,
-              "prompt": "입맛 (appetite)",
+              "prompt": "입맛 (appetite) ……〉 [ ]",
               "answer": "임맏",
               "page": 114
             }
@@ -4685,25 +4685,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "추천하다 + -아/어/여 보세요 = Try recommending (it).",
+              "prompt": "추천하다 + -아/어/여 보세요 ……〉 = Try recommending (it). ___________________",
               "answer": "추천해 보세요.",
               "page": 121
             },
             {
               "number": 2,
-              "prompt": "받다 + -아/어/여 보세요 = Try receiving (it).",
+              "prompt": "받다 + -아/어/여 보세요 ……〉 = Try receiving (it). ___________________",
               "answer": "받아 보세요.",
               "page": 121
             },
             {
               "number": 3,
-              "prompt": "추천하다 + -아/어/여 드릴까요? = Shall I recommend you (it)?",
+              "prompt": "추천하다 + -아/어/여 드릴까요? ……〉 = Shall I recommend you (it)? ___________________",
               "answer": "추천해 드릴까요?",
               "page": 121
             },
             {
               "number": 4,
-              "prompt": "사다 + -아/어/여 드릴까요? = Shall I buy you (it)?",
+              "prompt": "사다 + -아/어/여 드릴까요? ……〉 = Shall I buy you (it)? ___________________",
               "answer": "사 드릴까요?",
               "page": 121
             }
@@ -4723,13 +4723,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "독립 (independence)",
+              "prompt": "독립 (independence) ……〉 [ ]",
               "answer": "동닙",
               "page": 122
             },
             {
               "number": 2,
-              "prompt": "복리 (welfare, well-being)",
+              "prompt": "복리 (welfare, well-being) ……〉 [ ]",
               "answer": "봉니",
               "page": 122
             }
@@ -5027,25 +5027,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "못 + 사다 + -아/어/여요 = I can’t buy (it).",
+              "prompt": "못 + 사다 + -아/어/여요 ……〉 = I can’t buy (it). ___________________",
               "answer": "못 사요.",
               "page": 129
             },
             {
               "number": 2,
-              "prompt": "못 + 오다 + -아/어/여요 = I can’t come.",
+              "prompt": "못 + 오다 + -아/어/여요 ……〉 = I can’t come. ___________________",
               "answer": "못 와요.",
               "page": 129
             },
             {
               "number": 3,
-              "prompt": "인기가 없다 + -(으)ㄴ/는데 + 다 팔렸어요 = It’s not popular, but it’s sold out.",
+              "prompt": "인기가 없다 + -(으)ㄴ/는데 + 다 팔렸어요 ……〉 = It’s not popular, but it’s sold out. ___________________",
               "answer": "인기가 없는데 다 팔렸어요.",
               "page": 129
             },
             {
               "number": 4,
-              "prompt": "배고프다 + -(으)ㄴ/는데 + 음식이 없어요 = I’m hungry, but there’s no food.",
+              "prompt": "배고프다 + -(으)ㄴ/는데 + 음식이 없어요 ……〉 = I’m hungry, but there’s no food. ___________________",
               "answer": "배고픈데 음식이 없어요.",
               "page": 129
             }
@@ -5065,25 +5065,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "갔는데",
+              "prompt": "갔는데 ……〉 [ ]",
               "answer": "간는데",
               "page": 130
             },
             {
               "number": 2,
-              "prompt": "봤는데 B. When a syllable ends with ㅅ (which sounds the same as ㄷ when in the 받침 position) and is followed by a syllable that begins with ㄱ, the ㄱ is pronounced as ㄲ. Ex) 못 가요 → [몯 까요] * If you are wondering why 못 is pronounced as 몯, please refer to page 74. Write the pronunciations for the following words, just like the above example.",
+              "prompt": "봤는데 ……〉 [ ] B. When a syllable ends with ㅅ (which sounds the same as ㄷ when in the 받침 position) and is followed by a syllable that begins with ㄱ, the ㄱ is pronounced as ㄲ. Ex) 못 가요 → [몯 까요] * If you are wondering why 못 is pronounced as 몯, please refer to page 74. Write the pronunciations for the following words, just like the above example.",
               "answer": "봔는데",
               "page": 130
             },
             {
               "number": 1,
-              "prompt": "웃고",
+              "prompt": "웃고 ……〉 [ ]",
               "answer": "간는데",
               "page": 130
             },
             {
               "number": 2,
-              "prompt": "짓기",
+              "prompt": "짓기 ……〉 [ ]",
               "answer": "봔는데",
               "page": 130
             }
@@ -5363,25 +5363,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "읽다 + -(으)ㄹ까요? = Shall we read?",
+              "prompt": "읽다 + -(으)ㄹ까요? ……〉 = Shall we read? ___________________",
               "answer": "읽을까요?",
               "page": 137
             },
             {
               "number": 2,
-              "prompt": "먹다 + -(으)ㄹ까요? = Shall we eat?",
+              "prompt": "먹다 + -(으)ㄹ까요? ……〉 = Shall we eat? ___________________",
               "answer": "먹을까요?",
               "page": 137
             },
             {
               "number": 3,
-              "prompt": "가다 + -(으)ㄴ 다음에 = after going",
+              "prompt": "가다 + -(으)ㄴ 다음에 ……〉 = after going ___________________",
               "answer": "간 다음에",
               "page": 137
             },
             {
               "number": 4,
-              "prompt": "만나다 + -(으)ㄴ 다음에 = after meeting",
+              "prompt": "만나다 + -(으)ㄴ 다음에 ……〉 = after meeting ___________________",
               "answer": "만난 다음에",
               "page": 137
             }
@@ -5401,25 +5401,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "닭 (chicken)",
+              "prompt": "닭 (chicken) ……〉 [ ]",
               "answer": "닥",
               "page": 138
             },
             {
               "number": 2,
-              "prompt": "닭과 (chicken and)",
+              "prompt": "닭과 (chicken and) ……〉 [ ]",
               "answer": "닥꽈",
               "page": 138
             },
             {
               "number": 3,
-              "prompt": "밭이다 (to be filtered/drained)",
+              "prompt": "밭이다 (to be filtered/drained) ……〉 [ ]",
               "answer": "바치다",
               "page": 138
             },
             {
               "number": 4,
-              "prompt": "붙이다 (to stick, to attach)",
+              "prompt": "붙이다 (to stick, to attach) ……〉 [ ]",
               "answer": "부치다",
               "page": 138
             }
@@ -5699,25 +5699,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "예매하다 + -(으)ㄹ래요? = Will you reserve (it)?",
+              "prompt": "예매하다 + -(으)ㄹ래요? ……〉 = Will you reserve (it)? ___________________",
               "answer": "예매할래요?",
               "page": 145
             },
             {
               "number": 2,
-              "prompt": "먹다 + -(으)ㄹ래요? = Will you eat?",
+              "prompt": "먹다 + -(으)ㄹ래요? ……〉 = Will you eat? ___________________",
               "answer": "먹을래요?",
               "page": 145
             },
             {
               "number": 3,
-              "prompt": "보다 + -(으)러 가요. = Let’s go watch.",
+              "prompt": "보다 + -(으)러 가요. ……〉 = Let’s go watch. ___________________",
               "answer": "보러 가요.",
               "page": 145
             },
             {
               "number": 4,
-              "prompt": "쇼핑하다 + -(으)러 가요. = Let’s go shopping.",
+              "prompt": "쇼핑하다 + -(으)러 가요.……〉 = Let’s go shopping. ___________________",
               "answer": "쇼핑하러 가요.",
               "page": 145
             }
@@ -5737,25 +5737,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "먹으러",
+              "prompt": "먹으러 ……〉 [ ]",
               "answer": "머그러",
               "page": 146
             },
             {
               "number": 2,
-              "prompt": "먹을래요 B. When a syllable ends with ㅂ and is followed by a syllable that begins with ㅅ, the ㅅ is pronounced as ㅆ. Ex) 삼겹살 → [삼겹쌀] Write the pronunciations for the following words, just like the above example.",
+              "prompt": "먹을래요 ……〉 [ ] B. When a syllable ends with ㅂ and is followed by a syllable that begins with ㅅ, the ㅅ is pronounced as ㅆ. Ex) 삼겹살 → [삼겹쌀] Write the pronunciations for the following words, just like the above example.",
               "answer": "머글래요",
               "page": 146
             },
             {
               "number": 1,
-              "prompt": "몹시 (very, really)",
+              "prompt": "몹시 (very, really) ……〉 [ ]",
               "answer": "머그러",
               "page": 146
             },
             {
               "number": 2,
-              "prompt": "집사 (butler, steward)",
+              "prompt": "집사 (butler, steward) ……〉 [ ]",
               "answer": "머글래요",
               "page": 146
             }
@@ -6047,25 +6047,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "타다 + -(으)려면 = in order to ride",
+              "prompt": "타다 + -(으)려면 ……〉 = in order to ride ___________________",
               "answer": "타려면",
               "page": 153
             },
             {
               "number": 2,
-              "prompt": "기다리다 + -(으)려면 = in order to wait",
+              "prompt": "기다리다 + -(으)려면 ……〉 = in order to wait ___________________",
               "answer": "기다리려면",
               "page": 153
             },
             {
               "number": 3,
-              "prompt": "빌리다 + -기 전에 = before renting",
+              "prompt": "빌리다 + -기 전에 ……〉 = before renting ___________________",
               "answer": "빌리기 전에",
               "page": 153
             },
             {
               "number": 4,
-              "prompt": "먹다 + -기 전에 = before eating",
+              "prompt": "먹다 + -기 전에 ……〉 = before eating ___________________",
               "answer": "먹기 전에",
               "page": 153
             }
@@ -6085,25 +6085,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "놓는",
+              "prompt": "놓는 ……〉 [ ]",
               "answer": "논는",
               "page": 154
             },
             {
               "number": 2,
-              "prompt": "쌓네",
+              "prompt": "쌓네 ……〉 [ ]",
               "answer": "싼네",
               "page": 154
             },
             {
               "number": 3,
-              "prompt": "놓아요",
+              "prompt": "놓아요 ……〉 [ ]",
               "answer": "노아요",
               "page": 154
             },
             {
               "number": 4,
-              "prompt": "낳아요",
+              "prompt": "낳아요 ……〉 [ ]",
               "answer": "나아요",
               "page": 154
             }
@@ -6401,25 +6401,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "너 + 말고 + 네 친구 = not you, but your friend",
+              "prompt": "너 + 말고 + 네 친구 ……〉 = not you, but your friend ______________________",
               "answer": "너 말고 네 친구",
               "page": 161
             },
             {
               "number": 2,
-              "prompt": "그것 + 말고 + 저것 = not that one, but that one over there",
+              "prompt": "그것 + 말고 + 저것 ……〉 = not that one, but that one ______________________ over there",
               "answer": "그것 말고 저것",
               "page": 161
             },
             {
               "number": 3,
-              "prompt": "어리다 + -았/었/였을 때부터 = since I was little/young",
+              "prompt": "어리다 + -았/었/였을 때부터 ……〉 = since I was little/young __________________",
               "answer": "어렸을 때부터",
               "page": 161
             },
             {
               "number": 4,
-              "prompt": "만나다 + -았/었/였을 때부터 = since the time I met (them)",
+              "prompt": "만나다 + -았/었/였을 때부터 ……〉 = since the time _____________________ I met (them)",
               "answer": "만났을 때부터",
               "page": 161
             }
@@ -6439,25 +6439,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "깊어",
+              "prompt": "깊어 ……〉 [ ]",
               "answer": "기퍼",
               "page": 162
             },
             {
               "number": 2,
-              "prompt": "짚어",
+              "prompt": "짚어 ……〉 [ ]",
               "answer": "지퍼",
               "page": 162
             },
             {
               "number": 3,
-              "prompt": "갔어",
+              "prompt": "갔어 ……〉 [ ]",
               "answer": "가써",
               "page": 162
             },
             {
               "number": 4,
-              "prompt": "봤어",
+              "prompt": "봤어 ……〉 [ ]",
               "answer": "봐써",
               "page": 162
             }
@@ -6755,25 +6755,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "우리 + 만나다 + -아/어/여요 = Let’s meet.",
+              "prompt": "우리 + 만나다 + -아/어/여요 ……〉 = Let’s meet. ___________________",
               "answer": "우리 만나요.",
               "page": 169
             },
             {
               "number": 2,
-              "prompt": "우리 + 가다 + -아/어/여요 = Let’s go.",
+              "prompt": "우리 + 가다 + -아/어/여요 ……〉 = Let’s go. ___________________",
               "answer": "우리 가요.",
               "page": 169
             },
             {
               "number": 3,
-              "prompt": "하다 + -기 싫어요. = I don’t want to do (it).",
+              "prompt": "하다 + -기 싫어요. ……〉 = I don’t want to do (it). ___________________",
               "answer": "하기 싫어요.",
               "page": 169
             },
             {
               "number": 4,
-              "prompt": "만나다 + -기 싫어요. = I don’t want to meet.",
+              "prompt": "만나다 + -기 싫어요. ……〉 = I don’t want to meet. ___________________",
               "answer": "만나기 싫어요.",
               "page": 169
             }
@@ -6793,13 +6793,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "닳아요",
+              "prompt": "닳아요 ……〉 [ ]",
               "answer": "다라요",
               "page": 170
             },
             {
               "number": 2,
-              "prompt": "닳지",
+              "prompt": "닳지 ……〉 [ ]",
               "answer": "달치",
               "page": 170
             }
@@ -7121,25 +7121,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "야근하다 + -(으)ㄹ 거예요 = I am going to work overtime.",
+              "prompt": "야근하다 + -(으)ㄹ 거예요 ……〉 = I am going to work _____________________ overtime.",
               "answer": "야근할 거예요.",
               "page": 177
             },
             {
               "number": 2,
-              "prompt": "오다 + -(으)ㄹ 거예요 = I am going to come.",
+              "prompt": "오다 + -(으)ㄹ 거예요 ……〉 = I am going to come. _____________________",
               "answer": "올 거예요.",
               "page": 177
             },
             {
               "number": 3,
-              "prompt": "오다 + -아/어/여야 돼요 = I have to come.",
+              "prompt": "오다 + -아/어/여야 돼요 ……〉 = I have to come. _____________________",
               "answer": "와야 돼요.",
               "page": 177
             },
             {
               "number": 4,
-              "prompt": "웃다 + -아/어/여야 돼요 = I have to smile.",
+              "prompt": "웃다 + -아/어/여야 돼요 ……〉 = I have to smile. _____________________",
               "answer": "웃어야 돼요.",
               "page": 177
             }
@@ -7159,25 +7159,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "늦어",
+              "prompt": "늦어 ……〉 [ ]",
               "answer": "느저",
               "page": 178
             },
             {
               "number": 2,
-              "prompt": "짖으면",
+              "prompt": "짖으면 ……〉 [ ]",
               "answer": "지즈면",
               "page": 178
             },
             {
               "number": 3,
-              "prompt": "전화 (phone call)",
+              "prompt": "전화 (phone call) ……〉 [ ]",
               "answer": "저놔",
               "page": 178
             },
             {
               "number": 4,
-              "prompt": "분홍색 (pink color)",
+              "prompt": "분홍색 (pink color) ……〉 [ ]",
               "answer": "부농색",
               "page": 178
             }
@@ -7499,25 +7499,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "시작하다 + -ㄴ/는다! = It is about to start!",
+              "prompt": "시작하다 + -ㄴ/는다! ……〉 = It is about to start! ___________________",
               "answer": "시작한다!",
               "page": 185
             },
             {
               "number": 2,
-              "prompt": "오다 + -ㄴ/는다! = (They) are coming!",
+              "prompt": "오다 + -ㄴ/는다! ……〉 = (They) are coming! ___________________",
               "answer": "온다!",
               "page": 185
             },
             {
               "number": 3,
-              "prompt": "가다 + -(으)ㄹ 거야 = I am going to go.",
+              "prompt": "가다 + -(으)ㄹ 거야 ……〉 = I am going to go. ___________________",
               "answer": "갈 거야.",
               "page": 185
             },
             {
               "number": 4,
-              "prompt": "보다 + -(으)ㄹ 거야 = I am going to see.",
+              "prompt": "보다 + -(으)ㄹ 거야 ……〉 = I am going to see. ___________________",
               "answer": "볼 거야.",
               "page": 185
             }
@@ -7537,37 +7537,37 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "논의 (discussion, debate) or",
+              "prompt": "논의 (discussion, debate) ……〉 [ ] or [ ]",
               "answer": "노늬, 노니",
               "page": 186
             },
             {
               "number": 2,
-              "prompt": "주의 (attention, caution) or",
+              "prompt": "주의 (attention, caution) ……〉 [ ] or [ ]",
               "answer": "주의, 주이",
               "page": 186
             },
             {
               "number": 3,
-              "prompt": "했어",
+              "prompt": "했어 ……〉 [ ]",
               "answer": "해써",
               "page": 186
             },
             {
               "number": 4,
-              "prompt": "시작해",
+              "prompt": "시작해 ……〉 [ ]",
               "answer": "시자캐",
               "page": 186
             },
             {
               "number": 5,
-              "prompt": "갈게",
+              "prompt": "갈게 ……〉 [ ]",
               "answer": "갈께",
               "page": 186
             },
             {
               "number": 6,
-              "prompt": "천천히",
+              "prompt": "천천히 ……〉 [ ]",
               "answer": "천처니",
               "page": 186
             }
@@ -7859,25 +7859,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "가다 + -았/었/였어(요)? = Did you go?",
+              "prompt": "가다 + -았/었/였어(요)? ……〉 = Did you go? ___________________",
               "answer": "갔어요?",
               "page": 193
             },
             {
               "number": 2,
-              "prompt": "사다 + -았/었/였어(요)? = Did you buy (it)?",
+              "prompt": "사다 + -았/었/였어(요)? ……〉 = Did you buy (it)? ___________________",
               "answer": "샀어요?",
               "page": 193
             },
             {
               "number": 3,
-              "prompt": "오늘 + -밖에 없어요 = There’s nothing but today.",
+              "prompt": "오늘 + -밖에 없어요 ……〉 = There’s nothing but today. ___________________",
               "answer": "오늘밖에 없어요.",
               "page": 193
             },
             {
               "number": 4,
-              "prompt": "하나 + -밖에 없어요 = There’s only one.",
+              "prompt": "하나 + -밖에 없어요 ……〉 = There’s only one. ___________________",
               "answer": "하나밖에 없어요.",
               "page": 193
             }
@@ -7897,25 +7897,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "발전 (development)",
+              "prompt": "발전 (development) ……〉 [ ]",
               "answer": "발쩐",
               "page": 194
             },
             {
               "number": 2,
-              "prompt": "물질 (matter, substance)",
+              "prompt": "물질 (matter, substance) ……〉 [ ]",
               "answer": "물찔",
               "page": 194
             },
             {
               "number": 3,
-              "prompt": "못밖에",
+              "prompt": "못밖에 ……〉 [ ]",
               "answer": "몯빠께",
               "page": 194
             },
             {
               "number": 4,
-              "prompt": "붓밖에",
+              "prompt": "붓밖에 ……〉 [ ]",
               "answer": "붇빠께",
               "page": 194
             }
@@ -8213,25 +8213,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "하다 + -았/었/였어요 = (They) did.",
+              "prompt": "하다 + -았/었/였어요 ……〉 = (They) did. ___________________",
               "answer": "했어요.",
               "page": 201
             },
             {
               "number": 2,
-              "prompt": "가다 + -았/었/였어요 = (They) went.",
+              "prompt": "가다 + -았/었/였어요 ……〉 = (They) went. ___________________",
               "answer": "갔어요.",
               "page": 201
             },
             {
               "number": 3,
-              "prompt": "안 + 내다 + -았/었/였어요 = (They) didn’t submit.",
+              "prompt": "안 + 내다 + -았/었/였어요 ……〉 = (They) didn’t submit. ___________________",
               "answer": "안 냈어요.",
               "page": 201
             },
             {
               "number": 4,
-              "prompt": "안 + 먹다 + -았/었/였어요 = (They) didn’t eat.",
+              "prompt": "안 + 먹다 + -았/었/였어요 ……〉 = (They) didn’t eat. ___________________",
               "answer": "안 먹었어요.",
               "page": 201
             }
@@ -8251,25 +8251,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "백수 (jobless)",
+              "prompt": "백수 (jobless) ……〉 [ ]",
               "answer": "백쑤",
               "page": 202
             },
             {
               "number": 2,
-              "prompt": "박수 (applause, clapping)",
+              "prompt": "박수 (applause, clapping) ……〉 [ ]",
               "answer": "박쑤",
               "page": 202
             },
             {
               "number": 3,
-              "prompt": "국자 (ladle)",
+              "prompt": "국자 (ladle) ……〉 [ ]",
               "answer": "국짜",
               "page": 202
             },
             {
               "number": 4,
-              "prompt": "직장 (job, workplace)",
+              "prompt": "직장 (job, workplace) ……〉 [ ]",
               "answer": "직짱",
               "page": 202
             }
@@ -8561,25 +8561,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "버스 + 타고 가다 = to go by bus",
+              "prompt": "버스 + 타고 가다 ……〉 = to go by bus ___________________",
               "answer": "버스 타고 가다",
               "page": 209
             },
             {
               "number": 2,
-              "prompt": "지하철 + 타고 가다 = to go by subway",
+              "prompt": "지하철 + 타고 가다 ……〉 = to go by subway ___________________",
               "answer": "지하철 타고 가다",
               "page": 209
             },
             {
               "number": 3,
-              "prompt": "취하다 + -는 것 = getting drunk",
+              "prompt": "취하다 + -는 것 ……〉 = getting drunk ___________________",
               "answer": "취하는 것",
               "page": 209
             },
             {
               "number": 4,
-              "prompt": "들어가다 + -는 것 = going in, the act of going in",
+              "prompt": "들어가다 + -는 것 ……〉 = going in, the act of going in ___________________",
               "answer": "들어가는 것",
               "page": 209
             }
@@ -8599,37 +8599,37 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "좁히다 (to narrow)",
+              "prompt": "좁히다 (to narrow) ……〉 [ ]",
               "answer": "조피다",
               "page": 210
             },
             {
               "number": 2,
-              "prompt": "급하게 (in a hurry)",
+              "prompt": "급하게 (in a hurry) ……〉 [ ]",
               "answer": "그파게",
               "page": 210
             },
             {
               "number": 3,
-              "prompt": "감사합니다",
+              "prompt": "감사합니다 ……〉 [ ]",
               "answer": "감사함니다",
               "page": 210
             },
             {
               "number": 4,
-              "prompt": "조금밖에",
+              "prompt": "조금밖에 ……〉 [ ]",
               "answer": "조금바께",
               "page": 210
             },
             {
               "number": 5,
-              "prompt": "취했네",
+              "prompt": "취했네 ……〉 [ ]",
               "answer": "취핸네",
               "page": 210
             },
             {
               "number": 6,
-              "prompt": "힘들었어요",
+              "prompt": "힘들었어요 ……〉 [ ]",
               "answer": "힘드러써요",
               "page": 210
             }
@@ -8915,25 +8915,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "도시락 + 있어요 = I have a lunch box. / I brought my lunch.",
+              "prompt": "도시락 + 있어요 ……〉 = I have a lunch box. ________________________ / I brought my lunch.",
               "answer": "도시락 있어요.",
               "page": 217
             },
             {
               "number": 2,
-              "prompt": "수업 + 있어요 = I have a class.",
+              "prompt": "수업 + 있어요 ……〉 = I have a class. _________________________",
               "answer": "수업 있어요.",
               "page": 217
             },
             {
               "number": 3,
-              "prompt": "월요일 + -부터 + 금요일 + -까지 = from Monday to Friday",
+              "prompt": "월요일 + -부터 + 금요일 + -까지 ……〉 = from Monday ___________________ to Friday",
               "answer": "월요일부터 금요일까지",
               "page": 217
             },
             {
               "number": 4,
-              "prompt": "여기 + -부터 + 저기+ -까지 = from here to there",
+              "prompt": "여기 + -부터 + 저기+ -까지 ……〉 = from here to there ___________________",
               "answer": "여기부터 저기까지",
               "page": 217
             }
@@ -8953,37 +8953,37 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "희망 (hope, wish)",
+              "prompt": "희망 (hope, wish) ……〉 [ ]",
               "answer": "히망",
               "page": 218
             },
             {
               "number": 2,
-              "prompt": "무늬 (pattern)",
+              "prompt": "무늬 (pattern) ……〉 [ ]",
               "answer": "무니",
               "page": 218
             },
             {
               "number": 3,
-              "prompt": "방학은",
+              "prompt": "방학은 ……〉 [ ]",
               "answer": "방하근",
               "page": 218
             },
             {
               "number": 4,
-              "prompt": "학교",
+              "prompt": "학교 ……〉 [ ]",
               "answer": "학꾜",
               "page": 218
             },
             {
               "number": 5,
-              "prompt": "들어와요",
+              "prompt": "들어와요 ……〉 [ ]",
               "answer": "드러와요",
               "page": 218
             },
             {
               "number": 6,
-              "prompt": "시작할게요",
+              "prompt": "시작할게요 ……〉 [ ]",
               "answer": "시자칼께요",
               "page": 218
             }
@@ -9264,25 +9264,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "공부를 안 했어 + 그래서 + 시험을 망쳤어 = I didn’t study. So, I screwed up on the exam.",
+              "prompt": "공부를 안 했어 + 그래서 + 시험을 망쳤어 ……〉 ________________________________________________ = I didn’t study. So, I screwed up on the exam.",
               "answer": "공부를 안 했어. 그래서 시험을 망쳤어.",
               "page": 225
             },
             {
               "number": 2,
-              "prompt": "공부를 많이 했어 + 그래서 + 시험을 잘 봤어 = I studied a lot. Therefore, I did well on the exam.",
+              "prompt": "공부를 많이 했어 + 그래서 + 시험을 잘 봤어 ……〉 _________________________________________________ = I studied a lot. Therefore, I did well on the exam.",
               "answer": "공부를 많이 했어. 그래서 시험을 잘 봤어.",
               "page": 225
             },
             {
               "number": 3,
-              "prompt": "이것 + -도 = this one also",
+              "prompt": "이것 + -도 ……〉 = this one also ___________________",
               "answer": "이것도",
               "page": 225
             },
             {
               "number": 4,
-              "prompt": "다음 달 + -도 = next month too",
+              "prompt": "다음 달 + -도 ……〉 = next month too ___________________",
               "answer": "다음 달도",
               "page": 226
             }
@@ -9302,37 +9302,37 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "갖고",
+              "prompt": "갖고 ……〉 [ ]",
               "answer": "갇꼬",
               "page": 226
             },
             {
               "number": 2,
-              "prompt": "짖고",
+              "prompt": "짖고 ……〉 [ ]",
               "answer": "짇꼬",
               "page": 226
             },
             {
               "number": 3,
-              "prompt": "완전히",
+              "prompt": "완전히……〉 [ ]",
               "answer": "완저니",
               "page": 226
             },
             {
               "number": 4,
-              "prompt": "망쳤어",
+              "prompt": "망쳤어 ……〉 [ ]",
               "answer": "망처써",
               "page": 226
             },
             {
               "number": 5,
-              "prompt": "백 점",
+              "prompt": "백 점 ……〉 [ ]",
               "answer": "백 쩜",
               "page": 226
             },
             {
               "number": 6,
-              "prompt": "맞을 거야",
+              "prompt": "맞을 거야 ……〉 [ ]",
               "answer": "마즐 꺼야",
               "page": 226
             }
@@ -9618,25 +9618,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "덜 + 맛있다 = to be less tasty",
+              "prompt": "덜 + 맛있다 ……〉 = to be less tasty ___________________",
               "answer": "덜 맛있다",
               "page": 233
             },
             {
               "number": 2,
-              "prompt": "덜 + 감사하다 = to be less thankful",
+              "prompt": "덜 + 감사하다 ……〉 = to be less thankful ___________________",
               "answer": "덜 감사하다",
               "page": 233
             },
             {
               "number": 3,
-              "prompt": "주방 + -은/는 어때요? = How about the kitchen?",
+              "prompt": "주방 + -은/는 어때요? ……〉 = How about the kitchen? ___________________",
               "answer": "주방은 어때요?",
               "page": 233
             },
             {
               "number": 4,
-              "prompt": "학교 + -은/는 어때요? = How about your school?",
+              "prompt": "학교 + -은/는 어때요? ……〉 = How about your school? ___________________",
               "answer": "학교는 어때요?",
               "page": 233
             }
@@ -9656,37 +9656,37 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "갔습니다",
+              "prompt": "갔습니다 ……〉 [ ]",
               "answer": "갇씀니다",
               "page": 234
             },
             {
               "number": 2,
-              "prompt": "먹었습니다",
+              "prompt": "먹었습니다 ……〉 [ ]",
               "answer": "머걷씀니다",
               "page": 234
             },
             {
               "number": 3,
-              "prompt": "주문하세요",
+              "prompt": "주문하세요 ……〉 [ ]",
               "answer": "주무나세요",
               "page": 234
             },
             {
               "number": 4,
-              "prompt": "저희",
+              "prompt": "저희 ……〉 [ ]",
               "answer": "저히",
               "page": 234
             },
             {
               "number": 5,
-              "prompt": "많이",
+              "prompt": "많이 ……〉 [ ]",
               "answer": "마니",
               "page": 234
             },
             {
               "number": 6,
-              "prompt": "물어볼게요",
+              "prompt": "물어볼게요 ……〉 [ ]",
               "answer": "무러볼께요",
               "page": 234
             }
@@ -9984,25 +9984,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "김치찌개 + -(으)로 할까요? = Shall (I/we) go for kimchi stew?",
+              "prompt": "김치찌개 + -(으)로 할까요? ……〉 = Shall (I/we) go for kimchi stew? ____________________________",
               "answer": "김치찌개로 할까요?",
               "page": 241
             },
             {
               "number": 2,
-              "prompt": "오렌지 주스 + -(으)로 할까요? = Shall (I/we) go for some orange juice?",
+              "prompt": "오렌지 주스 + -(으)로 할까요? ……〉 = Shall (I/we) go for some orange juice? ___________________",
               "answer": "오렌지 주스로 할까요?",
               "page": 241
             },
             {
               "number": 3,
-              "prompt": "더 + 기다리다 = to wait more",
+              "prompt": "더 + 기다리다 ……〉 = to wait more ___________________",
               "answer": "더 기다리다",
               "page": 241
             },
             {
               "number": 4,
-              "prompt": "더 + 따뜻하다 = to be warmer",
+              "prompt": "더 + 따뜻하다 ……〉 = to be warmer ___________________",
               "answer": "더 따뜻하다",
               "page": 241
             }
@@ -10022,31 +10022,31 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "못하다 (to be bad at)",
+              "prompt": "못하다 (to be bad at) ……〉 [ ]",
               "answer": "모타다",
               "page": 242
             },
             {
               "number": 2,
-              "prompt": "탓하다 (to blame)",
+              "prompt": "탓하다 (to blame) ……〉 [ ]",
               "answer": "타타다",
               "page": 242
             },
             {
               "number": 3,
-              "prompt": "괜찮아요",
+              "prompt": "괜찮아요 ……〉 [ ]",
               "answer": "괜차나요",
               "page": 242
             },
             {
               "number": 4,
-              "prompt": "결제",
+              "prompt": "결제 ……〉 [ ]",
               "answer": "결쩨",
               "page": 242
             },
             {
               "number": 5,
-              "prompt": "합니다",
+              "prompt": "합니다 ……〉 [ ]",
               "answer": "함니다",
               "page": 242
             }
@@ -10338,25 +10338,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "수영 + 잘해(요) = (They) are good at swimming.",
+              "prompt": "수영 + 잘해(요) ……〉 = (They) are good at swimming. ___________________",
               "answer": "수영 잘해(요).",
               "page": 249
             },
             {
               "number": 2,
-              "prompt": "축구 + 잘해(요) = (They) are good at soccer.",
+              "prompt": "축구 + 잘해(요) ……〉 = (They) are good at soccer. ___________________",
               "answer": "축구 잘해(요).",
               "page": 249
             },
             {
               "number": 3,
-              "prompt": "잘하다 + -지(요)? = (They) are good at it, right?",
+              "prompt": "잘하다 + -지(요)? ……〉 = (They) are good at it, right? ___________________",
               "answer": "잘하지(요)?",
               "page": 249
             },
             {
               "number": 4,
-              "prompt": "예쁘다 + -지(요)? = (It) is pretty, right?",
+              "prompt": "예쁘다 + -지(요)? ……〉 = (It) is pretty, right? ___________________",
               "answer": "예쁘지(요)?",
               "page": 249
             }
@@ -10376,13 +10376,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "앉았어요",
+              "prompt": "앉았어요 ……〉 [ ]",
               "answer": "안자써요",
               "page": 250
             },
             {
               "number": 2,
-              "prompt": "앉아서",
+              "prompt": "앉아서 ……〉 [ ]",
               "answer": "안자서",
               "page": 250
             }
@@ -10680,25 +10680,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "볶다 + 아/어/여 줘 = Please fry it (for me).",
+              "prompt": "볶다 + 아/어/여 줘 ……〉 = Please fry it (for me). ___________________",
               "answer": "볶아 줘.",
               "page": 257
             },
             {
               "number": 2,
-              "prompt": "기다리다 + 아/어/여 줘 = Please wait (for me).",
+              "prompt": "기다리다 + 아/어/여 줘 ……〉 = Please wait (for me). ___________________",
               "answer": "기다려 줘.",
               "page": 257
             },
             {
               "number": 3,
-              "prompt": "예쁘다 + -(으)ㄹ까(요)? = Do you think it will be pretty? / I wonder if it will be pretty.",
+              "prompt": "예쁘다 + -(으)ㄹ까(요)? ……〉 _________________________________ = Do you think it will be pretty? / I wonder if it will be pretty.",
               "answer": "예쁠까(요)?",
               "page": 257
             },
             {
               "number": 4,
-              "prompt": "바쁘다 + -(으)ㄹ까(요)? = Do you think (they) will be busy? / I wonder if (they) will be busy.",
+              "prompt": "바쁘다 + -(으)ㄹ까(요)? ……〉 _________________________________ = Do you think (they) will be busy? / I wonder if (they) will be busy.",
               "answer": "바쁠까(요)?",
               "page": 257
             }
@@ -10718,25 +10718,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "밭 (dry field, farm)",
+              "prompt": "밭 (dry field, farm) ……〉 [ ]",
               "answer": "받",
               "page": 258
             },
             {
               "number": 2,
-              "prompt": "뭍 (land, shore)",
+              "prompt": "뭍 (land, shore) ……〉 [ ]",
               "answer": "묻",
               "page": 258
             },
             {
               "number": 3,
-              "prompt": "있고",
+              "prompt": "있고 ……〉 [ ]",
               "answer": "읻꼬",
               "page": 258
             },
             {
               "number": 4,
-              "prompt": "봤고",
+              "prompt": "봤고 ……〉 [ ]",
               "answer": "봗꼬",
               "page": 258
             }
@@ -11040,25 +11040,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "카드 + -도 주세요 = Please give me a card, too.",
+              "prompt": "카드 + -도 주세요 ……〉 = Please give me a card, too. ___________________",
               "answer": "카드도 주세요.",
               "page": 265
             },
             {
               "number": 2,
-              "prompt": "주소 + -도 주세요 = Please give me your address, too.",
+              "prompt": "주소 + -도 주세요 ……〉 = Please give me your address, too. ___________________",
               "answer": "주소도 주세요.",
               "page": 265
             },
             {
               "number": 3,
-              "prompt": "치킨 + 돼요? = Is fried chicken available? / Do you serve fried chicken?",
+              "prompt": "치킨 + 돼요? ……〉 ___________________ = Is fried chicken available? / Do you serve fried chicken?",
               "answer": "치킨 돼요?",
               "page": 265
             },
             {
               "number": 4,
-              "prompt": "카드 + 돼요? = Is (credit) card available? / Do you accept (credit) cards?",
+              "prompt": "카드 + 돼요? ……〉 ___________________ = Is (credit) card available? / Do you accept (credit) cards?",
               "answer": "카드 돼요?",
               "page": 265
             }
@@ -11078,37 +11078,37 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "육십 분 (60 minutes)",
+              "prompt": "육십 분 (60 minutes) ……〉 [ ]",
               "answer": "육씹 뿐",
               "page": 266
             },
             {
               "number": 2,
-              "prompt": "답변 (answer, reply)",
+              "prompt": "답변 (answer, reply) ……〉 [ ]",
               "answer": "답뼌",
               "page": 266
             },
             {
               "number": 3,
-              "prompt": "치킨입니다",
+              "prompt": "치킨입니다 ……〉 [ ]",
               "answer": "치키님니다",
               "page": 266
             },
             {
               "number": 4,
-              "prompt": "말해",
+              "prompt": "말해 ……〉 [ ]",
               "answer": "마래",
               "page": 266
             },
             {
               "number": 5,
-              "prompt": "맥주도",
+              "prompt": "맥주도 ……〉 [ ]",
               "answer": "맥쭈도",
               "page": 266
             },
             {
               "number": 6,
-              "prompt": "결제할게요",
+              "prompt": "결제할게요 ……〉 [ ]",
               "answer": "결쩨할께요",
               "page": 266
             }
@@ -11436,25 +11436,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "안 + 아프다 + -아/어/여요 = I am not sick.",
+              "prompt": "안 + 아프다 + -아/어/여요 ……〉 = I am not sick. ______________________",
               "answer": "안 아파요.",
               "page": 273
             },
             {
               "number": 2,
-              "prompt": "안 + 주다 + -아/어/여요 = I do not give (it).",
+              "prompt": "안 + 주다 + -아/어/여요 ……〉 = I do not give (it). ______________________",
               "answer": "안 줘요.",
               "page": 273
             },
             {
               "number": 3,
-              "prompt": "하루 + -에 + 한 + 번 = once a day",
+              "prompt": "하루 + -에 + 한 + 번 ……〉 = once a day ______________________",
               "answer": "하루에 한 번",
               "page": 273
             },
             {
               "number": 4,
-              "prompt": "한 달 + -에 + 두 + 번 = twice a month",
+              "prompt": "한 달 + -에 + 두 + 번 ……〉 = twice a month ______________________",
               "answer": "한 달에 두 번",
               "page": 273
             }
@@ -11474,25 +11474,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "툇마루",
+              "prompt": "툇마루 ……〉 [ ]",
               "answer": "퇸마루",
               "page": 274
             },
             {
               "number": 2,
-              "prompt": "뱃머리",
+              "prompt": "뱃머리 ……〉 [ ]",
               "answer": "밴머리",
               "page": 274
             },
             {
               "number": 3,
-              "prompt": "불나요",
+              "prompt": "불나요 ……〉 [ ]",
               "answer": "불라요",
               "page": 274
             },
             {
               "number": 4,
-              "prompt": "찰나",
+              "prompt": "찰나 ……〉 [ ]",
               "answer": "찰라",
               "page": 274
             }
@@ -11820,25 +11820,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "식사하다 + -시- + -았/었/였어요? = Did you eat? / Have you eaten?",
+              "prompt": "식사하다 + -시- + -았/었/였어요? ……〉 = Did you eat? / Have you eaten? _____________________________",
               "answer": "식사하셨어요?",
               "page": 281
             },
             {
               "number": 2,
-              "prompt": "공부하다 + -시- + -았/었/였어요? = Did you study?",
+              "prompt": "공부하다 + -시- + -았/었/였어요? ……〉 = Did you study? _____________________________",
               "answer": "공부하셨어요?",
               "page": 281
             },
             {
               "number": 3,
-              "prompt": "하다 + -지 마세요 = Don’t do (it). / Stop (it).",
+              "prompt": "하다 + -지 마세요 ……〉 = Don’t do (it). / Stop (it). ___________________",
               "answer": "하지 마세요.",
               "page": 281
             },
             {
               "number": 4,
-              "prompt": "오다 + -지 마세요 = Don’t come.",
+              "prompt": "오다 + -지 마세요 ……〉 = Don’t come. ___________________",
               "answer": "오지 마세요.",
               "page": 281
             }
@@ -11858,37 +11858,37 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "일시",
+              "prompt": "일시 ……〉 [ ]",
               "answer": "일씨",
               "page": 282
             },
             {
               "number": 2,
-              "prompt": "말살",
+              "prompt": "말살 ……〉 [ ]",
               "answer": "말쌀",
               "page": 282
             },
             {
               "number": 3,
-              "prompt": "장염이에요",
+              "prompt": "장염이에요 ……〉 [ ]",
               "answer": "장여미에요",
               "page": 282
             },
             {
               "number": 4,
-              "prompt": "따뜻한",
+              "prompt": "따뜻한 ……〉 [ ]",
               "answer": "따뜨탄",
               "page": 282
             },
             {
               "number": 5,
-              "prompt": "많이",
+              "prompt": "많이 ……〉 [ ]",
               "answer": "마니",
               "page": 282
             },
             {
               "number": 6,
-              "prompt": "감사합니다",
+              "prompt": "감사합니다 ……〉 [ ]",
               "answer": "감사함니다",
               "page": 282
             }
@@ -12186,25 +12186,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "책 + 아니야 = It’s not a book.",
+              "prompt": "책 + 아니야 ……〉 = It’s not a book. ___________________",
               "answer": "책 아니야.",
               "page": 289
             },
             {
               "number": 2,
-              "prompt": "병원 + 아니야 = It’s not a hospital.",
+              "prompt": "병원 + 아니야 ……〉 = It’s not a hospital. ___________________",
               "answer": "병원 아니야.",
               "page": 289
             },
             {
               "number": 3,
-              "prompt": "일주일 + 정도 됐어(요) = It has been about a week.",
+              "prompt": "일주일 + 정도 됐어(요) ……〉 = It has been about a week. ___________________",
               "answer": "일주일 정도 됐어(요).",
               "page": 289
             },
             {
               "number": 4,
-              "prompt": "일 년 + 정도 됐어(요) = It has been about a year.",
+              "prompt": "일 년 + 정도 됐어(요) ……〉 = It has been about a year. ___________________",
               "answer": "일 년 정도 됐어(요).",
               "page": 289
             }
@@ -12224,37 +12224,37 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "바쁜 일",
+              "prompt": "바쁜 일 ……〉 [ ]",
               "answer": "바쁜 닐",
               "page": 290
             },
             {
               "number": 2,
-              "prompt": "좋은 일",
+              "prompt": "좋은 일 ……〉 [ ]",
               "answer": "조은 닐",
               "page": 290
             },
             {
               "number": 3,
-              "prompt": "피곤해",
+              "prompt": "피곤해 ……〉 [ ]",
               "answer": "피고내",
               "page": 290
             },
             {
               "number": 4,
-              "prompt": "병원에",
+              "prompt": "병원에 ……〉 [ ]",
               "answer": "병워네",
               "page": 290
             },
             {
               "number": 5,
-              "prompt": "그랬어",
+              "prompt": "그랬어 ……〉 [ ]",
               "answer": "그래써",
               "page": 290
             },
             {
               "number": 6,
-              "prompt": "됐어",
+              "prompt": "됐어 ……〉 [ ]",
               "answer": "돼써",
               "page": 290
             }
@@ -12553,25 +12553,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "오다 + -시- + -아/어/여요? = Do you come? / Are you coming?",
+              "prompt": "오다 + -시- + -아/어/여요? ……〉 _____________________________ = Do you come? / Are you coming?",
               "answer": "오세요?",
               "page": 297
             },
             {
               "number": 2,
-              "prompt": "보다 + -시- + -아/어/여요? = Do you watch? / Are you watching?",
+              "prompt": "보다 + -시- + -아/어/여요? ……〉 _____________________________ = Do you watch? / Are you watching?",
               "answer": "보세요?",
               "page": 297
             },
             {
               "number": 3,
-              "prompt": "다 + 먹다 + -았/었/였습니다 = I have finished eating.",
+              "prompt": "다 + 먹다 + -았/었/였습니다 ……〉 = I have finished eating. _________________",
               "answer": "다 먹었습니다.",
               "page": 297
             },
             {
               "number": 4,
-              "prompt": "다 + 하다 + -았/었/였습니다 = I have done it all.",
+              "prompt": "다 + 하다 + -았/었/였습니다 ……〉 = I have done it all. ___________________",
               "answer": "다 했습니다.",
               "page": 298
             }
@@ -12591,37 +12591,37 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "법관 (judge, the bench)",
+              "prompt": "법관 (judge, the bench) ……〉 [ ]",
               "answer": "법꽌",
               "page": 298
             },
             {
               "number": 2,
-              "prompt": "합격 (pass, acceptance)",
+              "prompt": "합격 (pass, acceptance) ……〉 [ ]",
               "answer": "합껵",
               "page": 298
             },
             {
               "number": 3,
-              "prompt": "경복궁",
+              "prompt": "경복궁 ……〉 [ ]",
               "answer": "경복꿍",
               "page": 298
             },
             {
               "number": 4,
-              "prompt": "쪽으로",
+              "prompt": "쪽으로 ……〉 [ ]",
               "answer": "쪼그로",
               "page": 298
             },
             {
               "number": 5,
-              "prompt": "막혀요",
+              "prompt": "막혀요 ……〉 [ ]",
               "answer": "마켜요",
               "page": 298
             },
             {
               "number": 6,
-              "prompt": "늦었어요",
+              "prompt": "늦었어요 ……〉 [ ]",
               "answer": "느저써요",
               "page": 298
             }
@@ -12931,25 +12931,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "아직 + 결혼 + 못 했어(요) = I still can’t get married.",
+              "prompt": "아직 + 결혼 + 못 했어(요) ……〉 = I still can’t get married. ________________________",
               "answer": "아직 결혼 못 했어(요).",
               "page": 305
             },
             {
               "number": 2,
-              "prompt": "아직 + 숙제 + 못 했어(요) = I still have not been able to do homework.",
+              "prompt": "아직 + 숙제 + 못 했어(요) ……〉 = I still have not been able to do homework. ________________________",
               "answer": "아직 숙제 못 했어(요).",
               "page": 305
             },
             {
               "number": 3,
-              "prompt": "학교 + -에서 = at school",
+              "prompt": "학교 + -에서 ……〉 = at school ___________________",
               "answer": "학교에서",
               "page": 305
             },
             {
               "number": 4,
-              "prompt": "지하철역 + -에서 = at the subway station",
+              "prompt": "지하철역 + -에서 ……〉 = at the subway station ___________________",
               "answer": "지하철역에서",
               "page": 305
             }
@@ -12969,25 +12969,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "꽃병 (vase)",
+              "prompt": "꽃병 (vase) ……〉 [ ]",
               "answer": "꼳뼝",
               "page": 306
             },
             {
               "number": 2,
-              "prompt": "빛바래다 (to be faded)",
+              "prompt": "빛바래다 (to be faded) ……〉 [ ]",
               "answer": "빋빠래다",
               "page": 306
             },
             {
               "number": 3,
-              "prompt": "있다",
+              "prompt": "있다 ……〉 [ ]",
               "answer": "읻따",
               "page": 306
             },
             {
               "number": 4,
-              "prompt": "갔다",
+              "prompt": "갔다 ……〉 [ ]",
               "answer": "갇따",
               "page": 306
             }
@@ -13291,25 +13291,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "반대편 + -(으)로 = toward the opposite side",
+              "prompt": "반대편 + -(으)로 ……〉 = toward the opposite side ___________________",
               "answer": "반대편으로",
               "page": 313
             },
             {
               "number": 2,
-              "prompt": "버스 정류장 + -(으)로 = toward the bus stop",
+              "prompt": "버스 정류장 + -(으)로 ……〉 = toward the bus stop ___________________",
               "answer": "버스 정류장으로",
               "page": 313
             },
             {
               "number": 3,
-              "prompt": "타다 + -아/어/여야 돼(요)? = Do/Does (they) have to take/ride (it)?",
+              "prompt": "타다 + -아/어/여야 돼(요)? ……〉 = Do/Does (they) have to take/ride (it)? ___________________",
               "answer": "타야 돼(요)?",
               "page": 313
             },
             {
               "number": 4,
-              "prompt": "깔다 + -아/어/여야 돼(요)? = Do/Does (they) have to install (it)?",
+              "prompt": "깔다 + -아/어/여야 돼(요)? ……〉 = Do/Does (they) have to install (it)? ___________________",
               "answer": "깔아야 돼(요)?",
               "page": 313
             }
@@ -13329,25 +13329,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "붙은",
+              "prompt": "붙은 ……〉 [ ]",
               "answer": "부튼",
               "page": 314
             },
             {
               "number": 2,
-              "prompt": "밭을",
+              "prompt": "밭을 ……〉 [ ]",
               "answer": "바틀",
               "page": 314
             },
             {
               "number": 3,
-              "prompt": "국도 (national highway)",
+              "prompt": "국도 (national highway) ……〉 [ ]",
               "answer": "국또",
               "page": 314
             },
             {
               "number": 4,
-              "prompt": "각도 (angle)",
+              "prompt": "각도 (angle) ……〉 [ ]",
               "answer": "각또",
               "page": 314
             }
@@ -13651,25 +13651,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "만나다 + -(으)ㄹ 때 = when (they) meet",
+              "prompt": "만나다 + -(으)ㄹ 때 ……〉 = when (they) meet _______________________",
               "answer": "만날 때",
               "page": 321
             },
             {
               "number": 2,
-              "prompt": "먹다 + -(으)ㄹ 때 = when (they) eat",
+              "prompt": "먹다 + -(으)ㄹ 때 ……〉 = when (they) eat _______________________",
               "answer": "먹을 때",
               "page": 321
             },
             {
               "number": 3,
-              "prompt": "신다 + -고 + 타다 = to put on one’s shoes and ride / to ride with one’s shoes on",
+              "prompt": "신다 + -고 + 타다 ……〉 ________________________________ = to put on one’s shoes and ride / to ride with one’s shoes on",
               "answer": "신고 타다",
               "page": 321
             },
             {
               "number": 4,
-              "prompt": "들다 + -고 + 타다 = to pick (it) up and ride / to ride while carrying (it)",
+              "prompt": "들다 + -고 + 타다 ……〉 ________________________________ = to pick (it) up and ride / to ride while carrying (it)",
               "answer": "들고 타다",
               "page": 321
             }
@@ -13689,25 +13689,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "깊다 (to be deep)",
+              "prompt": "깊다 (to be deep) ……〉 [ ]",
               "answer": "깁따",
               "page": 322
             },
             {
               "number": 2,
-              "prompt": "앞뒤 (the front and back)",
+              "prompt": "앞뒤 (the front and back) ……〉 [ ]",
               "answer": "압뛰",
               "page": 322
             },
             {
               "number": 3,
-              "prompt": "안고",
+              "prompt": "안고 ……〉 [ ]",
               "answer": "안꼬",
               "page": 322
             },
             {
               "number": 4,
-              "prompt": "껴안고",
+              "prompt": "껴안고 ……〉 [ ]",
               "answer": "껴안꼬",
               "page": 322
             }
@@ -13999,25 +13999,25 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "비싸다 + -(으)ㄹ 수도 있다 = (They) might be expensive.",
+              "prompt": "비싸다 + -(으)ㄹ 수도 있다 ……〉 = (They) might be expensive. ___________________",
               "answer": "비쌀 수도 있다",
               "page": 329
             },
             {
               "number": 2,
-              "prompt": "가다 + -(으)ㄹ 수도 있다 = (They) might go.",
+              "prompt": "가다 + -(으)ㄹ 수도 있다 ……〉 = (They) might go. ___________________",
               "answer": "갈 수도 있다",
               "page": 329
             },
             {
               "number": 3,
-              "prompt": "비싸다 + -(으)ㄴ 것 = something expensive",
+              "prompt": "비싸다 + -(으)ㄴ 것 ……〉 = something expensive ___________________",
               "answer": "비싼 것",
               "page": 329
             },
             {
               "number": 4,
-              "prompt": "괜찮다 + -(으)ㄴ 것 = something fine/ok",
+              "prompt": "괜찮다 + -(으)ㄴ 것 ……〉 = something fine/ok ___________________",
               "answer": "괜찮은 것",
               "page": 329
             }
@@ -14037,37 +14037,37 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "탈 수 있어",
+              "prompt": "탈 수 있어 ……〉 [ ]",
               "answer": "탈 쑤 이써",
               "page": 330
             },
             {
               "number": 2,
-              "prompt": "괜찮아",
+              "prompt": "괜찮아 ……〉 [ ]",
               "answer": "괜차나",
               "page": 330
             },
             {
               "number": 3,
-              "prompt": "오랫동안",
+              "prompt": "오랫동안 ……〉 [ ]",
               "answer": "오랟똥안",
               "page": 330
             },
             {
               "number": 4,
-              "prompt": "넘어질 수도 있어",
+              "prompt": "넘어질 수도 있어 ……〉 [ ]",
               "answer": "너머질 쑤도 이써",
               "page": 330
             },
             {
               "number": 5,
-              "prompt": "천만 원",
+              "prompt": "천만 원 ……〉 [ ]",
               "answer": "천마 눤",
               "page": 330
             },
             {
               "number": 6,
-              "prompt": "좋은 거야",
+              "prompt": "좋은 거야 ……〉 [ ]",
               "answer": "조은 거야",
               "page": 330
             }

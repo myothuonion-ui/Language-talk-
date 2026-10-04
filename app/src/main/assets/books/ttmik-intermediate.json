@@ -199,13 +199,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Have you seen this guy before? (to see = 보다, this guy = 이 남자)",
+              "prompt": "Have you seen this guy before? (to see = 보다, this guy = 이 남자) ……〉",
               "answer": "이 남자 본 적 있으세요?",
               "page": 19
             },
             {
               "number": 2,
-              "prompt": "Have you met that person before? (to meet = 만나다, that person = 저 사람)",
+              "prompt": "Have you met that person before? (to meet = 만나다, that person = 저 사람) ……〉",
               "answer": "저 사람 만난 적 있으세요?",
               "page": 19
             }
@@ -227,15 +227,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "It kind of looked delicious. (to be delicious = 맛있다)",
+              "prompt": "It kind of looked delicious. (to be delicious = 맛있다) ……〉",
               "answer": "왠지 맛있을 것 같더라고요.",
-              "page": 20
+              "page": 21
             },
             {
               "number": 2,
-              "prompt": "It kind of looked like it would be okay. (to be okay = 괜찮다)",
+              "prompt": "It kind of looked like it would be okay. (to be okay = 괜찮다) ……〉",
               "answer": "왠지 괜찮을 것 같더라고요.",
-              "page": 20
+              "page": 21
             }
           ],
           "answerText": "1. 왠지 맛있을 것 같더라고요. 2. 왠지 괜찮을 것 같더라고요.",
@@ -254,15 +254,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "If you wait, you can meet her. (to wait = 기다리다, to meet = 만나다)",
+              "prompt": "If you wait, you can meet her. (to wait = 기다리다, to meet = 만나다) ……〉",
               "answer": "기다리시면 그녀를 만나실 수 있어요.",
-              "page": 22
+              "page": 23
             },
             {
               "number": 2,
-              "prompt": "If you call now, you can talk to that person. (to call now = 지금 전화하다, to talk to that person = 그 사람과 이야기하다)",
+              "prompt": "If you call now, you can talk to that person. (to call now = 지금 전화하다, to talk to that person = 그 사람과 이야기하다) ……〉",
               "answer": "지금 전화하시면 그 사람과 이야기하실 수 있어요.",
-              "page": 22
+              "page": 23
             }
           ],
           "answerText": "1. 기다리시면 그녀를 만나실 수 있어요. 2. 지금 전화하시면 그 사람과 이야기하실 수 있어요.",
@@ -597,13 +597,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I think I should go get my haircut tomorrow. (to go get one’s haircut = 머리 자르 러 가다, tomorrow = 내일)",
+              "prompt": "I think I should go get my haircut tomorrow. (to go get one’s haircut = 머리 자르 러 가다, tomorrow = 내일) ……〉",
               "answer": "내일 머리 자르러 가야겠다.",
               "page": 33
             },
             {
               "number": 2,
-              "prompt": "I think I should bring an umbrella. (to bring = 가지고 가다, umbrella = 우산)",
+              "prompt": "I think I should bring an umbrella. (to bring = 가지고 가다, umbrella = 우산) ……〉",
               "answer": "우산 가지고 가야겠다.",
               "page": 33
             }
@@ -625,15 +625,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "How could you say something like that? (to say something like that = 그런 말을 하다)",
+              "prompt": "How could you say something like that? (to say something like that = 그런 말을 하다) ……〉",
               "answer": "어떻게 그런 말을 해요?",
-              "page": 34
+              "page": 35
             },
             {
               "number": 2,
-              "prompt": "How could you let something like this pass? (to let something pass = 그냥 넘어 가다)",
+              "prompt": "How could you let something like this pass? (to let something pass = 그냥 넘어 가다) ……〉",
               "answer": "어떻게 이걸 그냥 넘어가요?",
-              "page": 34
+              "page": 35
             }
           ],
           "answerText": "1. 어떻게 그런 말을 해요? 2. 어떻게 이걸 그냥 넘어가요?",
@@ -652,15 +652,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "It is because I am scared. (to be scared = 무섭다)",
+              "prompt": "It is because I am scared. (to be scared = 무섭다) ……〉",
               "answer": "무서워서 그래.",
               "page": 36
             },
             {
               "number": 2,
-              "prompt": "It is because I am sleepy now. (to be sleepy = 졸리다, now = 지금)",
+              "prompt": "It is because I am sleepy now. (to be sleepy = 졸리다, now = 지금) ……〉",
               "answer": "지금 졸려서 그래",
-              "page": 36
+              "page": 37
             }
           ],
           "answerText": "1. 무서워서 그래. 2. 지금 졸려서 그래",
@@ -842,13 +842,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Why is he so handsome? (he/that guy = 저 남자, to be handsome = 잘생기다)",
+              "prompt": "Why is he so handsome? (he/that guy = 저 남자, to be handsome = 잘생기다) ……〉",
               "answer": "저 남자 왜 이렇게 잘생겼어?",
               "page": 45
             },
             {
               "number": 2,
-              "prompt": "Why are you so late? (to be late = 늦다)",
+              "prompt": "Why are you so late? (to be late = 늦다) ……〉",
               "answer": "왜 이렇게 늦어?",
               "page": 45
             }
@@ -869,15 +869,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "He is so busy dating these days. (He = 그 남자, to date = 연애하다, these days = 요즘)",
+              "prompt": "He is so busy dating these days. (He = 그 남자, to date = 연애하다, these days = 요즘) ……〉",
               "answer": "그 남자 요즘 연애하느라 정신이 없어.",
-              "page": 46
+              "page": 47
             },
             {
               "number": 2,
-              "prompt": "They are so busy preparing for the event. (to prepare = 준비하다, the event = 그 행사)",
+              "prompt": "They are so busy preparing for the event. (to prepare = 준비하다, the event = 그 행사) ……〉",
               "answer": "그 사람들 그 행사를 준비하느라 정신이 없어.",
-              "page": 46
+              "page": 47
             }
           ],
           "answerText": "1. 그 남자 요즘 연애하느라 정신이 없어. 2. 그 사람들 그 행사를 준비하느라 정신이 없어.",
@@ -896,13 +896,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "It’s been so long since I last went outside. (to go outside = 밖에 나가다)",
+              "prompt": "It’s been so long since I last went outside. (to go outside = 밖에 나가다) ……〉",
               "answer": "밖에 나간 지 진짜 오래 됐다.",
               "page": 48
             },
             {
               "number": 2,
-              "prompt": "It’s been a really long time since I last took the subway. (to take a subway = 지 하철 타다)",
+              "prompt": "It’s been a really long time since I last took the subway. (to take a subway = 지 하철 타다) ……〉",
               "answer": "지하철 탄 지 진짜 오래 됐다.",
               "page": 48
             }
@@ -1140,13 +1140,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I happened to be put in charge of that task. (to be put in charge of = 맡게 되다, that task = 그 일)",
+              "prompt": "I happened to be put in charge of that task. (to be put in charge of = 맡게 되다, that task = 그 일) ……〉",
               "answer": "그 일을 내가 맡게 됐어.",
               "page": 57
             },
             {
               "number": 2,
-              "prompt": "I happened to see him at a café. (to see = 보다, at a café = 카페에서)",
+              "prompt": "I happened to see him at a café. (to see = 보다, at a café = 카페에서) ……〉",
               "answer": "그 사람을 카페에서 보게 됐어.",
               "page": 57
             }
@@ -1168,15 +1168,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I’m drinking now. (to drink = 술 마시다, now = 지금)",
+              "prompt": "I’m drinking now. (to drink = 술 마시다, now = 지금) ……〉",
               "answer": "지금 술 마시고 있어.",
-              "page": 58
+              "page": 59
             },
             {
               "number": 2,
-              "prompt": "My friends are coming now. (my friends = 내 친구들, to come = 오다, now = 지금)",
+              "prompt": "My friends are coming now. (my friends = 내 친구들, to come = 오다, now = 지금) ……〉",
               "answer": "내 친구들 지금 오고 있어.",
-              "page": 58
+              "page": 59
             }
           ],
           "answerText": "1. 지금 술 마시고 있어. 2. 내 친구들 지금 오고 있어.",
@@ -1195,15 +1195,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Shall we watch a movie together tonight? (we = 우리, to watch = 보다, a movie = 그 영화, tonight = 오늘 저녁에)",
+              "prompt": "Shall we watch a movie together tonight? (we = 우리, to watch = 보다, a movie = 그 영화, tonight = 오늘 저녁에) ……〉",
               "answer": "우리 오늘 저녁에 같이 그 영화 볼까?",
               "page": 60
             },
             {
               "number": 2,
-              "prompt": "Shall we go to the park together this weekend? (to go = 가다, park = 공원, this weekend = 이번 주말에)",
+              "prompt": "Shall we go to the park together this weekend? (to go = 가다, park = 공원, this weekend = 이번 주말에) ……〉",
               "answer": "우리 이번 주말에 같이 공원 갈까?",
-              "page": 60
+              "page": 61
             }
           ],
           "answerText": "1. 우리 오늘 저녁에 같이 그 영화 볼까? 2. 우리 이번 주말에 같이 공원 갈까?",
@@ -1373,13 +1373,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "There has been no word. (word = 말)",
+              "prompt": "There has been no word. (word = 말) ……〉",
               "answer": "아무 말도 없어.",
               "page": 69
             },
             {
               "number": 2,
-              "prompt": "There isn’t any special occasion. (any special occasion = 일)",
+              "prompt": "There isn’t any special occasion. (any special occasion = 일) ……〉",
               "answer": "아무 일도 없어.",
               "page": 69
             }
@@ -1400,15 +1400,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Let’s eat together. (to eat = 먹다)",
+              "prompt": "Let’s eat together. (to eat = 먹다) ……〉",
               "answer": "같이 먹자.",
-              "page": 70
+              "page": 71
             },
             {
               "number": 2,
-              "prompt": "Let’s listen to the song together. (to listen to the song = 노래 듣다)",
+              "prompt": "Let’s listen to the song together. (to listen to the song = 노래 듣다) ……〉",
               "answer": "노래 같이 듣자",
-              "page": 70
+              "page": 71
             }
           ],
           "answerText": "1. 같이 먹자. 2. 노래 같이 듣자",
@@ -1427,13 +1427,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I don’t know how late they will be. (to be late = 늦다, they = 그 사람들)",
+              "prompt": "I don’t know how late they will be. (to be late = 늦다, they = 그 사람들) ……〉",
               "answer": "그 사람들이 얼마나 늦을지 모르겠네.",
               "page": 72
             },
             {
               "number": 2,
-              "prompt": "I don’t know how much he will eat. (he = 그 남자, to eat = 먹다)",
+              "prompt": "I don’t know how much he will eat. (he = 그 남자, to eat = 먹다) ……〉",
               "answer": "그 남자가 얼마나 먹을지 모르겠네.",
               "page": 72
             }
@@ -1629,13 +1629,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Do you have a different color by any chance? (a different color = 다른 색깔)",
+              "prompt": "Do you have a different color by any chance? (a different color = 다른 색깔) ……〉",
               "answer": "혹시 다른 색깔 있어?",
               "page": 81
             },
             {
               "number": 2,
-              "prompt": "Do you have more of this by any chance? (more of this = 이거 더)",
+              "prompt": "Do you have more of this by any chance? (more of this = 이거 더) ……〉",
               "answer": "혹시 이거 더 있어?",
               "page": 81
             }
@@ -1656,15 +1656,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I didn’t think I would be able to finish this today. (to finish = 끝내다)",
+              "prompt": "I didn’t think I would be able to finish this today. (to finish = 끝내다) ……〉",
               "answer": "난 이거 오늘 못 끝낼 줄 알았어.",
-              "page": 82
+              "page": 83
             },
             {
               "number": 2,
-              "prompt": "I didn’t think we would be able to meet again. (we = 우리, to meet = 만나다, again = 다시)",
+              "prompt": "I didn’t think we would be able to meet again. (we = 우리, to meet = 만나다, again = 다시) ……〉",
               "answer": "난 우리(가) 다시 못 만날 줄 알았어.",
-              "page": 82
+              "page": 83
             }
           ],
           "answerText": "1. 난 이거 오늘 못 끝낼 줄 알았어. 2. 난 우리(가) 다시 못 만날 줄 알았어.",
@@ -1683,13 +1683,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "It’s okay to use this, right? (to use = 쓰다, this = 이거)",
+              "prompt": "It’s okay to use this, right? (to use = 쓰다, this = 이거) ……〉",
               "answer": "나 이거 써도 되지?",
               "page": 84
             },
             {
               "number": 2,
-              "prompt": "It’s okay for us to start first, right? (us = 우리, to start = 시작하다, first = 먼저)",
+              "prompt": "It’s okay for us to start first, right? (us = 우리, to start = 시작하다, first = 먼저) ……〉",
               "answer": "우리 먼저 시작해도 되지?",
               "page": 84
             }
@@ -1909,13 +1909,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I can’t help it because it is tomorrow. (tomorrow = 내일)",
+              "prompt": "I can’t help it because it is tomorrow. (tomorrow = 내일) ……〉",
               "answer": "내일이라서 어쩔 수 없어.",
               "page": 93
             },
             {
               "number": 2,
-              "prompt": "I have no choice because she is a baby. (baby = 아기)",
+              "prompt": "I have no choice because she is a baby. (baby = 아기) ……〉",
               "answer": "아기라서 어쩔 수 없어.",
               "page": 93
             }
@@ -1936,15 +1936,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Don’t you dare meet that girl. (to meet = 만나다, that girl = 그 여자)",
+              "prompt": "Don’t you dare meet that girl. (to meet = 만나다, that girl = 그 여자) ……〉",
               "answer": "그 여자 만나기만 해 봐.",
-              "page": 94
+              "page": 95
             },
             {
               "number": 2,
-              "prompt": "You’ll be in big trouble if you don’t show up today. (to not show up = 안 나타나다, today = 오늘)",
+              "prompt": "You’ll be in big trouble if you don’t show up today. (to not show up = 안 나타나다, today = 오늘) ……〉",
               "answer": "오늘 안 나타나기만 해 봐.",
-              "page": 94
+              "page": 95
             }
           ],
           "answerText": "1. 그 여자 만나기만 해 봐. 2. 오늘 안 나타나기만 해 봐.",
@@ -1963,13 +1963,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Couldn’t you (just) stop talking? (to stop talking = 그만 말하다)",
+              "prompt": "Couldn’t you (just) stop talking? (to stop talking = 그만 말하다) ……〉",
               "answer": "그만 말하면 안 돼요?",
               "page": 96
             },
             {
               "number": 2,
-              "prompt": "Couldn’t you (just) do it for me? (to do it for me = 날 위해 해 주다)",
+              "prompt": "Couldn’t you (just) do it for me? (to do it for me = 날 위해 해 주다) ……〉",
               "answer": "날 위해 해 주면 안 돼요?",
               "page": 96
             }
@@ -2147,13 +2147,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Don’t go outside late at night. (to go outside = 밖에 나가다, late at night = 밤 늦게)",
+              "prompt": "Don’t go outside late at night. (to go outside = 밖에 나가다, late at night = 밤 늦게) ……〉",
               "answer": "밤 늦게 밖에 나가지 마.",
               "page": 105
             },
             {
               "number": 2,
-              "prompt": "Don’t be late tomorrow. (to be late = 늦다, tomorrow = 내일)",
+              "prompt": "Don’t be late tomorrow. (to be late = 늦다, tomorrow = 내일) ……〉",
               "answer": "내일 늦지 마.",
               "page": 105
             }
@@ -2174,15 +2174,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Make sure to call me tomorrow, please. (to call me = 전화하다, tomorrow = 내일)",
+              "prompt": "Make sure to call me tomorrow, please. (to call me = 전화하다, tomorrow = 내일) ……〉",
               "answer": "내일 꼭 전화해 주세요.",
-              "page": 106
+              "page": 107
             },
             {
               "number": 2,
-              "prompt": "Make sure to turn off the light at night. (to turn off the light = 불을 끄다, at night = 밤에)",
+              "prompt": "Make sure to turn off the light at night. (to turn off the light = 불을 끄다, at night = 밤에) ……〉",
               "answer": "밤에 꼭 불을 꺼 주세요.",
-              "page": 106
+              "page": 107
             }
           ],
           "answerText": "1. 내일 꼭 전화해 주세요. 2. 밤에 꼭 불을 꺼 주세요.",
@@ -2201,13 +2201,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I just have to pass this on? (to pass this on = 이것만 전달해 주다)",
+              "prompt": "I just have to pass this on? (to pass this on = 이것만 전달해 주다) ……〉",
               "answer": "이것만 전달해 주면 돼?",
               "page": 108
             },
             {
               "number": 2,
-              "prompt": "I just have to wait here? (to wait here = 여기서 기다리다)",
+              "prompt": "I just have to wait here? (to wait here = 여기서 기다리다) ……〉",
               "answer": "여기서 기다리면 돼?",
               "page": 108
             }
@@ -2427,13 +2427,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I will just buy this one. (to buy this one = 이걸로 사다)",
+              "prompt": "I will just buy this one. (to buy this one = 이걸로 사다) ……〉",
               "answer": "그냥 이걸로 살게요.",
               "page": 117
             },
             {
               "number": 2,
-              "prompt": "I will just come later. (to come later = 다음에 오다)",
+              "prompt": "I will just come later. (to come later = 다음에 오다) ……〉",
               "answer": "그냥 다음에 올게요.",
               "page": 117
             }
@@ -2455,15 +2455,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I told you that it really tasted good then. (really = 정말, to taste good = 맛있다, then = 그때는)",
+              "prompt": "I told you that it really tasted good then. (really = 정말, to taste good = 맛있다, then = 그때는) ……〉",
               "answer": "그때는 정말 맛있었다니까요.",
-              "page": 118
+              "page": 119
             },
             {
               "number": 2,
-              "prompt": "I told you that they said it will be raining today. (to be raining = 비 오다, today = 오늘)",
+              "prompt": "I told you that they said it will be raining today. (to be raining = 비 오다, today = 오늘) ……〉",
               "answer": "오늘 비 온다고 했다니까요.",
-              "page": 118
+              "page": 119
             }
           ],
           "answerText": "1. 그때는 정말 맛있었다니까요. 2. 오늘 비 온다고 했다니까요.",
@@ -2482,15 +2482,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "If you sleep now, you won’t get to see that. (to sleep now = 지금 자다, to get to see that = 그거 못 보다)",
+              "prompt": "If you sleep now, you won’t get to see that. (to sleep now = 지금 자다, to get to see that = 그거 못 보다) ……〉",
               "answer": "지금 자면 그거 못 봐.",
               "page": 120
             },
             {
               "number": 2,
-              "prompt": "If you eat all of this, you will have a stomachache. (to eat all of this = 이거 다 먹다, to have a stomachache = 배 아프다)",
+              "prompt": "If you eat all of this, you will have a stomachache. (to eat all of this = 이거 다 먹다, to have a stomachache = 배 아프다) ……〉",
               "answer": "이거 다 먹으면 배 아파.",
-              "page": 120
+              "page": 121
             }
           ],
           "answerText": "1. 지금 자면 그거 못 봐. 2. 이거 다 먹으면 배 아파.",
@@ -2702,13 +2702,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I want to sell my car. (to sell = 팔다, my car = 내 차)",
+              "prompt": "I want to sell my car. (to sell = 팔다, my car = 내 차) ……〉",
               "answer": "내 차 팔고 싶어.",
               "page": 129
             },
             {
               "number": 2,
-              "prompt": "I want to go to Korea. (to go to Korea = 한국에 가다)",
+              "prompt": "I want to go to Korea. (to go to Korea = 한국에 가다) ……〉",
               "answer": "한국에 가고 싶어.",
               "page": 129
             }
@@ -2729,15 +2729,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "It will be good if you come early. (you = 너, to come early = 일찍 오다)",
+              "prompt": "It will be good if you come early. (you = 너, to come early = 일찍 오다) ……〉",
               "answer": "너가 일찍 오면 좋을 것 같아.",
-              "page": 130
+              "page": 131
             },
             {
               "number": 2,
-              "prompt": "It will be good if it’s summer. (summer = 여름)",
+              "prompt": "It will be good if it’s summer. (summer = 여름) ……〉",
               "answer": "여름이면 좋을 것 같아.",
-              "page": 130
+              "page": 131
             }
           ],
           "answerText": "1. 너가 일찍 오면 좋을 것 같아. 2. 여름이면 좋을 것 같아.",
@@ -2756,13 +2756,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "It looks really fun. (to be fun = 재미있다)",
+              "prompt": "It looks really fun. (to be fun = 재미있다) ……〉",
               "answer": "진짜 재미있어 보인다.",
               "page": 132
             },
             {
               "number": 2,
-              "prompt": "It looks really tough. (to be tough = 힘들다)",
+              "prompt": "It looks really tough. (to be tough = 힘들다) ……〉",
               "answer": "진짜 힘들어 보인다.",
               "page": 132
             }
@@ -2934,13 +2934,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Did you come to watch a movie? (to watch a movie = 영화 보다)",
+              "prompt": "Did you come to watch a movie? (to watch a movie = 영화 보다) ……〉",
               "answer": "영화 보러 오셨어요?",
               "page": 141
             },
             {
               "number": 2,
-              "prompt": "Did you come to exercise? (to exercise = 운동하다)",
+              "prompt": "Did you come to exercise? (to exercise = 운동하다) ……〉",
               "answer": "운동하러 오셨어요?",
               "page": 141
             }
@@ -2961,15 +2961,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Don’t you have a scary movie? (scary movie = 무서운 영화)",
+              "prompt": "Don’t you have a scary movie? (scary movie = 무서운 영화) ……〉",
               "answer": "무서운 영화는 없나요?",
-              "page": 142
+              "page": 143
             },
             {
               "number": 2,
-              "prompt": "Isn’t there anything more that you need? (anything more that you need = 더 필요 한 것)",
+              "prompt": "Isn’t there anything more that you need? (anything more that you need = 더 필요 한 것) ……〉",
               "answer": "더 필요한 것은 없나요?",
-              "page": 142
+              "page": 143
             }
           ],
           "answerText": "1. 무서운 영화는 없나요? 2. 더 필요한 것은 없나요?",
@@ -2988,13 +2988,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Try reading it. (to read = 읽다)",
+              "prompt": "Try reading it. (to read = 읽다) ……〉",
               "answer": "한번 읽어 보세요",
               "page": 144
             },
             {
               "number": 2,
-              "prompt": "Try calling. (to call = 전화하다)",
+              "prompt": "Try calling. (to call = 전화하다) ……〉",
               "answer": "한번 전화해 보세요.",
               "page": 144
             }
@@ -3239,13 +3239,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Which is the smallest size? (the smallest size = 제일 작은 사이즈)",
+              "prompt": "Which is the smallest size? (the smallest size = 제일 작은 사이즈) ……〉",
               "answer": "제일 작은 사이즈가 어떤 거예요?",
               "page": 155
             },
             {
               "number": 2,
-              "prompt": "Which is the cheapest product? (the cheapest product = 가장 싼 제품)",
+              "prompt": "Which is the cheapest product? (the cheapest product = 가장 싼 제품) ……〉",
               "answer": "가장 싼 제품이 어떤 거예요?",
               "page": 155
             }
@@ -3266,15 +3266,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Do you mean the white one? (the white one = 하얀색)",
+              "prompt": "Do you mean the white one? (the white one = 하얀색) ……〉",
               "answer": "하얀색 말씀하시는 건가요?",
-              "page": 156
+              "page": 157
             },
             {
               "number": 2,
-              "prompt": "Do you mean that book over there on the shelf? (that book over there on the shelf = 선반 위에 있는 저 책)",
+              "prompt": "Do you mean that book over there on the shelf? (that book over there on the shelf = 선반 위에 있는 저 책) ……〉",
               "answer": "선반 위에 있는 저 책 말씀하시는 건가요?",
-              "page": 156
+              "page": 157
             }
           ],
           "answerText": "1. 하얀색 말씀하시는 건가요? 2. 선반 위에 있는 저 책 말씀하시는 건가요?",
@@ -3293,13 +3293,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Do you tend to eat a lot? (to eat = 먹다, a lot = 많이)",
+              "prompt": "Do you tend to eat a lot? (to eat = 먹다, a lot = 많이) ……〉",
               "answer": "많이 먹는 편이세요?",
               "page": 158
             },
             {
               "number": 2,
-              "prompt": "Do you tend to sleep more in the morning? (to sleep more in the morning = 아침 잠이 많다)",
+              "prompt": "Do you tend to sleep more in the morning? (to sleep more in the morning = 아침 잠이 많다) ……〉",
               "answer": "아침 잠이 많은 편이세요?",
               "page": 158
             }
@@ -3501,13 +3501,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I see that it became more fun. (to be more fun = 더 재미있다)",
+              "prompt": "I see that it became more fun. (to be more fun = 더 재미있다) ……〉",
               "answer": "더 재미있어졌네요.",
               "page": 167
             },
             {
               "number": 2,
-              "prompt": "I see that it became more expensive than yesterday. (to be more expensive than yesterday = 어제보다 비싸다)",
+              "prompt": "I see that it became more expensive than yesterday. (to be more expensive than yesterday = 어제보다 비싸다) ……〉",
               "answer": "어제보다 비싸졌네요.",
               "page": 167
             }
@@ -3528,15 +3528,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Why don’t we go out a little early? (to go out = 나가다, a little early = 조금 일찍)",
+              "prompt": "Why don’t we go out a little early? (to go out = 나가다, a little early = 조금 일찍) ……〉",
               "answer": "조금 일찍 나갔으면 해요.",
-              "page": 168
+              "page": 169
             },
             {
               "number": 2,
-              "prompt": "Why don’t we change the place where we will meet? (to change = 바꾸다, the place where we will meet = 만날 장소)",
+              "prompt": "Why don’t we change the place where we will meet? (to change = 바꾸다, the place where we will meet = 만날 장소) ……〉",
               "answer": "만날 장소를 바꿨으면 해요.",
-              "page": 168
+              "page": 169
             }
           ],
           "answerText": "1. 조금 일찍 나갔으면 해요. 2. 만날 장소를 바꿨으면 해요.",
@@ -3555,15 +3555,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I used to think that Hyunwoo was the only son. (Hyunwoo = 현우 씨, only son = 외아들)",
+              "prompt": "I used to think that Hyunwoo was the only son. (Hyunwoo = 현우 씨, only son = 외아들) ……〉",
               "answer": "현우 씨가 외아들이라고 생각했었어요.",
               "page": 170
             },
             {
               "number": 2,
-              "prompt": "I used to think that that was the best way. (that = 그게, the best way = 최선의 방법)",
+              "prompt": "I used to think that that was the best way. (that = 그게, the best way = 최선의 방법) ……〉",
               "answer": "그게 최선의 방법이라고 생각했었어요.",
-              "page": 170
+              "page": 171
             }
           ],
           "answerText": "1. 현우 씨가 외아들이라고 생각했었어요. 2. 그게 최선의 방법이라고 생각했었어요.",
@@ -3775,13 +3775,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Shall we go now? (to go = 가다, now = 지금)",
+              "prompt": "Shall we go now? (to go = 가다, now = 지금) ……〉",
               "answer": "지금 갈까요?",
               "page": 179
             },
             {
               "number": 2,
-              "prompt": "Shall we walk for a bit? (to walk for a bit = 좀 걷다)",
+              "prompt": "Shall we walk for a bit? (to walk for a bit = 좀 걷다) ……〉",
               "answer": "좀 걸을까요?",
               "page": 179
             }
@@ -3802,15 +3802,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "What kind of coffee do you like? (coffee = 커피)",
+              "prompt": "What kind of coffee do you like? (coffee = 커피) ……〉",
               "answer": "어떤 커피 좋아해요?",
-              "page": 180
+              "page": 181
             },
             {
               "number": 2,
-              "prompt": "What kind of sports do you like? (sports = 스포츠)",
+              "prompt": "What kind of sports do you like? (sports = 스포츠) ……〉",
               "answer": "어떤 스포츠 좋아해요?",
-              "page": 180
+              "page": 181
             }
           ],
           "answerText": "1. 어떤 커피 좋아해요? 2. 어떤 스포츠 좋아해요?",
@@ -3829,15 +3829,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I heard that the woman moved last month. (the woman = 그 여자, to move = 이 사가다, last month = 지난 달에)",
+              "prompt": "I heard that the woman moved last month. (the woman = 그 여자, to move = 이 사가다, last month = 지난 달에) ……〉",
               "answer": "그 여자 지난 달에 이사갔다고 하더라고요.",
               "page": 182
             },
             {
               "number": 2,
-              "prompt": "I heard that the guy got married. (the guy = 그 남자, to get married = 결혼하다)",
+              "prompt": "I heard that the guy got married. (the guy = 그 남자, to get married = 결혼하다) ……〉",
               "answer": "그 남자 결혼했다고 하더라고요.",
-              "page": 182
+              "page": 183
             }
           ],
           "answerText": "1. 그 여자 지난 달에 이사갔다고 하더라고요. 2. 그 남자 결혼했다고 하더라고요.",
@@ -4037,13 +4037,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "What shall we do after drinking this? (to drink this = 이거 마시다)",
+              "prompt": "What shall we do after drinking this? (to drink this = 이거 마시다) ……〉",
               "answer": "이거 마시고 뭐 할까?",
               "page": 191
             },
             {
               "number": 2,
-              "prompt": "What shall we do after getting off of work? (to get off of work = 퇴근하다)",
+              "prompt": "What shall we do after getting off of work? (to get off of work = 퇴근하다) ……〉",
               "answer": "퇴근하고 뭐 할까?",
               "page": 191
             }
@@ -4064,15 +4064,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I guess he liked you. (he = 저 남자, to like = 좋아하다, you = 너)",
+              "prompt": "I guess he liked you. (he = 저 남자, to like = 좋아하다, you = 너) ……〉",
               "answer": "저 남자가 너 좋아했나 봐.",
-              "page": 192
+              "page": 193
             },
             {
               "number": 2,
-              "prompt": "I guess Su-yeon hasn’t come yet. (to come = 오다, yet = 아직)",
+              "prompt": "I guess Su-yeon hasn’t come yet. (to come = 오다, yet = 아직) ……〉",
               "answer": "수연이가 아직 안 왔나 봐.",
-              "page": 192
+              "page": 193
             }
           ],
           "answerText": "1. 저 남자가 너 좋아했나 봐. 2. 수연이가 아직 안 왔나 봐.",
@@ -4091,13 +4091,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I wish I won the lottery. (to win the lottery = 로또 당첨되다)",
+              "prompt": "I wish I won the lottery. (to win the lottery = 로또 당첨되다) ……〉",
               "answer": "(내가) 로또 당첨됐으면 좋겠다.",
               "page": 194
             },
             {
               "number": 2,
-              "prompt": "I wish I was good at swimming. (to be good at = 잘하다, swimming = 수영)",
+              "prompt": "I wish I was good at swimming. (to be good at = 잘하다, swimming = 수영) ……〉",
               "answer": "(내가) 수영(을) 잘했으면 좋겠다.",
               "page": 194
             }
@@ -4317,13 +4317,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "How long have you lived here? (to live here = 여기에서 살다)",
+              "prompt": "How long have you lived here? (to live here = 여기에서 살다) ……〉",
               "answer": "여기에서 산 지 얼마나 됐지?",
               "page": 203
             },
             {
               "number": 2,
-              "prompt": "How long has it been since the shop opened? (the shop = 그 가게, to open = 오 픈하다)",
+              "prompt": "How long has it been since the shop opened? (the shop = 그 가게, to open = 오 픈하다) ……〉",
               "answer": "그 가게 오픈한 지 얼마나 됐지?",
               "page": 203
             }
@@ -4344,15 +4344,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "There’s no need to check. (to check = 확인하다)",
+              "prompt": "There’s no need to check. (to check = 확인하다) ……〉",
               "answer": "확인할 필요도 없어.",
-              "page": 204
+              "page": 205
             },
             {
               "number": 2,
-              "prompt": "There’s no need to answer the phone. (to answer the phone = 전화 받다)",
+              "prompt": "There’s no need to answer the phone. (to answer the phone = 전화 받다) ……〉",
               "answer": "전화 받을 필요도 없어.",
-              "page": 204
+              "page": 205
             }
           ],
           "answerText": "1. 확인할 필요도 없어. 2. 전화 받을 필요도 없어.",
@@ -4371,13 +4371,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Today is my birthday and my sister's birthday (at the same time). (today = 오늘, my birthday = 내 생일, my sister’s birthday = 내 여동생의 생일)",
+              "prompt": "Today is my birthday and my sister's birthday (at the same time). (today = 오늘, my birthday = 내 생일, my sister’s birthday = 내 여동생의 생일) ……〉",
               "answer": "오늘은 내 생일이자 내 여동생의 생일이야.",
               "page": 206
             },
             {
               "number": 2,
-              "prompt": "She is a professor and a writer (at the same time). (she = 그녀, professor = 교수, writer = 작가)",
+              "prompt": "She is a professor and a writer (at the same time). (she = 그녀, professor = 교수, writer = 작가) ……〉",
               "answer": "그녀는 교수이자 작가야.",
               "page": 206
             }
@@ -4591,13 +4591,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I should go and meet my friends. (to meet = 만나다, my friends = 친구들)",
+              "prompt": "I should go and meet my friends. (to meet = 만나다, my friends = 친구들) ……〉",
               "answer": "친구들 만나러 가야겠다.",
               "page": 215
             },
             {
               "number": 2,
-              "prompt": "I should go and sleep. (to go to bed = 자다)",
+              "prompt": "I should go and sleep. (to go to bed = 자다) ……〉",
               "answer": "자러 가야겠다.",
               "page": 215
             }
@@ -4619,15 +4619,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I guess you didn’t even have time to drink coffee. (to drink coffee = 커피 마시다)",
+              "prompt": "I guess you didn’t even have time to drink coffee. (to drink coffee = 커피 마시다) ……〉",
               "answer": "커피 마실 시간도 없었겠다.",
-              "page": 216
+              "page": 217
             },
             {
               "number": 2,
-              "prompt": "I guess you didn’t even have time to go home. (to go home = 집에 가다)",
+              "prompt": "I guess you didn’t even have time to go home. (to go home = 집에 가다) ……〉",
               "answer": "집에 갈 시간도 없었겠다.",
-              "page": 216
+              "page": 217
             }
           ],
           "answerText": "1. 커피 마실 시간도 없었겠다. 2. 집에 갈 시간도 없었겠다.",
@@ -4646,15 +4646,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "When did he say it’ll be finished? (to be finished = 끝나다)",
+              "prompt": "When did he say it’ll be finished? (to be finished = 끝나다) ……〉",
               "answer": "언제 끝난대?",
               "page": 218
             },
             {
               "number": 2,
-              "prompt": "When did she say she’ll come back? (to come back = 돌아오다)",
+              "prompt": "When did she say she’ll come back? (to come back = 돌아오다) ……〉",
               "answer": "언제 돌아온대?",
-              "page": 218
+              "page": 219
             }
           ],
           "answerText": "1. 언제 끝난대? 2. 언제 돌아온대?",
@@ -4854,13 +4854,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I think I will be able to do it. (I = 제가, be able to do it = 할 수 있다)",
+              "prompt": "I think I will be able to do it. (I = 제가, be able to do it = 할 수 있다) ……〉",
               "answer": "제가 할 수 있을 것 같습니다.",
               "page": 227
             },
             {
               "number": 2,
-              "prompt": "I think I will be busy tomorrow. (to be busy = 바쁘다, tomorrow = 내일)",
+              "prompt": "I think I will be busy tomorrow. (to be busy = 바쁘다, tomorrow = 내일) ……〉",
               "answer": "내일 바쁠 것 같습니다.",
               "page": 227
             }
@@ -4882,15 +4882,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "We will refund it. (to refund = 환불해 드리다)",
+              "prompt": "We will refund it. (to refund = 환불해 드리다) ……〉",
               "answer": "환불해 드리도록 하겠습니다.",
-              "page": 228
+              "page": 229
             },
             {
               "number": 2,
-              "prompt": "I will arrive by 3PM. (to arrive = 도착하다, by 3PM = 3시까지)",
+              "prompt": "I will arrive by 3PM. (to arrive = 도착하다, by 3PM = 3시까지) ……〉",
               "answer": "3시까지 도착하도록 하겠습니다.",
-              "page": 228
+              "page": 229
             }
           ],
           "answerText": "1. 환불해 드리도록 하겠습니다. 2. 3시까지 도착하도록 하겠습니다.",
@@ -4909,15 +4909,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "He says you should finish it by today. (to finish = 끝내다, by today = 오늘 안에)",
+              "prompt": "He says you should finish it by today. (to finish = 끝내다, by today = 오늘 안에) ……〉",
               "answer": "오늘 안에 끝내라고 하십니다.",
-              "page": 230
+              "page": 231
             },
             {
               "number": 2,
-              "prompt": "He says we should come to eat. (to come to eat = 밥 먹으러 오다)",
+              "prompt": "He says we should come to eat. (to come to eat = 밥 먹으러 오다) ……〉",
               "answer": "밥 먹으러 오라고 하십니다.",
-              "page": 230
+              "page": 231
             }
           ],
           "answerText": "1. 오늘 안에 끝내라고 하십니다. 2. 밥 먹으러 오라고 하십니다.",
@@ -5105,13 +5105,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "You are going to come here?! (to come = 오다, here = 여기)",
+              "prompt": "You are going to come here?! (to come = 오다, here = 여기) ……〉",
               "answer": "여기 오려고?",
               "page": 239
             },
             {
               "number": 2,
-              "prompt": "You are going to eat all of this?! (to eat them all = 이거 다 먹다)",
+              "prompt": "You are going to eat all of this?! (to eat them all = 이거 다 먹다) ……〉",
               "answer": "이거 다 먹으려고?",
               "page": 239
             }
@@ -5133,15 +5133,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Well, you know, I will just have to wear this. (to wear = 입다, this = 이거)",
+              "prompt": "Well, you know, I will just have to wear this. (to wear = 입다, this = 이거) ……〉",
               "answer": "이거 입어야지 뭐.",
-              "page": 240
+              "page": 241
             },
             {
               "number": 2,
-              "prompt": "Well, you know, I will just have to use this. (to use = 쓰다)",
+              "prompt": "Well, you know, I will just have to use this. (to use = 쓰다) ……〉",
               "answer": "이거 써야지 뭐.",
-              "page": 240
+              "page": 241
             }
           ],
           "answerText": "1. 이거 입어야지 뭐. 2. 이거 써야지 뭐.",
@@ -5160,15 +5160,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Since we have consecutive holidays next week, let’s go on a trip. (consecutive holidays = 연휴, next week = 다음 주, to go on a trip = 여행가다)",
+              "prompt": "Since we have consecutive holidays next week, let’s go on a trip. (consecutive holidays = 연휴, next week = 다음 주, to go on a trip = 여행가다) ……〉",
               "answer": "다음 주 연휴니까 여행갑시다.",
-              "page": 242
+              "page": 243
             },
             {
               "number": 2,
-              "prompt": "Since Hyunwoo is not here yet, let’s wait a little bit more. (to be not here yet = 아직 안 오다, to wait = 기다리다, a little bit more = 조금만 더)",
+              "prompt": "Since Hyunwoo is not here yet, let’s wait a little bit more. (to be not here yet = 아직 안 오다, to wait = 기다리다, a little bit more = 조금만 더) ……〉",
               "answer": "현우가 아직 안 왔으니까 조금만 더 기다립시다.",
-              "page": 242
+              "page": 243
             }
           ],
           "answerText": "1. 다음 주 연휴니까 여행갑시다. 2. 현우가 아직 안 왔으니까 조금만 더 기다립시다.",
@@ -5356,13 +5356,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I barely managed to pass the exam. (to pass the exam = 시험에 합격하다)",
+              "prompt": "I barely managed to pass the exam. (to pass the exam = 시험에 합격하다) ……〉",
               "answer": "시험에 겨우 합격했다.",
               "page": 251
             },
             {
               "number": 2,
-              "prompt": "Due to bad traffic, I barely managed to arrive on time. (due to the traffic = 차가 막혀서, to arrive = 도착하다)",
+              "prompt": "Due to bad traffic, I barely managed to arrive on time. (due to the traffic = 차가 막혀서, to arrive = 도착하다) ……〉",
               "answer": "차가 막혀서 겨우 도착했다.",
               "page": 251
             }
@@ -5384,15 +5384,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "How about trying to apply here? (to try to apply = 지원해 보다, here = 여기)",
+              "prompt": "How about trying to apply here? (to try to apply = 지원해 보다, here = 여기) ……〉",
               "answer": "여기 지원해 보는 건 어때?",
-              "page": 252
+              "page": 253
             },
             {
               "number": 2,
-              "prompt": "How about taking the train? (to go = 가다, by train = 기차 타고)",
+              "prompt": "How about taking the train? (to go = 가다, by train = 기차 타고) ……〉",
               "answer": "기차 타고 가는 건 어때?",
-              "page": 252
+              "page": 253
             }
           ],
           "answerText": "1. 여기 지원해 보는 건 어때? 2. 기차 타고 가는 건 어때?",
@@ -5411,15 +5411,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "It’s a movie called “Gun-ham-do”. (movie = 영화)",
+              "prompt": "It’s a movie called “Gun-ham-do”. (movie = 영화) ……〉",
               "answer": "군함도라는 영화야.",
               "page": 254
             },
             {
               "number": 2,
-              "prompt": "Do you know the brand called Basta? (do you know? = 알아?, brand = 브랜드)",
+              "prompt": "Do you know the brand called Basta? (do you know? = 알아?, brand = 브랜드) ……〉",
               "answer": "바스타라는 브랜드 알아?",
-              "page": 254
+              "page": 255
             }
           ],
           "answerText": "1. 군함도라는 영화야. 2. 바스타라는 브랜드 알아?",
@@ -5613,13 +5613,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "It’s okay. We can just see it next time. (to see it = 보다, next time = 다음에)",
+              "prompt": "It’s okay. We can just see it next time. (to see it = 보다, next time = 다음에) ……〉",
               "answer": "괜찮아. 다음에 보면 돼.",
               "page": 263
             },
             {
               "number": 2,
-              "prompt": "It’s okay. I can just ask someone else. (to ask another person = 다른 사람한테 물 어보다)",
+              "prompt": "It’s okay. I can just ask someone else. (to ask another person = 다른 사람한테 물 어보다) ……〉",
               "answer": "괜찮아. 다른 사람한테 물어보면 돼.",
               "page": 263
             }
@@ -5641,15 +5641,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I definitely can’t finish this today. (to finish = 끝내다, this = 이거, today = 오늘 안에)",
+              "prompt": "I definitely can’t finish this today. (to finish = 끝내다, this = 이거, today = 오늘 안에) ……〉",
               "answer": "나는 이거 오늘 안에 절대 못 끝내.",
-              "page": 264
+              "page": 265
             },
             {
               "number": 2,
-              "prompt": "I can never meet that person again. (to meet = 만나다, that person = 그 사람, again = 다시)",
+              "prompt": "I can never meet that person again. (to meet = 만나다, that person = 그 사람, again = 다시) ……〉",
               "answer": "나는 그 사람 절대 다시 못 만나.",
-              "page": 264
+              "page": 265
             }
           ],
           "answerText": "1. 나는 이거 오늘 안에 절대 못 끝내. 2. 나는 그 사람 절대 다시 못 만나.",
@@ -5668,15 +5668,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I will make sure I change my phone by tomorrow. (to change my phone 휴대폰 바꾸다, by tomorrow = 내일까지)",
+              "prompt": "I will make sure I change my phone by tomorrow. (to change my phone 휴대폰 바꾸다, by tomorrow = 내일까지) ……〉",
               "answer": "내일까지 꼭 휴대폰 바꿀 거야.",
               "page": 266
             },
             {
               "number": 2,
-              "prompt": "I will make sure I meet that person. (to meet that person = 그 사람 만나다)",
+              "prompt": "I will make sure I meet that person. (to meet that person = 그 사람 만나다) ……〉",
               "answer": "꼭 그 사람 만날 거야.",
-              "page": 266
+              "page": 267
             }
           ],
           "answerText": "1. 내일까지 꼭 휴대폰 바꿀 거야. 2. 꼭 그 사람 만날 거야.",
@@ -5870,13 +5870,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Let’s hurry and go hang out. (to hang out = 놀다)",
+              "prompt": "Let’s hurry and go hang out. (to hang out = 놀다) ……〉",
               "answer": "얼른 놀러 가자.",
               "page": 275
             },
             {
               "number": 2,
-              "prompt": "Let’s hurry up and go for a walk. (to go for a walk = 산책하다)",
+              "prompt": "Let’s hurry up and go for a walk. (to go for a walk = 산책하다) ……〉",
               "answer": "얼른 산책하러 가자.",
               "page": 275
             }
@@ -5898,15 +5898,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I knew you would have a stomachache. (to have a stomachache = 배탈나다)",
+              "prompt": "I knew you would have a stomachache. (to have a stomachache = 배탈나다) ……〉",
               "answer": "너 배탈 날 줄 알았다.",
-              "page": 276
+              "page": 277
             },
             {
               "number": 2,
-              "prompt": "I knew you would sing that song. (to sing the song = 그 노래 부르다)",
+              "prompt": "I knew you would sing that song. (to sing the song = 그 노래 부르다) ……〉",
               "answer": "너 그 노래 부를 줄 알았다.",
-              "page": 276
+              "page": 277
             }
           ],
           "answerText": "1. 너 배탈 날 줄 알았다. 2. 너 그 노래 부를 줄 알았다.",
@@ -5925,15 +5925,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I was bored so I came. (to be bored = 심심하다)",
+              "prompt": "I was bored so I came. (to be bored = 심심하다) ……〉",
               "answer": "심심해서 왔어요.",
               "page": 278
             },
             {
               "number": 2,
-              "prompt": "I was hungry so I came. (to be hungry = 배고프다)",
+              "prompt": "I was hungry so I came. (to be hungry = 배고프다) ……〉",
               "answer": "배고파서 왔어요.",
-              "page": 278
+              "page": 279
             }
           ],
           "answerText": "1. 심심해서 왔어요. 2. 배고파서 왔어요.",
@@ -6115,13 +6115,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Is there something that you want to drink? (to drink = 마시다)",
+              "prompt": "Is there something that you want to drink? (to drink = 마시다) ……〉",
               "answer": "마시고 싶은 거 있어?",
               "page": 287
             },
             {
               "number": 2,
-              "prompt": "Is there anything that you’d like to do? (to do = 하다)",
+              "prompt": "Is there anything that you’d like to do? (to do = 하다) ……〉",
               "answer": "하고 싶은 거 있어?",
               "page": 287
             }
@@ -6142,15 +6142,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I have to meet that person this Saturday, right? (to meet = 만나다, that person = 그 사람, this Saturday = 이번 주 토요일에)",
+              "prompt": "I have to meet that person this Saturday, right? (to meet = 만나다, that person = 그 사람, this Saturday = 이번 주 토요일에) ……〉",
               "answer": "이번주 토요일에 그 사람 만나야 되지?.",
-              "page": 288
+              "page": 289
             },
             {
               "number": 2,
-              "prompt": "We have to move this, right? (to move = 옮기다, this = 이거)",
+              "prompt": "We have to move this, right? (to move = 옮기다, this = 이거) ……〉",
               "answer": "이거 옮겨야 되지?",
-              "page": 288
+              "page": 289
             }
           ],
           "answerText": "1. 이번주 토요일에 그 사람 만나야 되지?. 2. 이거 옮겨야 되지?",
@@ -6169,13 +6169,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "That book should be at the library. (that book = 그 책, to be in a library = 도서관에 있다)",
+              "prompt": "That book should be at the library. (that book = 그 책, to be in a library = 도서관에 있다) ……〉",
               "answer": "그 책은 도서관에 있을 거야.",
               "page": 290
             },
             {
               "number": 2,
-              "prompt": "Hyunwoo should be in the U.S. now. (to be in the U.S. = 미국에 있다)",
+              "prompt": "Hyunwoo should be in the U.S. now. (to be in the U.S. = 미국에 있다) ……〉",
               "answer": "현우는 지금 미국에 있을 거야.",
               "page": 290
             }
@@ -6371,13 +6371,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "You don’t even know that the book was published yet? (the book = 그 책, to be published = 나오다)",
+              "prompt": "You don’t even know that the book was published yet? (the book = 그 책, to be published = 나오다) ……〉",
               "answer": "아직 그 책 나온 것도 몰라?",
               "page": 299
             },
             {
               "number": 2,
-              "prompt": "You don’t even know the movie yet? (the movie = 그 영화)",
+              "prompt": "You don’t even know the movie yet? (the movie = 그 영화) ……〉",
               "answer": "아직 그 영화도 몰라?",
               "page": 299
             }
@@ -6398,15 +6398,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "First talk to Minkyung. (to talk to Minkyung = 민경이한테 얘기하다)",
+              "prompt": "First talk to Minkyung. (to talk to Minkyung = 민경이한테 얘기하다) ……〉",
               "answer": "우선 민경이한테 얘기해 봐.",
-              "page": 300
+              "page": 301
             },
             {
               "number": 2,
-              "prompt": "First book the tickets. (to book = 예매하다, the tickets = 티켓)",
+              "prompt": "First book the tickets. (to book = 예매하다, the tickets = 티켓) ……〉",
               "answer": "우선 티켓(을) 예매해 봐.",
-              "page": 300
+              "page": 301
             }
           ],
           "answerText": "1. 우선 민경이한테 얘기해 봐. 2. 우선 티켓(을) 예매해 봐.",
@@ -6426,15 +6426,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Just read it.",
+              "prompt": "Just read it. ……〉",
               "answer": "대충 읽어.",
-              "page": 301
+              "page": 302
             },
             {
               "number": 2,
-              "prompt": "Just do it.",
+              "prompt": "Just do it. ……〉",
               "answer": "대충 해.",
-              "page": 301
+              "page": 302
             }
           ],
           "answerText": "1. 대충 읽어. 2. 대충 해.",
@@ -6628,13 +6628,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Will we have to do it together? (to do = 하다, together = 같이)",
+              "prompt": "Will we have to do it together? (to do = 하다, together = 같이) ……〉",
               "answer": "같이 해야 할까요?",
               "page": 311
             },
             {
               "number": 2,
-              "prompt": "Do you think I should continue practicing? (to keep practicing = 계속 연습하다)",
+              "prompt": "Do you think I should continue practicing? (to keep practicing = 계속 연습하다) ……〉",
               "answer": "계속 연습해야 할까요?",
               "page": 311
             }
@@ -6655,15 +6655,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I think they’re about to go to a meeting. (to go to a meeting = 미팅에 가다)",
+              "prompt": "I think they’re about to go to a meeting. (to go to a meeting = 미팅에 가다) ……〉",
               "answer": "미팅에 가려고 하는 것 같네요.",
-              "page": 312
+              "page": 313
             },
             {
               "number": 2,
-              "prompt": "I think she is about to pick up the phone. (to pick up the phone = 전화를 받다)",
+              "prompt": "I think she is about to pick up the phone. (to pick up the phone = 전화를 받다) ……〉",
               "answer": "전화를 받으려고 하는 것 같네요.",
-              "page": 312
+              "page": 313
             }
           ],
           "answerText": "1. 미팅에 가려고 하는 것 같네요.2. 전화를 받으려고 하는 것 같네요.",
@@ -6682,13 +6682,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I almost lost a friend of mine. (to lose = 잃다, a friend of mine = 친구)",
+              "prompt": "I almost lost a friend of mine. (to lose = 잃다, a friend of mine = 친구) ……〉",
               "answer": "친구를 잃을 뻔한 적이 있어요.",
               "page": 314
             },
             {
               "number": 2,
-              "prompt": "I almost couldn’t come back once. (couldn’t come back = 못 돌아오다)",
+              "prompt": "I almost couldn’t come back once. (couldn’t come back = 못 돌아오다) ……〉",
               "answer": "못 돌아올 뻔한 적이 있어요.",
               "page": 314
             }
@@ -6920,15 +6920,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I ate too much and now my stomach hurts. (to have a stomachache = 배 아프다, to eat too much = 너무 많이 먹다)",
+              "prompt": "I ate too much and now my stomach hurts. (to have a stomachache = 배 아프다, to eat too much = 너무 많이 먹다) ……〉",
               "answer": "너무 많이 먹었더니 배 아파요.",
               "page": 323
             },
             {
               "number": 2,
-              "prompt": "I stayed home for a long time and as a result I’m bored. (to feel bored = 심심하다, to stay home = 집에 있다, too long = 오래)",
+              "prompt": "I stayed home for a long time and as a result I’m bored. (to feel bored = 심심하다, to stay home = 집에 있다, too long = 오래) ……〉",
               "answer": "집에 오래 있었더니 심심해요. or 오래 집에 있었더니 심심 해요.",
-              "page": 323
+              "page": 324
             }
           ],
           "answerText": "1. 너무 많이 먹었더니 배 아파요. 2. 집에 오래 있었더니 심심해요. or 오래 집에 있었더니 심심\n      해요.",
@@ -6948,15 +6948,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "After you have taken some medicine, you will get better. (to have some medicine = 약 먹다, to get better = 낫다)",
+              "prompt": "After you have taken some medicine, you will get better. (to have some medicine = 약 먹다, to get better = 낫다) ……〉",
               "answer": "약 먹으면 나을 거예요.",
-              "page": 324
+              "page": 325
             },
             {
               "number": 2,
-              "prompt": "If he comes back next month, we will meet again. (to come back = 돌아오다, next month = 다음 달)",
+              "prompt": "If he comes back next month, we will meet again. (to come back = 돌아오다, next month = 다음 달) ……〉",
               "answer": "다음 달에 그 사람이 돌아오면 다시 만날 거예요 or 그 사람이 다음 달에 돌아오면 다시 만날 거예요.",
-              "page": 324
+              "page": 325
             }
           ],
           "answerText": "1. 약 먹으면 나을 거예요. 2. 다음 달에 그 사람이 돌아오면 다시 만날 거예요 or 그 사람이 다음\n                    달에 돌아오면 다시 만날 거예요.",
@@ -6975,15 +6975,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "It needs to be brighter. (to be brighter = 더 밝다)",
+              "prompt": "It needs to be brighter. (to be brighter = 더 밝다) ……〉",
               "answer": "더 밝아야 돼요.",
               "page": 326
             },
             {
               "number": 2,
-              "prompt": "You need to eat more. (to eat more = 더 먹다)",
+              "prompt": "You need to eat more. (to eat more = 더 먹다) ……〉",
               "answer": "더 먹어야 돼요.",
-              "page": 326
+              "page": 327
             }
           ],
           "answerText": "1. 더 밝아야 돼요. 2. 더 먹어야 돼요.",
@@ -7189,13 +7189,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I’m getting more and more curious. (to be curious = 궁금하다)",
+              "prompt": "I’m getting more and more curious. (to be curious = 궁금하다) ……〉",
               "answer": "계속 더 궁금해지네.",
               "page": 335
             },
             {
               "number": 2,
-              "prompt": "It’s getting bigger and bigger. (to be bigger = 더 크다)",
+              "prompt": "It’s getting bigger and bigger. (to be bigger = 더 크다) ……〉",
               "answer": "계속 더 커지네.",
               "page": 335
             }
@@ -7216,15 +7216,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I can’t get drunk today. (to get drunk = 취하다, today = 오늘)",
+              "prompt": "I can’t get drunk today. (to get drunk = 취하다, today = 오늘) ……〉",
               "answer": "나 오늘 취하면 안 돼..",
-              "page": 336
+              "page": 337
             },
             {
               "number": 2,
-              "prompt": "I shouldn’t exercise today. (to exercise = 운동하다, today = 오늘)",
+              "prompt": "I shouldn’t exercise today. (to exercise = 운동하다, today = 오늘) ……〉",
               "answer": "나 오늘 운동하면 안 돼.",
-              "page": 336
+              "page": 337
             }
           ],
           "answerText": "1. 나 오늘 취하면 안 돼.. 2. 나 오늘 운동하면 안 돼.",
@@ -7243,13 +7243,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "It looks like we’re about to get a call. (to get a call = 전화 오다)",
+              "prompt": "It looks like we’re about to get a call. (to get a call = 전화 오다) ……〉",
               "answer": "금방 전화 올 것 같아.",
               "page": 338
             },
             {
               "number": 2,
-              "prompt": "It looks like they’re about to depart. (to depart = 출발하다)",
+              "prompt": "It looks like they’re about to depart. (to depart = 출발하다) ……〉",
               "answer": "금방 출발할 것 같아.",
               "page": 338
             }
@@ -7457,13 +7457,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "The food here is relatively better compared to that of other places. (to be good = 맛있다, other places = 다른 곳들)",
+              "prompt": "The food here is relatively better compared to that of other places. (to be good = 맛있다, other places = 다른 곳들) ……〉",
               "answer": "다른 곳들에 비해서 맛있는 편이에요.",
               "page": 347
             },
             {
               "number": 2,
-              "prompt": "It's relatively hotter here compared to other countries. (to be hot = 덥다, other countries = 다른 나라들)",
+              "prompt": "It's relatively hotter here compared to other countries. (to be hot = 덥다, other countries = 다른 나라들) ……〉",
               "answer": "다른 나라들에 비해서 더운 편이에요.",
               "page": 347
             }
@@ -7485,15 +7485,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "I found that it was farther than I had thought. (to be far = 멀다)",
+              "prompt": "I found that it was farther than I had thought. (to be far = 멀다) ……〉",
               "answer": "생각보다 멀더라고요.",
-              "page": 348
+              "page": 349
             },
             {
               "number": 2,
-              "prompt": "I found that it was harder than I had thought. (to be hard = 어렵다)",
+              "prompt": "I found that it was harder than I had thought. (to be hard = 어렵다) ……〉",
               "answer": "생각보다 어렵더라고요.",
-              "page": 348
+              "page": 349
             }
           ],
           "answerText": "1. 생각보다 멀더라고요. 2. 생각보다 어렵더라고요.",
@@ -7512,15 +7512,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Bread or snacks, it doesn’t matter. (bread = 빵, snacks = 과자)",
+              "prompt": "Bread or snacks, it doesn’t matter. (bread = 빵, snacks = 과자) ……〉",
               "answer": "빵이든 과자든 상관없어요.",
               "page": 350
             },
             {
               "number": 2,
-              "prompt": "Red or white, it doesn’t matter. (red = 빨간색, white = 하얀색)",
+              "prompt": "Red or white, it doesn’t matter. (red = 빨간색, white = 하얀색) ……〉",
               "answer": "빨간색이든 하얀색이든 상관없어요.",
-              "page": 350
+              "page": 351
             }
           ],
           "answerText": "1. 빵이든 과자든 상관없어요. 2. 빨간색이든 하얀색이든 상관없어요.",
@@ -7696,13 +7696,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "What should I do to go there? (to go = 가다, there = 저기로)",
+              "prompt": "What should I do to go there? (to go = 가다, there = 저기로) ……〉",
               "answer": "저기로 가려면 어떻게 해야 되죠?",
               "page": 359
             },
             {
               "number": 2,
-              "prompt": "What should I do to turn off the computer? (to turn off = 끄다, computer = 컴퓨터)",
+              "prompt": "What should I do to turn off the computer? (to turn off = 끄다, computer = 컴퓨터) ……〉",
               "answer": "컴퓨터 끄려면 어떻게 해야 되죠?",
               "page": 359
             }
@@ -7723,15 +7723,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Is this supposed to make this kind of sound? (to make this kind of sound = 이런 소리 나다)",
+              "prompt": "Is this supposed to make this kind of sound? (to make this kind of sound = 이런 소리 나다) ……〉",
               "answer": "이거 이런 소리 나는 거 맞나요?",
-              "page": 360
+              "page": 361
             },
             {
               "number": 2,
-              "prompt": "Is this the right train to Busan? (Busan = 부산)",
+              "prompt": "Is this the right train to Busan? (Busan = 부산) ……〉",
               "answer": "이거 부산 가는 거 맞나요?",
-              "page": 360
+              "page": 361
             }
           ],
           "answerText": "1. 이거 이런 소리 나는 거 맞나요? 2. 이거 부산 가는 거 맞나요?",
@@ -7750,13 +7750,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Don’t open the window and just turn on the air conditioner. (to open = 열다, the window = 창문, to turn on the air conditioner = 에어컨 켜다)",
+              "prompt": "Don’t open the window and just turn on the air conditioner. (to open = 열다, the window = 창문, to turn on the air conditioner = 에어컨 켜다) ……〉",
               "answer": "창문 열지 말고 에어컨 켜.",
               "page": 362
             },
             {
               "number": 2,
-              "prompt": "Don’t go there and just come here. (to go there = 거기로 가다, to come here = 여 기로 오다)",
+              "prompt": "Don’t go there and just come here. (to go there = 거기로 가다, to come here = 여 기로 오다) ……〉",
               "answer": "거기로 가지 말고 여기로 와.",
               "page": 362
             }
@@ -7934,13 +7934,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "This is my first time listening to this song. (to listen = 듣다, this song = 이 노래)",
+              "prompt": "This is my first time listening to this song. (to listen = 듣다, this song = 이 노래) ……〉",
               "answer": "이 노래 처음 들어 보는 거예요.",
               "page": 371
             },
             {
               "number": 2,
-              "prompt": "This is my first time doing this exercise. (to do = 하다, this exercise = 이 운동)",
+              "prompt": "This is my first time doing this exercise. (to do = 하다, this exercise = 이 운동) ……〉",
               "answer": "이 운동 처음 해 보는 거예요.",
               "page": 371
             }
@@ -7961,15 +7961,15 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "The guy just left last month. (to leave = 떠나다, last month = 지난 달)",
+              "prompt": "The guy just left last month. (to leave = 떠나다, last month = 지난 달) ……〉",
               "answer": "그 남자 지난 달에 떠나 버렸어요.",
-              "page": 372
+              "page": 373
             },
             {
               "number": 2,
-              "prompt": "I just cut that part. (to cut = 자르다, that part = 그 부분)",
+              "prompt": "I just cut that part. (to cut = 자르다, that part = 그 부분) ……〉",
               "answer": "그 부분 잘라 버렸어요.",
-              "page": 372
+              "page": 373
             }
           ],
           "answerText": "1. 그 남자 지난 달에 떠나 버렸어요. 2. 그 부분 잘라 버렸어요.",
@@ -7988,13 +7988,13 @@
           "exercises": [
             {
               "number": 1,
-              "prompt": "Actually, when you meet them, they're nothing special. (to meet = 만나다, them = 그 사람들)",
+              "prompt": "Actually, when you meet them, they're nothing special. (to meet = 만나다, them = 그 사람들) ……〉",
               "answer": "막상 그 사람들 만나 보면 별 거 없어.",
               "page": 374
             },
             {
               "number": 2,
-              "prompt": "Actually, if you go there, there’s nothing special. (to go = 가다)",
+              "prompt": "Actually, if you go there, there’s nothing special. (to go = 가다) ……〉",
               "answer": "막상 가 보면 별 거 없어.",
               "page": 374
             }

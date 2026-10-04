@@ -134,6 +134,7 @@ class BookRepository(private val context: Context, val store: BookStore, private
             updated = start.copy(slow = when (command) { "SLOW" -> true; "NORMAL" -> false; else -> start.slow })
             speech = if (command == "EXPLAIN") explanation(id, start, "turn") else start.lastAssistantText.ifBlank { "မင်းအလှည့်ပါ။" }
             caption = if (command == "EXPLAIN") speech else start.lastAssistantCaption.ifBlank { speech }
+            updated = updated.copy(heard = heard.take(600), feedback = if (command == "EXPLAIN") speech.take(1600) else start.feedback)
         } else if (target == null) {
             speech = "ဒီအပိုင်းကို ပြီးရင် နောက်အပိုင်းကို ဆက်နိုင်ပါတယ်။"
             caption = speech
