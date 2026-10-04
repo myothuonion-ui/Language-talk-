@@ -1,7 +1,6 @@
 package com.myothuonion.languagetalk
 
 import android.graphics.Bitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -16,10 +15,13 @@ class PracticeScreensTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     private fun capture(name: String) {
+        compose.waitForIdle()
         val directory = File(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null), "screenshots").apply { mkdirs() }
+        val screenshot = requireNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
         File(directory, "$name.png").outputStream().use { output ->
-            compose.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, output)
+            screenshot.compress(Bitmap.CompressFormat.PNG, 100, output)
         }
+        screenshot.recycle()
     }
 
     @Test fun homeReviewContextAndSavedVoiceSettingsAreAccessible() {

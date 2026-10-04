@@ -10,13 +10,16 @@ import java.util.concurrent.ConcurrentHashMap
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
 data class AiRouteStatus(val task: AiTask = AiTask.CONVERSATION, val provider: String = "",
-    val model: String = "", val fallback: Boolean = false, val review: String = "")
+    val model: String = "", val fallback: Boolean = false, val review: String = "", val chatId: Long? = null)
 
 class AiService(private val settings: SettingsStore, private val secrets: SecretStore,
     private val gemini: GeminiClient, private val client: ProviderClient = ProviderClient()) {
     val status = MutableStateFlow(AiRouteStatus())
     private val router = AiRouter()
     private val sessionRoutes = ConcurrentHashMap<String, AiRoutePrefs>()
+    private suspend fun configuration(): AiConfiguration = settings.settings.first().ai.also { config ->
+        config.profiles.forEach(::validateAiProfile)
+    }
     fun configured(id: String) = secrets.apiKey(id).isNotBlank()
     private fun sessionKey(task: AiTask, chatId: Long?) = task.name + ":" + (chatId ?: 0)
     fun sessionRoute(task: AiTask, chatId: Long? = null) = sessionRoutes[sessionKey(task, chatId)]
@@ -32,7 +35,7 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
     suspend fun reply(task: AiTask, instruction: String, history: List<MessageEntity>, input: String,
         audio: AudioPayload? = null, allowEmptyReply: Boolean = false, chatId: Long? = null,
         legacyMode: BrainMode? = null, audioEvaluationRequired: Boolean = false): TutorReply {
-        val config = settings.settings.first().ai
+        val config = configuration()
         val explicit = sessionRoute(task, chatId) ?: config.routes[task]
         val route = explicit ?: when (legacyMode) {
             BrainMode.NVIDIA_BRAIN -> AiRoutePrefs(AiMode.CUSTOM, AiModelRef("nvidia"))
@@ -91,12 +94,12 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
             }
         }
         val profile = config.profiles.first { it.id == routed.selected.profileId }
-        status.value = AiRouteStatus(task, profile.label, routed.selected.model, routed.usedFallback, reviewStatus)
+        status.value = AiRouteStatus(task, profile.label, routed.selected.model, routed.usedFallback, reviewStatus, chatId)
         return result
     }
 
     suspend fun transcribe(audio: AudioPayload): String {
-        val config = settings.settings.first().ai
+        val config = configuration()
         val route = preferences(AiTask.TRANSCRIBE)
         return router.run(AiPlans.candidates(config, AiTask.TRANSCRIBE, ::configured, route)) { ref ->
             val profile = config.profiles.first { it.id == ref.profileId }
@@ -113,7 +116,7 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
     suspend fun speech(text: String, voice: String, style: String): AudioPayload {
         val korean = VoiceText.korean(text)
         require(korean.isNotBlank()) { "နားထောင်ဖို့ ကိုရီးယားစာ မရှိပါ။ မြန်မာရှင်းပြချက်ကို စာနဲ့ဖတ်ပါ။" }
-        val config = settings.settings.first().ai
+        val config = configuration()
         val route = preferences(AiTask.SPEECH)
         val routed = AiRouter(attemptMs = 25_000, totalMs = 65_000)
             .run(AiPlans.candidates(config, AiTask.SPEECH, ::configured, route)) { ref ->
@@ -127,7 +130,7 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
     }
 
     suspend fun document(name: String, mime: String, bytes: ByteArray, extractPdf: suspend () -> String): String {
-        val config = settings.settings.first().ai
+        val config = configuration()
         val route = preferences(AiTask.DOCUMENT)
         val instruction = "Summarize the supplied personal document factually in Myanmar. Preserve names, dates, rules " +
             "and useful Korean phrases. Do not invent omitted pages, schedules or personal facts. " +
@@ -182,7 +185,7 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
     }
 
     suspend fun liveProfile(): Pair<AiProfile, List<String>> {
-        val config = settings.settings.first().ai
+        val config = configuration()
         val refs = AiPlans.candidates(config, AiTask.LIVE, ::configured, preferences(AiTask.LIVE))
         val ref = refs.firstOrNull() ?: throw AiApiException("Native Live အတွက် Gemini key လိုပါတယ်။ Voice pipeline သို့မဟုတ် စာနဲ့ စကားပြောနိုင်ပါတယ်။")
         val profile = config.profiles.first { it.id == ref.profileId }
@@ -196,6 +199,7 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
 
     fun key(id: String) = secrets.apiKey(id)
     suspend fun modelList(profile: AiProfile, candidate: String? = null): List<String> {
+        validateAiProfile(profile)
         val key = candidate?.takeIf(String::isNotBlank) ?: secrets.apiKey(profile.id)
         require(key.isNotBlank()) { "API key ထည့်ပါ။" }
         return if (profile.format == ApiFormat.GEMINI) geminiClient(profile).listModels(key)

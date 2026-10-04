@@ -283,7 +283,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         liveStartJob = viewModelScope.launch {
             try {
                 if (repository.prefersReliableVoice(chatId)) {
-                    startReliableLive(chatId, "Using your selected brain mode with Gemini voice")
+                    startReliableLive(chatId, "ရွေးထားတဲ့ AI နဲ့ voice pipeline သုံးမယ်")
                     return@launch
                 }
                 val config = repository.liveSessionConfig(chatId)
@@ -340,7 +340,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         _liveState.value = LiveState(
             phase = LivePhase.CONNECTING,
             fallbackUsed = true,
-            activeModel = "Gemini reliable voice",
+            activeModel = "Voice pipeline",
             diagnostic = "Switching voice mode"
         )
         liveCollector = viewModelScope.launch {

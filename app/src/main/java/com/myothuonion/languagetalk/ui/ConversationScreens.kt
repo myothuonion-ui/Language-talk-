@@ -515,7 +515,8 @@ internal fun LiveChatScreen(
                             fontSize = 13.sp, lineHeight = 23.sp, modifier = Modifier.padding(top = 8.dp))
                 }
                 TextButton(onHelp) { Text("အဖြေပုံစံ အကူအညီ", color = Mint) }
-                if (aiStatus.review.isNotBlank()) Text(aiStatus.review, color = Color.White.copy(alpha = .6f), fontSize = 11.sp)
+                if (aiStatus.chatId == chat.id && aiStatus.review.isNotBlank())
+                    Text(aiStatus.review, color = Color.White.copy(alpha = .6f), fontSize = 11.sp)
 
                 if (permissionDenied || state.phase == LivePhase.ERROR) {
                     Text(

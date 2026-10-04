@@ -42,6 +42,7 @@ class SecretStore(context: Context) {
             preferences.edit().remove(name).apply()
             return
         }
+        require(value.length <= 4096 && value.none { it.isISOControl() }) { "API key ကို တစ်ကြောင်းတည်း ထည့်ပါ။" }
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(Cipher.ENCRYPT_MODE, getOrCreateKey())
         val payload = cipher.iv + cipher.doFinal(value.toByteArray(Charsets.UTF_8))

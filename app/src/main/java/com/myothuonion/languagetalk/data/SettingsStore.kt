@@ -72,6 +72,9 @@ class SettingsStore(private val context: Context) {
                         speechModel = GeminiModels.normalize(prefs[GEMINI_TTS_MODEL].orEmpty(), GeminiTask.SPEECH),
                         liveModel = GeminiModels.normalize(prefs[LIVE_MODEL].orEmpty(), GeminiTask.LIVE),
                         taskDefaults = GeminiModels.normalize(prefs[GEMINI_MODEL].orEmpty(), GeminiTask.TEXT) == GeminiModels.TEXT)
+                    else if (profile.id == "nvidia" && !prefs[NVIDIA_MODEL].isNullOrBlank() &&
+                        prefs[NVIDIA_MODEL] != "nvidia/nemotron-3-ultra-550b-a55b")
+                        profile.copy(textModel = prefs[NVIDIA_MODEL]!!, taskDefaults = false)
                     else profile
                 })
         )
@@ -88,6 +91,8 @@ class SettingsStore(private val context: Context) {
                 taskDefaults = if (value.geminiModel != previous.geminiModel) false else profile.taskDefaults,
                 speechModel = if (value.geminiTtsModel != previous.geminiTtsModel) value.geminiTtsModel else profile.speechModel,
                 liveModel = if (value.liveModel != previous.liveModel) value.liveModel else profile.liveModel)
+            else if (profile.id == "nvidia" && value.nvidiaModel != previous.nvidiaModel)
+                profile.copy(textModel = value.nvidiaModel, taskDefaults = false)
             else profile
         })
         context.dataStore.edit { prefs ->

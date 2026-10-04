@@ -155,6 +155,9 @@ class ProviderClient(
 }
 
 fun validateAiProfile(profile: AiProfile) {
+    builtInAiProfiles().firstOrNull { it.id == profile.id }?.let { original ->
+        require(profile.kind == original.kind) { "Built-in API identity ကို ပြောင်းလို့မရပါ။ Add API နဲ့ နောက် profile ဖန်တီးပါ။" }
+    }
     require(profile.id.matches(Regex("[a-zA-Z0-9_-]{1,80}"))) { "API profile ID မမှန်ပါ။" }
     require(profile.label.isNotBlank() && profile.label.length <= 80) { "API နာမည်ထည့်ပါ။" }
     require(profile.textModel.isNotBlank()) { "Text model ID ထည့်ပါ။" }

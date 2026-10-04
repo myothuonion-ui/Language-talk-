@@ -751,7 +751,8 @@ private fun ChatScreen(
                 if (message.id == messages.lastOrNull { it.role == "ASSISTANT" }?.id) {
                     answerProgress?.let { AnswerPatternCard(it.answerPattern, it.answerExample, it.answerHint) }
                     if (message.role == "ASSISTANT") TextButton(onHelp, enabled = !work.isSending) { Text("အဖြေပုံစံ အကူအညီ") }
-                    if (aiStatus.review.isNotBlank()) Text(aiStatus.review, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (aiStatus.chatId == chat.id && aiStatus.review.isNotBlank())
+                        Text(aiStatus.review, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             if (work.isSending) {

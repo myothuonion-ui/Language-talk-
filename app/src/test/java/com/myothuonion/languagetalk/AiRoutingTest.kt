@@ -163,6 +163,7 @@ class AiRoutingTest {
             assertTrue(runCatching { validateAiProfile(custom.copy(baseUrl = it)) }.isFailure)
         }
         assertTrue(runCatching { validateAiProfile(builtInAiProfiles().first().copy(baseUrl = "https://example.com/v1/")) }.isFailure)
+        assertTrue(runCatching { validateAiProfile(custom.copy(id = "gemini")) }.isFailure)
     }
 
     @Test fun customTaskModelOverridesTheBuiltinFastDefault() {

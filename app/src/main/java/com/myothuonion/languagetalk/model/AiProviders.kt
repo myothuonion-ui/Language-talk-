@@ -41,8 +41,8 @@ data class AiProfile(
 ) {
     fun supports(task: AiTask): Boolean = when (task) {
         AiTask.LIVE -> kind == AiProviderKind.GEMINI && format == ApiFormat.GEMINI && liveModel.isNotBlank()
-        AiTask.SPEECH -> format == ApiFormat.GEMINI || (audioEndpoints && speechModel.isNotBlank())
-        AiTask.TRANSCRIBE -> format == ApiFormat.GEMINI || (audioEndpoints && transcribeModel.isNotBlank())
+        AiTask.SPEECH -> format == ApiFormat.GEMINI || (format == ApiFormat.OPENAI_CHAT && audioEndpoints && speechModel.isNotBlank())
+        AiTask.TRANSCRIBE -> format == ApiFormat.GEMINI || (format == ApiFormat.OPENAI_CHAT && audioEndpoints && transcribeModel.isNotBlank())
         else -> textModel.isNotBlank()
     }
 }
