@@ -1,13 +1,13 @@
-# Upgrading to v0.7.0
+# Upgrading to v0.7.1
 
-These APKs use runner-generated debug signing keys, so v0.7.0 can have a different certificate from any previously installed version.
+These APKs use runner-generated debug signing keys, so v0.7.1 can have a different certificate from any previously installed version.
 Android rejects an in-place update when the certificates differ. Uninstalling the old app removes
 its local chats, memories and encrypted API keys. Save your context first.
 
 ## If your current app has Export backup
 
-1. Keep the old app installed and open **My Context → Export backup** (under **Me** in v0.7.0). Save the JSON somewhere you can access after uninstalling. Check the saved file is nonempty.
-2. Once the backup succeeds, uninstall the old app and install `language-talk-v0.7.0.apk` from [v0.7.0 Releases](https://github.com/myothuonion-ui/Language-talk-/releases/tag/v0.7.0).
+1. Keep the old app installed and open **My Context → Export backup** (under **Me** in v0.7.1). Save the JSON somewhere you can access after uninstalling. Check the saved file is nonempty.
+2. Once the backup succeeds, uninstall the old app and install `language-talk-v0.7.1.apk` from [v0.7.1 Releases](https://github.com/myothuonion-ui/Language-talk-/releases/tag/v0.7.1).
 3. Open **Me → My Context → Restore backup** and select that JSON. Check your conversations, memories and recordings.
 4. Re-enter your Gemini API key and press **Me → Settings → AI ချိတ်ဆက်မှု → Test**. This now tests actual text and voice access. If it reports a quota/access error, that provider issue needs to be resolved before voice can work.
 5. Try Live. Native Live is checked at session start and can recover through Gemini text + speech.
@@ -20,7 +20,7 @@ New Coach progress, saved words, lookup cache and reader page/bookmark metadata 
 
 1. Keep v0.4.0 installed on your phone.
 2. Download `language-talk-legacy-backup-windows.exe` from
-   [v0.7.0 Releases](https://github.com/myothuonion-ui/Language-talk-/releases/tag/v0.7.0).
+   [v0.7.1 Releases](https://github.com/myothuonion-ui/Language-talk-/releases/tag/v0.7.1).
    This is a Windows utility, not the Android app. It bundles Python and Android
    Platform Tools, so neither needs to be installed separately.
 3. Enable Android **Developer options → USB debugging**. Connect your unlocked
@@ -29,9 +29,9 @@ New Coach progress, saved words, lookup cache and reader page/bookmark metadata 
    **Backup saved**, and check that the reported chat count matches your old app.
    If it fails, keep the old app installed and resolve the connection first.
 5. Keep a copy of the JSON file. After a successful backup, remove v0.4.0 and
-   install `language-talk-v0.7.0.apk`.
+   install `language-talk-v0.7.1.apk`.
 6. Copy the JSON file to your phone. Open **Me → My Context → Restore backup** in
-   v0.7.0 and select it. Check your restored conversations and memories.
+   v0.7.1 and select it. Check your restored conversations and memories.
 7. Re-enter your API keys in Settings. Original imported photo/PDF/text files
    should be imported again if needed; their saved summaries are restored.
 

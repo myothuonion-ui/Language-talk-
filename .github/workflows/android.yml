@@ -37,11 +37,11 @@ jobs:
       - name: Unit tests, lint, APK, and device-test compilation
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest --stacktrace
       - name: Prepare APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.7.0.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.7.1.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: language-talk-v0.7.0-apk
-          path: language-talk-v0.7.0.apk
+          name: language-talk-v0.7.1-apk
+          path: language-talk-v0.7.1.apk
           if-no-files-found: error
           retention-days: 90
       - uses: actions/upload-artifact@v4
@@ -122,14 +122,14 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: language-talk-v0.7.0-apk
+          name: language-talk-v0.7.1-apk
       - uses: actions/download-artifact@v4
         with:
           name: language-talk-legacy-backup-windows
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.7.0
-          name: Language Talk AI v0.7.0
+          tag_name: v0.7.1
+          name: Language Talk AI v0.7.1
           body: |
             Korean Coach + integrated PDF reader with a simpler Books / Practice / Me design.
 
@@ -147,6 +147,6 @@ jobs:
             Offline: books and cached lookups. New translations/assessments/AI audio require your key/network. Sample audio and feedback are AI-generated; app levels are learning estimates, not official certification.
             Guide: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/LEARNING_READER.md
           files: |
-            language-talk-v0.7.0.apk
+            language-talk-v0.7.1.apk
             language-talk-legacy-backup-windows.exe
           make_latest: true

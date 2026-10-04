@@ -226,9 +226,9 @@ private fun CoachLessonScreen(viewModel: CoachViewModel, settings: AppSettings) 
                         modifier = Modifier.fillMaxWidth().height(56.dp).testTag("coach-voice"), shape = RoundedCornerShape(18.dp)) {
                         Icon(Icons.Default.Mic, null); Spacer(Modifier.width(8.dp)); Text("Voice နဲ့ လေ့ကျင့်မယ်")
                     }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        TextButton({ microphone("record") }, enabled = !ui.busy) { Text(if (ui.recording) "အသံပို့မယ်" else "တစ်ကြောင်း အသံသွင်း") }
-                        TextButton({ typing = !typing }, enabled = canControl) { Text("စာရိုက်ဖြေ") }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton({ microphone("record") }, Modifier.weight(1f), enabled = !ui.busy) { Text(if (ui.recording) "အသံပို့မယ်" else "တစ်ကြောင်း အသံသွင်း", fontSize = 13.sp) }
+                        TextButton({ typing = !typing }, Modifier.weight(1f), enabled = canControl) { Text("စာရိုက်ဖြေ", fontSize = 13.sp) }
                     }
                 }
                 if (typing) {

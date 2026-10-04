@@ -79,7 +79,8 @@ internal fun BookshelfScreen(viewModel: ReaderViewModel, onRead: (String) -> Uni
                     Column(Modifier.fillMaxSize().padding(10.dp), verticalArrangement = Arrangement.SpaceBetween) {
                         Icon(Icons.Default.MenuBook, null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
                         Text(if (book.assetId.isNotBlank()) if (book.id.contains("beginner")) "BEGINNER" else "INTERMEDIATE" else "PDF",
-                            fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                            fontSize = 9.sp, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -260,8 +261,10 @@ internal fun PdfReaderScreen(viewModel: ReaderViewModel, onBack: () -> Unit) {
         var edit by remember(ui.selection) { mutableStateOf(false) }
         var input by remember(ui.selection) { mutableStateOf(ui.selection) }
         var grammar by remember(ui.selection) { mutableStateOf(false) }
-        ModalBottomSheet(onDismissRequest = viewModel::dismissLookup) {
-            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 22.dp).padding(bottom = 24.dp),
+        val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(onDismissRequest = viewModel::dismissLookup, sheetState = sheet) {
+            Column(Modifier.fillMaxWidth().navigationBarsPadding().imePadding()
+                .verticalScroll(rememberScrollState()).padding(horizontal = 22.dp).padding(bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text("한국어 / English → မြန်မာ", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -279,9 +282,9 @@ internal fun PdfReaderScreen(viewModel: ReaderViewModel, onBack: () -> Unit) {
                         TextButton({ grammar = !grammar }) { Text("Grammar ရှင်းချက်") }
                         if (grammar) Text(value.grammar, lineHeight = 25.sp)
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        OutlinedButton(viewModel::listen) { Icon(Icons.Default.VolumeUp, null); Spacer(Modifier.width(6.dp)); Text("နားထောင်") }
-                        Button(viewModel::saveWord, enabled = !ui.saved) { Text(if (ui.saved) "သိမ်းပြီးပြီ" else "သိမ်းမယ်") }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlinedButton(viewModel::listen, Modifier.weight(1f)) { Icon(Icons.Default.VolumeUp, null); Spacer(Modifier.width(6.dp)); Text("နားထောင်") }
+                        Button(viewModel::saveWord, Modifier.weight(1f), enabled = !ui.saved) { Text(if (ui.saved) "သိမ်းပြီးပြီ" else "သိမ်းမယ်") }
                     }
                 }
                 if (!ui.translating && ui.translation == null) {

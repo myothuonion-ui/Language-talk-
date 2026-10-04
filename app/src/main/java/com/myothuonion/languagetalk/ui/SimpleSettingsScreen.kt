@@ -92,6 +92,6 @@ internal fun SimpleSettingsScreen(settings: AppSettings, credentials: Credential
             if (credentials.geminiStatus.isNotBlank()) Text(credentials.geminiStatus, fontSize = 12.sp)
             TextButton(onAdvanced) { Text("Advanced settings"); Icon(Icons.Default.ChevronRight, null) }
         }
-        item { Text("Language Talk · v0.7.0", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        item { Text("Language Talk · v0.7.1", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
 }

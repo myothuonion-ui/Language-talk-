@@ -1,4 +1,4 @@
-# Korean Coach and PDF reader — v0.7.0
+# Korean Coach and PDF reader — v0.7.1
 
 Books / Practice / Me are the three main destinations. Model IDs, provider choices and custom prompts live under Me → Settings → Advanced.
 
