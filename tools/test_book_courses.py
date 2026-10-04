@@ -92,6 +92,7 @@ class BuiltInBooksTest(unittest.TestCase):
                         self.assertTrue(ex["prompt"] and ex["answer"])
                         self.assertIn(ex["page"], section["pages"])
                         self.assertFalse("Answer Key" in ex["prompt"])
+                        self.assertFalse(re.search(r"\b[ABC]\.\s+When", ex["prompt"]))
 
 
 if __name__ == "__main__":

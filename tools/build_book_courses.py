@@ -193,8 +193,9 @@ def extract(path, book_id):
                 if e["number"] in spill_numbers:
                     e["page"] = start + 6
             pstart = re.search(r"^\s*1\.\s", pron, re.M).start()
-            # Rule B text between pronunciation exercises belongs in the source explanation.
-            pexercise_text = re.sub(r"^\s*B\..*?(?=^\s*3\.\s)", "", pron[pstart:], flags=re.M | re.S)
+            # A two-column rule heading can share the last exercise's line.
+            # Keep the rule in sourceText, excluding it from that exercise prompt.
+            pexercise_text = re.sub(r"(?<!\w)[ABC]\.\s+.*?(?=^[ \t]*[1-9]\.\s|\Z)", "", pron[pstart:], flags=re.M | re.S)
             sections = [
                 section("short", "စကားပြောတို", "DIALOGUE", clean_page(raw_pages[start]), [start + 1], short),
                 section("short-vocab", "ဝေါဟာရ · စကားပြောတို", "VOCABULARY", vocab_culture[0], [start + 2]),

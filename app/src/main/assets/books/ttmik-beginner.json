@@ -5071,7 +5071,7 @@
             },
             {
               "number": 2,
-              "prompt": "봤는데 ……〉 [ ] B. When a syllable ends with ㅅ (which sounds the same as ㄷ when in the 받침 position) and is followed by a syllable that begins with ㄱ, the ㄱ is pronounced as ㄲ. Ex) 못 가요 → [몯 까요] * If you are wondering why 못 is pronounced as 몯, please refer to page 74. Write the pronunciations for the following words, just like the above example.",
+              "prompt": "봤는데 ……〉 [ ]",
               "answer": "봔는데",
               "page": 130
             },
@@ -5743,7 +5743,7 @@
             },
             {
               "number": 2,
-              "prompt": "먹을래요 ……〉 [ ] B. When a syllable ends with ㅂ and is followed by a syllable that begins with ㅅ, the ㅅ is pronounced as ㅆ. Ex) 삼겹살 → [삼겹쌀] Write the pronunciations for the following words, just like the above example.",
+              "prompt": "먹을래요 ……〉 [ ]",
               "answer": "머글래요",
               "page": 146
             },
