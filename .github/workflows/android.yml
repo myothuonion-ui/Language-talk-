@@ -37,11 +37,11 @@ jobs:
       - name: Unit tests, lint, APK, and device-test compilation
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest --stacktrace
       - name: Prepare APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.8.0.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.8.1.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: language-talk-v0.8.0-apk
-          path: language-talk-v0.8.0.apk
+          name: language-talk-v0.8.1-apk
+          path: language-talk-v0.8.1.apk
           if-no-files-found: error
           retention-days: 90
       - uses: actions/upload-artifact@v4
@@ -122,16 +122,16 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: language-talk-v0.8.0-apk
+          name: language-talk-v0.8.1-apk
       - uses: actions/download-artifact@v4
         with:
           name: language-talk-legacy-backup-windows
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.8.0
-          name: Language Talk AI v0.8.0
+          tag_name: v0.8.1
+          name: Language Talk AI v0.8.1
           body: |
-            Language Talk v0.8.0: clearer Korean practice and flexible AI connections.
+            Language Talk v0.8.1: clearer Korean practice and flexible AI connections.
 
             - Practice opens with Book lessons, Live conversation, and a small daily lesson
             - Daily lessons teach the pattern, Myanmar meaning and vocabulary before practice
@@ -149,6 +149,6 @@ jobs:
             Back up in Me → My Context → Export before installing if Android requests uninstall because of the earlier APK signing key. Restore JSON and re-enter keys afterward. Keep imported source PDFs.
             Guide: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/AI_AND_PRACTICE.md
           files: |
-            language-talk-v0.8.0.apk
+            language-talk-v0.8.1.apk
             language-talk-legacy-backup-windows.exe
           make_latest: true

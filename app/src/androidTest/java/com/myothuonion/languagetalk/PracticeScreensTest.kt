@@ -32,6 +32,14 @@ class PracticeScreensTest {
         compose.onNodeWithText("Practice", useUnmergedTree = true).performClick()
         compose.onNodeWithTag("practice-books").assertIsDisplayed()
         compose.onNodeWithTag("practice-live").assertIsDisplayed()
+        val hub = compose.onNodeWithTag("practice-hub").fetchSemanticsNode()
+        for (tag in listOf("practice-books", "practice-live", "practice-daily")) {
+            compose.onNodeWithTag(tag).assertIsDisplayed()
+            val card = compose.onNodeWithTag(tag).fetchSemanticsNode()
+            org.junit.Assert.assertTrue("$tag must fit inside the initial Practice screen",
+                card.positionInRoot.y >= hub.positionInRoot.y &&
+                    card.positionInRoot.y + card.size.height <= hub.positionInRoot.y + hub.size.height)
+        }
         capture("practice")
         compose.onNodeWithTag("practice-live").performClick()
         compose.onNodeWithTag("guided-mode").assertIsSelected()

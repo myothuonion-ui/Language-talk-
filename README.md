@@ -1,9 +1,9 @@
-# Language Talk AI v0.8.0
+# Language Talk AI v0.8.1
 
 Books / Practice / Me, Korean-only speech with written Myanmar teaching, guided answer frames, and flexible Gemini / NVIDIA / OpenAI / Claude / DeepSeek API connections.
 
-- [Download APK](https://github.com/myothuonion-ui/Language-talk-/releases/download/v0.8.0/language-talk-v0.8.0.apk)
-- [Release and complete source](https://github.com/myothuonion-ui/Language-talk-/releases/tag/v0.8.0)
+- [Download APK](https://github.com/myothuonion-ui/Language-talk-/releases/download/v0.8.1/language-talk-v0.8.1.apk)
+- [Release and complete source](https://github.com/myothuonion-ui/Language-talk-/releases/tag/v0.8.1)
 - [New Practice and API guide](docs/AI_AND_PRACTICE.md)
 - [Korean Coach and PDF reader guide](docs/LEARNING_READER.md)
 
@@ -63,7 +63,7 @@ Quick Translate handles typed/spoken Korean, English and Myanmar. Korean Name St
 
 ## Install and development
 
-Android 8.0 or newer. Install the APK from Releases and enter your own API key. **Back up before reinstalling: debug APKs use runner-generated signing keys and can differ between versions.** In v0.5.0 or later use My Context → Export backup. For v0.4.0 use the Windows backup helper from Releases. Restore the JSON in Me → My Context after installing v0.8.0 and re-enter your API key. See [Upgrade instructions](docs/UPGRADING.md). Database v4 includes migrations from previous app databases and does not reset existing chats when the signing key matches.
+Android 8.0 or newer. Install the APK from Releases and enter your own API key. **Back up before reinstalling: debug APKs use runner-generated signing keys and can differ between versions.** In v0.5.0 or later use My Context → Export backup. For v0.4.0 use the Windows backup helper from Releases. Restore the JSON in Me → My Context after installing v0.8.1 and re-enter your API key. See [Upgrade instructions](docs/UPGRADING.md). Database v4 includes migrations from previous app databases and does not reset existing chats when the signing key matches.
 
 Requirements: JDK 17, Android SDK 35, Gradle 8.10.2.
 
@@ -73,6 +73,6 @@ gradle wrapper --gradle-version 8.10.2
 ./gradlew connectedDebugAndroidTest
 ```
 
-GitHub Actions runs unit tests, lint, APK compilation and Android emulator migration, backup restoration and screen checks on Android 10 and 15 before publishing v0.8.0. HTTP tests simulate Gemini and compatible provider requests, structured output, quota, timeout, cancellation, fallback, transcription and speech. CI does not make real provider calls because no personal API keys are supplied. Actual provider checks are documented in [Provider validation](docs/PROVIDER_VALIDATION.md). Microphone quality, pronunciation judgments and provider availability require device testing.
+GitHub Actions runs unit tests, lint, APK compilation and Android emulator migration, backup restoration and screen checks on Android 10 and 15 before publishing v0.8.1. HTTP tests simulate Gemini and compatible provider requests, structured output, quota, timeout, cancellation, fallback, transcription and speech. CI does not make real provider calls because no personal API keys are supplied. Actual provider checks are documented in [Provider validation](docs/PROVIDER_VALIDATION.md). Microphone quality, pronunciation judgments and provider availability require device testing.
 
 See [Architecture](docs/ARCHITECTURE.md).

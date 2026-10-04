@@ -1,3 +1,9 @@
+# v0.8.1 — Practice choices visible together
+
+- Keep Book lessons, Live conversation and the small daily lesson fully visible on the initial Practice screen.
+- Use compact cards with clear roles and retain all v0.8.0 teaching and API features.
+- Verify all three cards fit within the screen on Android 10 and 15, alongside navigation, upgrade, backup and provider contract tests.
+
 # v0.8.0 — Guided practice and flexible APIs
 
 - Open Practice with three cards: original book lessons, Live conversation and a small daily lesson.

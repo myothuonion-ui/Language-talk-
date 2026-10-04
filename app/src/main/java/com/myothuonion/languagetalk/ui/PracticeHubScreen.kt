@@ -25,22 +25,22 @@ import com.myothuonion.languagetalk.model.*
 @Composable
 internal fun PracticeHubScreen(settings: AppSettings, onBooks: () -> Unit, onLive: () -> Unit,
     onDaily: () -> Unit, onSettings: () -> Unit) {
-    LazyColumn(Modifier.fillMaxSize().testTag("practice-hub"), contentPadding = PaddingValues(22.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    LazyColumn(Modifier.fillMaxSize().testTag("practice-hub"), contentPadding = PaddingValues(18.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Row(Modifier.fillMaxWidth().statusBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("YOUR KOREAN", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                    Text("စကားပြောတတ်ဖို့၊\nတစ်ဆင့်ချင်း", fontSize = 28.sp, lineHeight = 43.sp, fontWeight = FontWeight.SemiBold)
+                    Text("ဒီနေ့ လေ့ကျင့်မယ်", fontSize = 26.sp, lineHeight = 38.sp, fontWeight = FontWeight.SemiBold)
                     Text(settings.displayName + " · ဒီနေ့ ဘယ်လိုလေ့လာမလဲ", fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 IconButton(onSettings) { Icon(Icons.Default.Settings, "Settings") }
             }
         }
-        item { PracticeEntry("စာအုပ်သင်ခန်းစာ", "မူရင်းစာအုပ်အစဉ်အတိုင်း", "Beginner ၄၀ + Intermediate ၃၀ ခန်း\nနှစ်ယောက် အလှည့်ကျပြောမယ်", Icons.Default.MenuBook, "practice-books", onBooks) }
-        item { PracticeEntry("Live စကားပြော", "ကိုယ့်ဘဝနဲ့ ကိုက်ညီတဲ့ Korean", "ဖြေဖို့ ပုံစံပြပေးတဲ့ Guided\nလွတ်လွတ်လပ်လပ် Open conversation", Icons.Default.GraphicEq, "practice-live", onLive) }
-        item { PracticeEntry("ဒီနေ့ နည်းနည်းစီ", "၅–၁၀ မိနစ် · စကားပုံစံတစ်ခု", "အရင်သင် → အတူပြော → ကိုယ်တိုင်သုံး\nနောက်နေ့မှာ ပြန်လေ့ကျင့်", Icons.Default.WbSunny, "practice-daily", onDaily) }
+        item { PracticeEntry("စာအုပ်သင်ခန်းစာ", "မူရင်းအစဉ်အတိုင်း · ခန်း ၇၀\nနှစ်ယောက် အလှည့်ကျပြောမယ်", Icons.Default.MenuBook, "practice-books", onBooks) }
+        item { PracticeEntry("Live စကားပြော", "Guided · အဖြေပုံစံကြည့်ပြောမယ်\nOpen · ကိုယ့်အကြောင်း စကားပြောမယ်", Icons.Default.GraphicEq, "practice-live", onLive) }
+        item { PracticeEntry("ဒီနေ့ နည်းနည်းစီ", "၅–၁၀ မိနစ် · အရင်သင်၊ ပြီးမှပြော\nအတူလေ့ကျင့် → ကိုယ်တိုင်သုံး", Icons.Default.WbSunny, "practice-daily", onDaily) }
         item {
             Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
                 Icon(Icons.Default.VolumeUp, null, Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
@@ -52,18 +52,18 @@ internal fun PracticeHubScreen(settings: AppSettings, onBooks: () -> Unit, onLiv
 }
 
 @Composable
-private fun PracticeEntry(title: String, subtitle: String, detail: String, icon: ImageVector, tag: String, onClick: () -> Unit) {
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth().testTag(tag), shape = RoundedCornerShape(26.dp),
+private fun PracticeEntry(title: String, detail: String, icon: ImageVector, tag: String, onClick: () -> Unit) {
+    Card(onClick = onClick, modifier = Modifier.fillMaxWidth().testTag(tag), shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)) {
-        Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(46.dp).background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(15.dp)),
-                    contentAlignment = Alignment.Center) { Icon(icon, null, tint = MaterialTheme.colorScheme.primary) }
-                Spacer(Modifier.weight(1f)); Icon(Icons.Default.ArrowForward, null, tint = MaterialTheme.colorScheme.primary)
+        Row(Modifier.fillMaxWidth().padding(15.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box(Modifier.size(40.dp).background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(13.dp)),
+                contentAlignment = Alignment.Center) { Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp)) }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                Text(title, fontSize = 18.sp, lineHeight = 29.sp, fontWeight = FontWeight.SemiBold)
+                Text(detail, fontSize = 12.sp, lineHeight = 21.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Text(title, fontSize = 22.sp, fontWeight = FontWeight.SemiBold)
-            Text(subtitle, color = MaterialTheme.colorScheme.primary, fontSize = 12.sp, fontWeight = FontWeight.Medium)
-            Text(detail, fontSize = 13.sp, lineHeight = 23.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Icon(Icons.Default.ArrowForward, null, Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
         }
     }
 }
