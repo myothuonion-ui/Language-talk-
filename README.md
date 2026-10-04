@@ -1,4 +1,8 @@
-# Language Talk AI v0.5.2
+# Language Talk AI v0.6.0
+
+## Built-in books
+
+Home → **My Books** includes both supplied TTMIK Real-Life Korean Conversations PDFs and 70 structured chapters. Dialogue turns follow the original book; vocabulary/grammar can be explained in Myanmar with your existing Gemini key. Progress and cached explanations are included in backup. See [the course guide](docs/BOOK_COURSES.md).
 
 An Android Korean/English voice tutor with an editable personal profile, persistent learning state, guided speaking practice and Gemini voice output.
 
@@ -47,7 +51,7 @@ Quick Translate handles typed/spoken Korean, English and Myanmar. Korean Name St
 
 ## Install and development
 
-Android 8.0 or newer. Install the APK from Releases and enter your own API key. **Back up before reinstalling: debug APKs use runner-generated signing keys and can differ between versions.** In v0.5.0 use My Context → Export backup. For v0.4.0 use the Windows backup helper from Releases. Restore the JSON in My Context after installing v0.5.2 and re-enter your API key. See [Upgrade instructions](docs/UPGRADING.md). Database v3 includes migrations from previous app databases and does not reset existing chats when the signing key matches.
+Android 8.0 or newer. Install the APK from Releases and enter your own API key. **Back up before reinstalling: debug APKs use runner-generated signing keys and can differ between versions.** In v0.5.0 or later use My Context → Export backup. For v0.4.0 use the Windows backup helper from Releases. Restore the JSON in My Context after installing v0.6.0 and re-enter your API key. See [Upgrade instructions](docs/UPGRADING.md). Database v3 includes migrations from previous app databases and does not reset existing chats when the signing key matches.
 
 Requirements: JDK 17, Android SDK 35, Gradle 8.10.2.
 
@@ -57,6 +61,6 @@ gradle wrapper --gradle-version 8.10.2
 ./gradlew connectedDebugAndroidTest
 ```
 
-GitHub Actions runs unit tests, lint, APK compilation and Android emulator migration, backup restoration and screen checks before publishing v0.5.2. HTTP tests use simulated Gemini catalog, tutoring, speech and quota responses. CI does not make real Gemini/NVIDIA calls because no personal API keys are supplied. Actual provider checks are documented in [Provider validation](docs/PROVIDER_VALIDATION.md). Microphone quality, pronunciation judgments and provider availability require device testing.
+GitHub Actions runs unit tests, lint, APK compilation and Android emulator migration, backup restoration and screen checks before publishing v0.6.0. HTTP tests use simulated Gemini catalog, tutoring, speech and quota responses. CI does not make real Gemini/NVIDIA calls because no personal API keys are supplied. Actual provider checks are documented in [Provider validation](docs/PROVIDER_VALIDATION.md). Microphone quality, pronunciation judgments and provider availability require device testing.
 
 See [Architecture](docs/ARCHITECTURE.md).

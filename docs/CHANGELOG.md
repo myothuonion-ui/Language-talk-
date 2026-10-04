@@ -1,3 +1,11 @@
+# v0.6.0 — Built-in book courses
+
+- Bundle the two supplied TTMIK PDFs and page-linked Beginner 40 / Intermediate 30 chapter courses.
+- Add exact role-controlled dialogues, original study sections and 507 original exercises with answer keys.
+- Add on-demand/cached Myanmar teaching, hands-free voice and source-page viewing.
+- Persist course/section/turn/role and correction review separately from personal facts; include them in portable backup.
+- Add controller, asset fidelity, PDF rendering, offline answer, backup and screen checks.
+
 # v0.5.2 — Verified Gemini voice fix
 
 - Fixes the exact HTTP 400 "Audio delivery mode is not supported" error by omitting `response_format.delivery` from TTS requests. Explicit WAV encoding, exact spoken text and voice/style remain supported.

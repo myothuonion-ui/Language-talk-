@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.testTag
 import com.myothuonion.languagetalk.data.*
 import com.myothuonion.languagetalk.model.*
 
@@ -51,13 +52,22 @@ internal fun VoiceEditor(voice: String, style: String, pace: String, silence: In
 @Composable
 internal fun LearningHomeScreen(settings: AppSettings, chats: List<ChatEntity>, progress: List<LearningProgressEntity>,
     reviews: List<ReviewItemEntity>, onContinue: (Long) -> Unit, onNew: () -> Unit, onQuick: (TutorConfig) -> Unit,
-    onReview: () -> Unit, onTranslate: () -> Unit, onNames: () -> Unit) {
+    onReview: () -> Unit, onTranslate: () -> Unit, onNames: () -> Unit, onBooks: () -> Unit = {}) {
     val latest = progress.firstOrNull { item -> chats.any { it.id == item.chatId } }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             Column(Modifier.statusBarsPadding()) {
                 Text("안녕하세요, ${settings.displayName}", fontSize = 25.sp, fontWeight = FontWeight.Bold)
                 Text("ဒီနေ့ နားလည်ပြီး ကိုယ်တိုင်ပြောနိုင်ဖို့", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        item {
+            Card {
+                Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("My Books · Korean Conversations", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text("Beginner ၄၀ ခန်း + Intermediate ၃၀ ခန်း · မူရင်းစာအုပ်အစဉ်အတိုင်း")
+                    Button(onBooks, Modifier.fillMaxWidth().testTag("open-books")) { Text("စာအုပ်သင်ခန်းစာများ") }
+                }
             }
         }
         item {
@@ -171,7 +181,7 @@ internal fun ContextScreen(settings: AppSettings, memories: List<MemoryEntity>, 
         }
         item {
             Text("Backup & restore", fontWeight = FontWeight.Bold)
-            Text("Chats, context, learning progress နဲ့ recordings ပါမယ်။ API keys မပါဘူး။ Restore က လက်ရှိ chats တွေနဲ့ပေါင်းထည့်မယ်။", fontSize = 12.sp)
+            Text("Chats, context, learning progress, recordings နဲ့ စာအုပ်သင်ခန်းစာ/မြန်မာရှင်းပြချက်တွေ ပါမယ်။ API keys မပါဘူး။ Restore က လက်ရှိ chats တွေနဲ့ပေါင်းထည့်မယ်။", fontSize = 12.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton({ export.launch("language-talk-backup.json") }) { Text("Export") }
                 OutlinedButton({ restore.launch(arrayOf("application/json", "text/plain")) }) { Text("Restore") }

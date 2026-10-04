@@ -35,7 +35,8 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private
         systemInstruction: String,
         history: List<MessageEntity>,
         userText: String,
-        audio: AudioPayload? = null
+        audio: AudioPayload? = null,
+        temperature: Double = 0.7
     ): TutorReply {
         requireKey(apiKey)
         val contents = buildJsonArray {
@@ -75,7 +76,7 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private
             })
             put("contents", contents)
             put("generationConfig", buildJsonObject {
-                put("temperature", JsonPrimitive(0.7))
+                put("temperature", JsonPrimitive(temperature))
                 put("responseMimeType", JsonPrimitive("application/json"))
                 put("responseSchema", tutorReplySchema())
             })

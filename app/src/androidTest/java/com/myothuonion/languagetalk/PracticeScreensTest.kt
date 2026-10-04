@@ -23,7 +23,7 @@ class PracticeScreensTest {
     }
 
     @Test fun homeReviewContextAndSavedVoiceSettingsAreAccessible() {
-        compose.onNodeWithText("Your 30-minute practice").assertIsDisplayed()
+        compose.onNodeWithText("My Books · Korean Conversations").assertIsDisplayed()
         capture("home")
         compose.onNodeWithText("Review", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Review & recordings").assertIsDisplayed()

@@ -37,11 +37,11 @@ jobs:
       - name: Unit tests, lint, APK, and device-test compilation
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest --stacktrace
       - name: Prepare APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.5.2.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.6.0.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: language-talk-v0.5.2-apk
-          path: language-talk-v0.5.2.apk
+          name: language-talk-v0.6.0-apk
+          path: language-talk-v0.6.0.apk
           if-no-files-found: error
           retention-days: 90
       - uses: actions/upload-artifact@v4
@@ -118,30 +118,32 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: language-talk-v0.5.2-apk
+          name: language-talk-v0.6.0-apk
       - uses: actions/download-artifact@v4
         with:
           name: language-talk-legacy-backup-windows
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.5.2
-          name: Language Talk AI v0.5.2
+          tag_name: v0.6.0
+          name: Language Talk AI v0.6.0
           body: |
-            Fixes "Audio delivery mode is not supported" during Gemini voice chat.
+            Built-in TTMIK Real-Life Korean Conversations: Beginner (40 chapters) and Intermediate (30 chapters).
 
-            - Removes the explicitly selected audio delivery mode rejected by Gemini TTS
-            - Keeps exact spoken text, custom voice/style metadata and WAV output
-            - Makes the Live retry control accessible on shorter screens
-            - Stops microphone capture after voice/playback errors and prevents stale session starts
-            - Tests actual app request fixtures, real Gemini WAV playback, invalid audio and the retry screen
+            - Both original user-supplied PDFs and all 70 page-linked chapters are included
+            - Exact dialogue turns, selectable roles, multiple characters and formal/casual scenes
+            - Original vocabulary, cultural tips, grammar, pronunciation and 507 exercises/answers
+            - Myanmar explanations generated with your configured Gemini key and cached locally
+            - Hands-free book practice, typed answers, Slow/Natural pace and existing custom voice settings
+            - Saved course/section/turn, corrections and review mistakes, included in portable backup
+            - Offline original-book reading with a page viewer; Korean Only review hides answers
+            - Extra personal application practice after a chapter, using its original grammar
 
-            Actual provider checks performed outside public CI with a user-supplied key: the old request reproduced HTTP 400; corrected speech returned WAV; structured tutoring succeeded through the configured text fallback; native Live setup, lesson tool, audio input transcription and spoken reply succeeded over two turns. Personal keys are not included in this APK, repository or CI.
+            BACK UP FIRST: in your current app, My Context → Export backup before uninstalling. CI debug APKs use runner-generated signing keys; if Android rejects the update, install after backing up and uninstalling, restore your JSON and re-enter your API key.
 
-            BACK UP FIRST: this debug APK uses a different runner-generated signing key. In your old app, use My Context → Export backup before uninstalling. Install this APK, restore the JSON and re-enter your key. For v0.4.0 use the Windows helper below.
-            Upgrade instructions: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/UPGRADING.md
-
-            Your phone microphone/network and current provider quota still affect live use. Settings → Test checks text and speech access; native Live is checked at session start.
+            Books and exact typed answers work offline. New Myanmar explanations and voice need your key/network. No personal provider keys are included in the APK, repository or CI.
+            Guide: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/BOOK_COURSES.md
+            Upgrade: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/UPGRADING.md
           files: |
-            language-talk-v0.5.2.apk
+            language-talk-v0.6.0.apk
             language-talk-legacy-backup-windows.exe
           make_latest: true

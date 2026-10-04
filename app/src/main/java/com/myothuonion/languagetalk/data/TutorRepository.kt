@@ -50,7 +50,8 @@ class TutorRepository(
     private val settingsStore: SettingsStore,
     private val secrets: SecretStore,
     private val gemini: GeminiClient,
-    private val nvidia: NvidiaClient
+    private val nvidia: NvidiaClient,
+    private val bookStore: BookStore? = null
 ) {
     private val turnMutex = Mutex()
     private val catalogMutex = Mutex()
@@ -60,7 +61,7 @@ class TutorRepository(
     val recordings = dao.observeRecordings()
     val progress = dao.observeProgress()
     val reviews = dao.observeReviews()
-    val backup by lazy { BackupStore(database, settingsStore, recordingDirectory) }
+    val backup by lazy { BackupStore(database, settingsStore, recordingDirectory, bookStore) }
     val chats = dao.observeChats()
     val memories = dao.observeGlobalMemories()
     val sources = dao.observeKnowledgeSources()
@@ -218,6 +219,20 @@ class TutorRepository(
     suspend fun previewVoice(voice: String, style: String, text: String): AudioPayload {
         val settings = settingsStore.settings.first()
         return geminiSpeech(settings.geminiTtsModel, text, voice, style)
+    }
+
+    /** Book mode never writes fictional textbook identities to personal memory. */
+    suspend fun bookResponse(instruction: String, input: String, audio: AudioPayload? = null): TutorReply {
+        val current = settingsStore.settings.first()
+        return withGeminiFallback("Book course", current.geminiModel, textModels(current.geminiModel)) { model ->
+            gemini.tutorReply(secrets.geminiApiKey, model, instruction, emptyList(), input, audio, temperature = 0.15)
+        }.value
+    }
+
+    suspend fun bookSpeech(text: String, slow: Boolean): AudioPayload {
+        val current = settingsStore.settings.first()
+        return geminiSpeech(current.geminiTtsModel, text, current.defaultVoiceName,
+            current.defaultVoiceStyle + if (slow) " Speak slowly and clearly. Read exactly the supplied text." else " Speak at a natural pace. Read exactly the supplied text.")
     }
 
     suspend fun analyzeAndAddSource(name: String, mimeType: String, uri: String, bytes: ByteArray) {

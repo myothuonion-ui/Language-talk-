@@ -128,11 +128,12 @@ import java.util.Date
 import java.util.Locale
 
 private enum class Screen {
-    HOME, NEW_CHAT, HISTORY, CHAT_HUB, MEMORY, SETTINGS, MESSAGE_CHAT, LIVE_CHAT, NAME_STUDIO, QUICK_TRANSLATE
+    HOME, NEW_CHAT, HISTORY, CHAT_HUB, MEMORY, SETTINGS, MESSAGE_CHAT, LIVE_CHAT, NAME_STUDIO, QUICK_TRANSLATE, BOOKS
 }
 
 @Composable
 fun LanguageTalkApp(viewModel: AppViewModel) {
+    val bookViewModel: BookViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
     val settings by viewModel.settings.collectAsState()
     LanguageTalkTheme(settings.darkTheme) {
         var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
@@ -189,7 +190,14 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                                 voiceStyle = settings.defaultVoiceStyle, speakingPace = settings.defaultPace,
                                 silenceMs = settings.defaultSilenceMs, speakCorrections = settings.defaultSpeakCorrections)) { screen = Screen.LIVE_CHAT }
                         }, onReview = { screen = Screen.HISTORY },
-                        onTranslate = { screen = Screen.QUICK_TRANSLATE }, onNames = { screen = Screen.NAME_STUDIO })
+                        onTranslate = { screen = Screen.QUICK_TRANSLATE }, onNames = { screen = Screen.NAME_STUDIO },
+                        onBooks = { viewModel.closeChat(); screen = Screen.BOOKS })
+                    Screen.BOOKS -> BookCoursesScreen(bookViewModel, settings,
+                        onBack = { screen = Screen.HOME }, onSettings = { screen = Screen.SETTINGS },
+                        onApply = { config -> viewModel.createChat(config.copy(brainMode = settings.brainMode,
+                            voiceName = settings.defaultVoiceName, voiceStyle = settings.defaultVoiceStyle,
+                            speakingPace = settings.defaultPace, silenceMs = settings.defaultSilenceMs,
+                            speakCorrections = settings.defaultSpeakCorrections)) { screen = Screen.LIVE_CHAT } })
                     Screen.NEW_CHAT -> NewChatScreen(
                         defaults = settings,
                         onBack = { screen = Screen.HOME },

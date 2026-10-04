@@ -12,6 +12,7 @@ import kotlinx.serialization.json.contentOrNull
 import java.io.File
 import java.util.Base64
 import java.util.UUID
+import com.myothuonion.languagetalk.model.BookShelfState
 
 @Serializable
 data class BackupPreferences(
@@ -41,7 +42,8 @@ data class LearningBackup(
     val progress: List<LearningProgressEntity> = emptyList(),
     val reviews: List<ReviewItemEntity> = emptyList(),
     val audio: List<BackupAudio> = emptyList(),
-    val preferences: BackupPreferences = BackupPreferences()
+    val preferences: BackupPreferences = BackupPreferences(),
+    val books: BookShelfState = BookShelfState()
 )
 
 object BackupCodec {
@@ -63,14 +65,20 @@ object BackupCodec {
             backup.reviews.all { it.chatId in ids } && backup.memories.all { it.scopeChatId == null || it.scopeChatId in ids }) { "Backup has missing chat references" }
         require(backup.audio.map { it.messageId }.distinct().size == backup.audio.size && backup.audio.all { it.messageId in messages }) { "Invalid recording references" }
         backup.audio.forEach { require(Base64.getDecoder().decode(it.data).size <= 4 * 1024 * 1024) { "A recording is too large" } }
+        require(backup.books.progress.size <= 2 && backup.books.progress.map { it.bookId }.distinct().size == backup.books.progress.size) { "Invalid book progress" }
+        require(backup.books.progress.all { it.bookId in setOf("ttmik-beginner", "ttmik-intermediate") &&
+            it.chapter in 1..40 && it.section in 0..12 && it.activity in 0..100 && it.mistakes.size <= 100 && it.completedSections.size <= 500 }) { "Invalid book lesson state" }
+        require(backup.books.explanations.size <= 500 && backup.books.explanations.all { it.key.length <= 180 && it.text.length <= 12000 }) { "Book explanations are too large" }
         return backup
     }
 }
 
-class BackupStore(private val db: AppDatabase, private val settings: SettingsStore, private val recordings: File) {
+class BackupStore(private val db: AppDatabase, private val settings: SettingsStore, private val recordings: File,
+    private val books: BookStore? = null) {
     suspend fun export(): ByteArray {
         val dao = db.dao()
         val preferences = settings.settings.first()
+        val bookState = books?.export() ?: BookShelfState()
         val backup = db.withTransaction {
             val messages = dao.allMessages()
             val audio = messages.filter { it.audioPath.isNotBlank() && it.audioPath == File(it.audioPath).name }.mapNotNull { message ->
@@ -78,7 +86,7 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
                 if (file.isFile) BackupAudio(message.id, Base64.getEncoder().encodeToString(file.readBytes())) else null
             }
             LearningBackup(chats = dao.allChats(), messages = messages, memories = dao.allMemories(),
-                sources = dao.allSources().map { it.copy(uri = "") }, progress = dao.allProgress(), reviews = dao.allReviews(), audio = audio,
+                sources = dao.allSources().map { it.copy(uri = "") }, progress = dao.allProgress(), reviews = dao.allReviews(), audio = audio, books = bookState,
                 preferences = BackupPreferences(preferences.displayName, preferences.learnerProfile, preferences.globalBehavior,
                     preferences.defaultVoiceName, preferences.defaultVoiceStyle, preferences.defaultPace, preferences.defaultSilenceMs,
                     preferences.defaultSpeakCorrections, preferences.autoLearningMemory, preferences.recordPractice))
@@ -90,6 +98,7 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
 
     suspend fun restore(bytes: ByteArray): Int {
         val backup = BackupCodec.decode(bytes)
+        books?.validateRestore(backup.books)
         val stagedFiles = mutableListOf<File>()
         recordings.mkdirs()
         try {
@@ -119,6 +128,7 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
             globalBehavior = prefs.globalBehavior, defaultVoiceName = prefs.voiceName, defaultVoiceStyle = prefs.voiceStyle,
             defaultPace = prefs.pace, defaultSilenceMs = prefs.silenceMs.coerceIn(800, 4000), defaultSpeakCorrections = prefs.speakCorrections,
             autoLearningMemory = prefs.autoLearningMemory, recordPractice = prefs.recordPractice) }
+        if (backup.books.progress.isNotEmpty() || backup.books.explanations.isNotEmpty()) books?.restore(backup.books)
         return backup.chats.size
     }
 }
