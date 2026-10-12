@@ -105,7 +105,7 @@ object BookEngine {
         return state.activity >= when {
             section.turns.isNotEmpty() -> section.turns.size
             section.exercises.isNotEmpty() -> section.exercises.size
-            else -> return state.studied
+            else -> return state.studied || key(state,section) in state.completedSections
         }
     }
 

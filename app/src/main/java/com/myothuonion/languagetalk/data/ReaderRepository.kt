@@ -8,6 +8,7 @@ import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
 import com.myothuonion.languagetalk.model.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.security.MessageDigest
@@ -116,16 +117,16 @@ class ReaderRepository(private val context: Context, val store: LearningStore,
     suspend fun theme(value: String) { require(value in setOf("DAY", "SEPIA", "NIGHT")); store.update { it.copy(readerTheme = value) } }
 
     suspend fun addAnnotation(book: ReaderBook, page: Int, quote: String, kind: String, note: String,
-        surrounding: String, rectangles: List<ReaderRect>): ReaderAnnotation {
+        surrounding: String, rectangles: List<ReaderRect>, textStart: Int = -1): ReaderAnnotation {
         val previous = store.export().annotations.firstOrNull { it.bookId == book.id && it.page == page &&
-            it.quote == quote.trim().take(1200) && it.kind == kind && it.rectangles == rectangles }
+            it.quote == quote.trim().take(1200) && it.kind == kind && it.rectangles == rectangles && it.textStart == textStart }
         if (previous != null) {
             if (kind == "NOTE") updateNote(previous.id,note)
             return previous
         }
         val value = ReaderAnnotation(UUID.randomUUID().toString(), book.id, page, quote.trim().take(1200),
             kind, note.take(4000), surrounding.take(4000), rectangles.take(400),
-            fingerprint = book.fingerprint, createdAt = System.currentTimeMillis())
+            fingerprint = book.fingerprint, createdAt = System.currentTimeMillis(), textStart = textStart)
         require(page in 0 until book.pageCount && ReaderTools.valid(value))
         store.update { state ->
             require(state.annotations.size < 5000) { "မှတ်သားချက်များလွန်းပါတယ်။ Backup ယူပြီး စီမံပါ။" }

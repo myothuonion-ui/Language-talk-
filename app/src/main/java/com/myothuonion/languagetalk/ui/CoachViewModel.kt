@@ -139,7 +139,7 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
         val created = HandsFreeRestSession(getApplication(), silenceMs,
             opening = { repository.opening(current.slow, current.reviewId, current.placement, current.unitId) }) { audio ->
             assess(audio = audio)
-            if (finished()) HandsFreeTurn(ui.value.heard, ui.value.feedback,
+            if (finished() || repository.store.export().units.firstOrNull { it.id == ui.value.unitId }?.readyToContinue == true) HandsFreeTurn(ui.value.heard, ui.value.feedback,
                 repository.speech("수고하셨습니다.", ui.value.slow))
             else {
                 val opening = repository.opening(ui.value.slow, current.reviewId, current.placement, current.unitId, ui.value.feedback)

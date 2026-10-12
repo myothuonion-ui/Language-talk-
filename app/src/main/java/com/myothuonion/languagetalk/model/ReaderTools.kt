@@ -12,7 +12,7 @@ data class ReaderAnnotation(
     val id: String, val bookId: String, val page: Int, val quote: String,
     val kind: String = "HIGHLIGHT", val note: String = "", val context: String = "",
     val rectangles: List<ReaderRect> = emptyList(), val colour: String = "GOLD",
-    val fingerprint: String = "", val createdAt: Long = 0
+    val fingerprint: String = "", val createdAt: Long = 0, val textStart: Int = -1
 )
 
 @Serializable
@@ -60,7 +60,7 @@ object ReaderTools {
     fun valid(value: ReaderAnnotation): Boolean =
         value.id.length in 1..100 && value.bookId.matches(Regex("[a-zA-Z0-9-]{1,90}")) &&
         value.page in 0..4999 && value.quote.length in 1..1200 && value.kind in kinds &&
-        value.note.length <= 4000 && value.context.length <= 4000 && value.rectangles.size <= 400 &&
+        value.note.length <= 4000 && value.context.length <= 4000 && value.rectangles.size <= 400 && value.textStart in -1..1_000_000 &&
         value.rectangles.all { it.left.isFinite() && it.top.isFinite() && it.right.isFinite() && it.bottom.isFinite() &&
             it.left in 0f..1f && it.top in 0f..1f && it.right in it.left..1f && it.bottom in it.top..1f }
 

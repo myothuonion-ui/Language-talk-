@@ -16,7 +16,7 @@ import java.io.File
 data class ReaderUiState(val bookId: String = "", val page: Int = 0, val pageData: ReadablePdfPage? = null,
     val loading: Boolean = false, val translating: Boolean = false, val selection: String = "", val sentence: String = "",
     val rectangles: List<ReaderRect> = emptyList(), val translation: ReaderTranslation? = null,
-    val saved: Boolean = false, val error: String? = null, val status: String = "", val lookupOpen: Boolean = false,
+    val saved: Boolean = false, val selectionStart: Int = -1, val error: String? = null, val status: String = "", val lookupOpen: Boolean = false,
     val explanation: ReaderPageExplanation? = null, val explaining: Boolean = false,
     val playing: Boolean = false, val audioLoading: Boolean = false, val playingText: String = "",
     val searching: Boolean = false, val searchPage: Int = 0, val searchHits: List<ReaderSearchHit> = emptyList())
@@ -101,9 +101,9 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
         renderGeneration++; renderJob?.cancel(); translateJob?.cancel(); explanationJob?.cancel(); searchJob?.cancel()
         stopAudio(); pageCache.clear(); _ui.value = ReaderUiState()
     }
-    fun select(text: String, sentence: String, rectangles: List<ReaderRect> = emptyList()) {
+    fun select(text: String, sentence: String, rectangles: List<ReaderRect> = emptyList(), start: Int = -1) {
         translateJob?.cancel(); stopAudio()
-        _ui.update { it.copy(selection = text.trim().take(1200), sentence = sentence.take(4000), rectangles = rectangles.take(400),
+        _ui.update { it.copy(selection = text.trim().take(1200), sentence = sentence.take(4000), rectangles = rectangles.take(400), selectionStart = start,
             translation = null, lookupOpen = false, translating = false, saved = false, error = null, status = "") }
     }
     fun dismissLookup() {
@@ -129,7 +129,7 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
         val current = ui.value
         if (current.selection.isBlank()) return@launch
         try {
-            repository.addAnnotation(currentBook(),current.page,current.selection,kind,note,current.sentence,current.rectangles)
+            repository.addAnnotation(currentBook(),current.page,current.selection,kind,note,current.sentence,current.rectangles,current.selectionStart)
             if (ui.value.bookId == current.bookId && ui.value.page == current.page) _ui.update { it.copy(saved = true, status = "မှတ်သားချက် သိမ်းထားပြီးပြီ။") }
         } catch (e: Exception) { failure(e) }
     }

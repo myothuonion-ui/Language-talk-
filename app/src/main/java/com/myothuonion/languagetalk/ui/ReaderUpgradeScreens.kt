@@ -334,7 +334,9 @@ private fun ReaderTextPage(data: ReadablePdfPage,annotations: List<ReaderAnnotat
         buildAnnotatedString {
             append(data.layer.text)
             annotations.forEach { value ->
-                var at = data.layer.text.indexOf(value.quote)
+                var at = if (value.textStart >= 0 && value.textStart+value.quote.length <= data.layer.text.length &&
+                    data.layer.text.substring(value.textStart,value.textStart+value.quote.length) == value.quote) value.textStart
+                    else data.layer.text.indexOf(value.quote)
                 if (at < 0) at = data.layer.text.replace("\n"," ").indexOf(value.quote)
                 if (at >= 0 && at+value.quote.length <= length) addStyle(when (value.kind) {
                     "BOLD" -> SpanStyle(fontWeight = FontWeight.Bold)
@@ -359,7 +361,9 @@ private fun ReaderTextPage(data: ReadablePdfPage,annotations: List<ReaderAnnotat
                             var b = max(anchor,end).coerceIn(a,text.lastIndex)+1
                             while (a > 0 && !text[a-1].isWhitespace()) a--
                             while (b < text.length && !text[b].isWhitespace()) b++
-                            viewModel.select(text.substring(a,b),text.substring((a-200).coerceAtLeast(0),(b+200).coerceAtMost(text.length)))
+                            val phrase = text.substring(a,b)
+                            val offset = phrase.indexOfFirst { !it.isWhitespace() }.coerceAtLeast(0)
+                            viewModel.select(phrase,text.substring((a-200).coerceAtLeast(0),(b+200).coerceAtMost(text.length)),start = a+offset)
                         }
                     })
             })
