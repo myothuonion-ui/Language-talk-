@@ -31,7 +31,7 @@ jobs:
         with:
           gradle-version: '8.10.2'
       - name: Generate Gradle wrapper
-        run: gradle wrapper --gradle-version 8.10.2
+        run: gradle wrapper --gradle-version 8.10.2 --gradle-distribution-url https://downloads.gradle.org/distributions/gradle-8.10.2-bin.zip
       - name: Check legacy backup conversion
         run: python3 -m unittest discover -s tools -p 'test_*.py' -v
       - name: Restore development signing identity
@@ -79,7 +79,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
-      - run: gradle wrapper --gradle-version 8.10.2
+      - run: gradle wrapper --gradle-version 8.10.2 --gradle-distribution-url https://downloads.gradle.org/distributions/gradle-8.10.2-bin.zip
       - name: Enable KVM
         run: sudo chmod 666 /dev/kvm
       - name: Test upgrade, restore, and screens on Android
