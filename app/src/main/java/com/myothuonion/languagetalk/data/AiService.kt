@@ -34,7 +34,8 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
 
     suspend fun reply(task: AiTask, instruction: String, history: List<MessageEntity>, input: String,
         audio: AudioPayload? = null, allowEmptyReply: Boolean = false, chatId: Long? = null,
-        legacyMode: BrainMode? = null, audioEvaluationRequired: Boolean = false): TutorReply {
+        legacyMode: BrainMode? = null, audioEvaluationRequired: Boolean = false,
+        image: Pair<String, ByteArray>? = null): TutorReply {
         val config = configuration()
         val explicit = sessionRoute(task, chatId) ?: config.routes[task]
         val route = explicit ?: when (legacyMode) {
@@ -53,7 +54,7 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
             val profile = config.profiles.first { it.id == ref.profileId }
             if (profile.format == ApiFormat.GEMINI) {
                 geminiClient(profile).tutorReply(secrets.apiKey(profile.id), ref.model, instruction,
-                    history, input, audio, if (task == AiTask.CONVERSATION) 0.6 else 0.15, allowEmptyReply)
+                    history, input, audio, if (task == AiTask.CONVERSATION) 0.6 else 0.15, allowEmptyReply, image)
                     .also { if (audio != null && it.heardText.isNotBlank()) transcript = it.heardText }
             } else {
                 val heard = if (audio == null) "" else transcript ?: transcribe(audio).also { transcript = it }

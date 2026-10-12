@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 data class CoachUiState(val open: Boolean = false, val unitId: String = "", val reviewId: String? = null,
     val placement: Boolean = false, val busy: Boolean = false, val recording: Boolean = false,
     val slow: Boolean = true, val heard: String = "", val feedback: String = "", val error: String? = null,
-    val teaching: Boolean = false)
+    val teaching: Boolean = false, val inputLevel: Float = 0f, val elapsedSeconds: Long = 0)
 
 class CoachViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = (application as LanguageTalkApplication).learning
@@ -69,6 +69,10 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
         _ui.value = CoachUiState(open = true, unitId = unit.id, slow = unit.level < 3, teaching = true)
         repository.select(unit.id)
     } }
+    fun continueStep() { stopVoice(); work {
+        repository.continueStep(ui.value.unitId)
+        _ui.update { it.copy(feedback = "", heard = "") }
+    } }
     fun restart() { stopVoice(); work { repository.restart(ui.value.unitId); _ui.update { it.copy(feedback = "", heard = "") } } }
     fun beginPractice() { stopVoice(); _ui.update { it.copy(teaching = false, feedback = "", heard = "") } }
     fun showTeaching() { stopVoice(); _ui.update { it.copy(teaching = true) } }
@@ -89,7 +93,9 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
         if (ui.value.busy || live.value.connected) return
         if (!ui.value.recording) {
             player.stop()
-            runCatching { recorder.start() }.onSuccess { _ui.update { it.copy(recording = true, error = null) } }
+            runCatching { recorder.start { level, seconds ->
+                _ui.update { it.copy(inputLevel = level, elapsedSeconds = seconds) }
+            } }.onSuccess { _ui.update { it.copy(recording = true, error = null) } }
                 .onFailure { e -> _ui.update { it.copy(error = e.message) } }
         } else {
             val audio = recorder.stop()
@@ -142,7 +148,7 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
         }
         session = created
         collector = viewModelScope.launch { created.state.collect { value ->
-            if (value.phase == LivePhase.LISTENING && finished()) stopVoice()
+            if (value.phase == LivePhase.LISTENING && (finished() || repository.store.export().units.firstOrNull { it.id == ui.value.unitId }?.readyToContinue == true)) stopVoice()
             else _live.value = value.copy(activeModel = "Korean Coach", diagnostic = "သင်ခန်းစာအစီအစဉ်အတိုင်း")
         } }
         created.start()

@@ -1,3 +1,12 @@
+# v0.9.0 beta — Reader and deliberate speaking practice
+
+- Swipe page navigation, persistent selection tools, notes, saved passages, page export, thumbnails and whole-book search.
+- Structured page teaching and per-line Korean audio, plus user-imported original page tracks.
+- New Book/Live practice cards, real capture levels and recognized text; successful attempts wait for explicit Continue.
+- Free chapter/section selection with saved unfinished cursors, source-to-practice actions and saved reader collections.
+- Persistent System/Light/Dark appearance, glass icons and Room v4→v5/backup compatibility.
+- Beta limitations and account/device checks are documented in READER_PRACTICE_V090.md.
+
 # v0.8.1 — Practice choices visible together
 
 - Keep Book lessons, Live conversation and the small daily lesson fully visible on the initial Practice screen.

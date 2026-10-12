@@ -541,6 +541,15 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             refreshLiveContext()
         }
     }
+    fun continuePractice(voice: Boolean = false) {
+        val chatId = currentChatId.value ?: return
+        stopLive()
+        viewModelScope.launch { runWork("ဆက်လေ့ကျင့်မယ်…") {
+            repository.continuePractice(chatId)
+            if (voice) startLive(chatId)
+            else repository.sendMessage(chatId,"Continue the selected practice step. Ask one short question.",opening = true)
+        } }
+    }
     fun helpWithAnswer() {
         val chatId = currentChatId.value ?: return
         val question = liveState.value.aiCaption.ifBlank {

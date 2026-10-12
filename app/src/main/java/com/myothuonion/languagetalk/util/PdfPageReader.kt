@@ -36,6 +36,18 @@ data class ReadablePdfPage(val bitmap: Bitmap, val layer: PdfTextLayer)
 class PdfPageReader(context: Context) {
     private val cache = File(context.cacheDir, "reader-text").apply { mkdirs() }
     private val json = Json { ignoreUnknownKeys = true }
+    suspend fun thumbnail(file: File, index: Int): Bitmap = withContext(Dispatchers.IO) {
+        PdfRenderer(ParcelFileDescriptor.open(file,ParcelFileDescriptor.MODE_READ_ONLY)).use { renderer ->
+            renderer.openPage(index).use { page ->
+                val scale = min(180f / page.width,260f / page.height)
+                val result = Bitmap.createBitmap((page.width*scale).toInt().coerceAtLeast(1),
+                    (page.height*scale).toInt().coerceAtLeast(1),Bitmap.Config.ARGB_8888)
+                result.eraseColor(android.graphics.Color.WHITE)
+                page.render(result,null,null,PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                result
+            }
+        }
+    }
     @RequiresApi(35)
     private fun nativeText(page: PdfRenderer.Page): String = page.textContents.joinToString("\n") { it.text }
     suspend fun render(file: File, id: String, index: Int): ReadablePdfPage = withContext(Dispatchers.IO) {

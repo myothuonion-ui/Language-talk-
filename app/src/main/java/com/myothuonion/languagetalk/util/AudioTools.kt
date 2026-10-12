@@ -14,8 +14,10 @@ import java.io.File
 class VoiceRecorder(private val context: Context) {
     private var recorder: MediaRecorder? = null
     private var outputFile: File? = null
+    private val meter = android.os.Handler(android.os.Looper.getMainLooper())
+    private var beganAt = 0L
 
-    fun start() {
+    fun start(onLevel: (Float, Long) -> Unit = { _, _ -> }) {
         stopSilently()
         val file = File(context.cacheDir, "voice-${System.currentTimeMillis()}.m4a")
         val mediaRecorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -35,9 +37,20 @@ class VoiceRecorder(private val context: Context) {
         }
         outputFile = file
         recorder = mediaRecorder
+        beganAt = android.os.SystemClock.elapsedRealtime()
+        val pulse = object : Runnable {
+            override fun run() {
+                val active = recorder ?: return
+                val amplitude = runCatching { active.maxAmplitude / 32767f }.getOrDefault(0f).coerceIn(0f, 1f)
+                onLevel(amplitude, (android.os.SystemClock.elapsedRealtime() - beganAt) / 1000)
+                meter.postDelayed(this, 120)
+            }
+        }
+        meter.post(pulse)
     }
 
     fun stop(): AudioPayload? {
+        meter.removeCallbacksAndMessages(null)
         val file = outputFile
         return try {
             recorder?.stop()
@@ -56,6 +69,7 @@ class VoiceRecorder(private val context: Context) {
     }
 
     fun stopSilently() {
+        meter.removeCallbacksAndMessages(null)
         runCatching { recorder?.stop() }
         runCatching { recorder?.release() }
         recorder = null

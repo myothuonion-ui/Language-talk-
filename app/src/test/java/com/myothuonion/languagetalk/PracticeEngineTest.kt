@@ -12,7 +12,8 @@ class PracticeEngineTest {
     @Test fun successfulRepetitionStillRequiresIndependentUse() {
         val state = PracticeState(stage = "REPEAT", targetSentence = "안녕하세요.")
         val next = PracticeEngine.advance(state, PracticeAssessment(assessment = "PASSED"), PracticeMode.GUIDED)
-        assertEquals("APPLY", next.stage); assertEquals(0, next.completed)
+        assertEquals("REPEAT",next.stage); assertTrue(next.readyToContinue)
+        assertEquals("APPLY",PracticeEngine.continueStep(next).stage); assertEquals(0,next.completed)
     }
     @Test fun uncertainAudioCannotAdvance() {
         val state = PracticeState(stage = "APPLY", targetSentence = "안녕하세요.")
@@ -26,18 +27,22 @@ class PracticeEngineTest {
     @Test fun independentUseCountsOnceThenIntroducesTheNextSentence() {
         val state = PracticeState(stage = "APPLY", targetSentence = "안녕하세요.")
         val next = PracticeEngine.advance(state, PracticeAssessment(assessment = "PASSED"), PracticeMode.GUIDED)
-        assertEquals(1, next.completed); assertEquals("INTRO", next.stage)
+        assertEquals(1,next.completed); assertEquals("APPLY",next.stage); assertTrue(next.readyToContinue)
+        assertEquals("INTRO",PracticeEngine.continueStep(next).stage)
         assertEquals(1, PracticeEngine.advance(next, PracticeAssessment(assessment = "PASSED"), PracticeMode.GUIDED).completed)
     }
-    @Test fun nextPhraseIsPersistedBeforeTheLearnerRepeatsIt() {
+    @Test fun generatedNextPhraseCannotReplaceTheTargetBeforeExplicitContinuation() {
         val state = PracticeState(stage = "APPLY", targetSentence = "안녕하세요.")
         val next = PracticeEngine.advance(state, PracticeAssessment(assessment = "PASSED", nextTargetSentence = "감사합니다."), PracticeMode.GUIDED)
-        assertEquals("REPEAT", next.stage); assertEquals("감사합니다.", next.targetSentence); assertEquals(1, next.completed)
+        assertEquals("APPLY",next.stage); assertEquals("안녕하세요.",next.targetSentence); assertEquals(1,next.completed)
+        assertTrue(next.readyToContinue)
+        assertEquals("",PracticeEngine.continueStep(next).targetSentence)
     }
     @Test fun fiveUsefulPhrasesLeadToReview() {
         val state = PracticeState(stage = "APPLY", completed = 4, targetSentence = "감사합니다.")
         val next = PracticeEngine.advance(state, PracticeAssessment(assessment = "PASSED"), PracticeMode.GUIDED)
-        assertEquals("REVIEW", next.stage); assertEquals(5, next.completed)
+        assertEquals("APPLY",next.stage); assertTrue(next.readyToContinue); assertEquals(5,next.completed)
+        assertEquals("REVIEW",PracticeEngine.continueStep(next).stage)
     }
     @Test fun repeatAndSlowCommandsDoNotCountAsAnswers() {
         val state = PracticeState(stage = "APPLY")

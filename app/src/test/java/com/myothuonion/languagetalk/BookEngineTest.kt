@@ -28,7 +28,9 @@ class BookEngineTest {
         val book = course()
         val ready = BookEngine.opening(book, state()).progress
         val assessed = BookEngine.assessed(book, ready, "저도 반갑습니다", "PASSED", "")
-        val next = BookEngine.opening(book, assessed)
+        assertEquals(ready.activity, assessed.activity)
+        assertTrue(assessed.awaitingNext)
+        val next = BookEngine.opening(book, BookEngine.continueActivity(book, assessed))
         assertEquals("어디에 사세요?", next.text)
         assertEquals("서울에 살아요.", BookEngine.target(book, next.progress)?.text)
     }
@@ -57,10 +59,13 @@ class BookEngineTest {
         assertEquals(1, passed.mistakes.single().successes)
     }
 
-    @Test fun cannot_complete_dialogue_or_unlock_future_chapter_early() {
+    @Test fun cannot_complete_dialogue_but_can_choose_a_future_chapter_without_marking_it_complete() {
         val book = course()
         assertThrows(IllegalArgumentException::class.java) { BookEngine.completeSection(book, state()) }
-        assertThrows(IllegalArgumentException::class.java) { BookEngine.selectChapter(book, state(), 2) }
+        val jump = BookEngine.selectChapter(book,state(),2)
+        assertEquals(2,jump.chapter)
+        assertTrue(jump.completedChapters.isEmpty())
+        assertEquals(state().activity,BookEngine.selectChapter(book,jump,1).activity)
         val done = BookEngine.completeSection(book, state().copy(activity = 5))
         assertEquals(listOf(1), done.completedChapters)
         assertEquals(2, done.chapter)
@@ -83,7 +88,9 @@ class BookEngineTest {
             BookExercise(2, "engineer", "저는 엔지니어예요.", 17)))
         val book = course(listOf(section))
         assertEquals("저는 회사원이에요.", BookEngine.target(book, state())?.text)
-        val after = BookEngine.assessed(book, state(), "저는회사원이에요", "PASSED", "")
+        val waiting = BookEngine.assessed(book,state(),"저는회사원이에요","PASSED","")
+        assertEquals("저는 회사원이에요.",BookEngine.target(book,waiting)?.text)
+        val after = BookEngine.continueActivity(book,waiting)
         assertEquals("저는 엔지니어예요.", BookEngine.target(book, after)?.text)
         assertFalse(BookEngine.finished(book, after))
     }

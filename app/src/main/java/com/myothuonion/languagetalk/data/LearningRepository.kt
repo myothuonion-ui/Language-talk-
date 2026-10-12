@@ -138,6 +138,10 @@ class LearningRepository(private val context: Context, val store: LearningStore,
         }
         CoachResult(heard, note, passed, unsure)
     }
+    suspend fun continueStep(id: String) = store.update { state ->
+        val old = CoachEngine.progress(state, id)
+        state.copy(units = state.units.filterNot { it.id == id } + CoachEngine.continueStep(old))
+    }
     suspend fun speech(text: String, slow: Boolean, alternate: Boolean = false): AudioPayload = withContext(Dispatchers.IO) {
         val settings = tutor.settings.first()
         val voice = if (alternate) if (settings.defaultVoiceName == "Puck") "Kore" else "Puck" else settings.defaultVoiceName

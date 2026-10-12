@@ -30,6 +30,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
+      - uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: language-talk-beta-debug-signing-v1
       - name: Generate Gradle wrapper
         run: gradle wrapper --gradle-version 8.10.2
       - name: Check legacy backup conversion
@@ -37,11 +41,15 @@ jobs:
       - name: Unit tests, lint, APK, and device-test compilation
         run: ./gradlew testDebugUnitTest lintDebug assembleDebug assembleDebugAndroidTest --stacktrace
       - name: Prepare APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.8.1.apk
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk language-talk-v0.9.0.apk
+          sha256sum language-talk-v0.9.0.apk > language-talk-v0.9.0.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: language-talk-v0.8.1-apk
-          path: language-talk-v0.8.1.apk
+          name: language-talk-v0.9.0-apk
+          path: |
+            language-talk-v0.9.0.apk
+            language-talk-v0.9.0.apk.sha256
           if-no-files-found: error
           retention-days: 90
       - uses: actions/upload-artifact@v4
@@ -122,33 +130,37 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: language-talk-v0.8.1-apk
+          name: language-talk-v0.9.0-apk
       - uses: actions/download-artifact@v4
         with:
           name: language-talk-legacy-backup-windows
       - uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.8.1
-          name: Language Talk AI v0.8.1
+          tag_name: v0.9.0
+          name: Language Talk AI v0.9.0
+          prerelease: true
           body: |
-            Language Talk v0.8.1: clearer Korean practice and flexible AI connections.
+            Language Talk v0.9.0 — Reader and speaking practice update.
 
-            - Practice opens with Book lessons, Live conversation, and a small daily lesson
-            - Daily lessons teach the pattern, Myanmar meaning and vocabulary before practice
-            - Korean speech only; Myanmar grammar and corrections stay as text
-            - Guided answer frames, optional full examples, Open conversation and help on demand
-            - Gemini / NVIDIA / OpenAI / Claude / DeepSeek and custom API profiles
-            - Per-feature or per-chat model choices, ordered fallbacks, independent two-AI review
-            - Native Gemini Live plus hands-free transcription → chosen text AI → Korean speech
-            - Gemini and NVIDIA fallback defaults; paid API fallback requires enabling it
-            - Existing books, PDF reader, My Context and learning data preserved
+            - Swipe PDF pages; select words and save highlights, underlines, bold text-mode emphasis, passages and notes
+            - Search the entire book, view page thumbnails, save page images and open saved source references
+            - Explain a whole page in structured Myanmar teaching cards, with vocabulary, separate grammar rules and hidden exercise answers
+            - Korean speaker actions beside textbook lines and teaching examples; import matching original track audio
+            - Redesigned Book and Live practice with real microphone levels, recording time and recognized text
+            - Explicit Continue after a successful attempt; choose any chapter/section while preserving unfinished progress
+            - Saved reader collections and practice directly from a selected or saved passage
+            - System / Light / Dark appearance and consistent glass icons
+            - Room v4→v5 migration and extended backup/restore for reader notes and waiting practice states
 
-            Add your own keys in Me → Settings → AI & APIs. Keys are encrypted locally and excluded from backups.
-            Text/API routing is covered by automated HTTP tests; account quotas, model access and language quality depend on your provider. Use Test text after adding a key.
-            Native Live currently uses Gemini. OpenAI supports the voice pipeline through file transcription and speech APIs; NVIDIA, Claude and DeepSeek are text brains.
-            Back up in Me → My Context → Export before installing if Android requests uninstall because of the earlier APK signing key. Restore JSON and re-enter keys afterward. Keep imported source PDFs.
-            Guide: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/AI_AND_PRACTICE.md
+            This is a beta update. Automated tests do not verify your provider quota, account model access,
+            real phone microphone acoustics, or the quality of every AI-generated Myanmar explanation.
+            Add your own keys in Me → Settings → AI & APIs.
+            Back up in Me → My Context before installing. Older APK signing keys can require reinstalling;
+            backups exclude original imported PDF/audio files and API keys. Keep those original files.
+            Original track files are user imports; generated speech is labelled AI voice.
+            SHA-256 is provided alongside the APK.
           files: |
-            language-talk-v0.8.1.apk
+            language-talk-v0.9.0.apk
+            language-talk-v0.9.0.apk.sha256
             language-talk-legacy-backup-windows.exe
-          make_latest: true
+          make_latest: false

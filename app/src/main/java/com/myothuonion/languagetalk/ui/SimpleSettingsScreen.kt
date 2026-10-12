@@ -65,8 +65,13 @@ internal fun SimpleSettingsScreen(settings: AppSettings, credentials: Credential
                     FilterChip(learning.readerTheme == value, { reader.theme(value) }, label = { Text(label) })
                 }
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("App dark theme", Modifier.weight(1f)); Switch(draft.darkTheme, { save(draft.copy(darkTheme = it)) })
+            Text("App appearance", style = MaterialTheme.typography.labelLarge)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("SYSTEM" to "System", "LIGHT" to "Light", "DARK" to "Dark").forEach { (value, label) ->
+                    FilterChip(draft.appAppearance == value,
+                        { save(draft.copy(appAppearance = value, darkTheme = value == "DARK")) },
+                        label = { Text(label) }, modifier = Modifier.testTag("theme-" + value))
+                }
             }
         }
         item {
@@ -96,6 +101,6 @@ internal fun SimpleSettingsScreen(settings: AppSettings, credentials: Credential
             if (credentials.geminiStatus.isNotBlank()) Text(credentials.geminiStatus, fontSize = 12.sp)
             TextButton(onAdvanced) { Text("Advanced settings"); Icon(Icons.Default.ChevronRight, null) }
         }
-        item { Text("Language Talk · v0.8.1", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+        item { Text("Language Talk · v" + com.myothuonion.languagetalk.BuildConfig.VERSION_NAME, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     }
 }

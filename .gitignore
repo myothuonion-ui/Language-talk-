@@ -12,3 +12,5 @@ app/build/
 secrets.properties
 *.apk
 *.aab
+__pycache__/
+*.py[cod]

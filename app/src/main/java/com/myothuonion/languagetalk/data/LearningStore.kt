@@ -46,6 +46,18 @@ class LearningStore(private val context: Context) {
                 it.assetId in setOf("", "ttmik-beginner", "ttmik-intermediate") })
         require(value.attempts.size <= 500 && value.attempts.all { it.heard.length <= 4000 && it.feedback.length <= 4000 })
         require(value.translations.size <= 500 && value.translations.all { it.meaning.length <= 4000 && it.sentence.length <= 4000 })
+        require(value.annotations.size <= 5000 && value.annotations.all(ReaderTools::valid) &&
+            value.annotations.map { it.id }.distinct().size == value.annotations.size)
+        require(value.pageExplanations.size <= 250 && value.pageExplanations.all {
+            it.page in 0..4999 && it.key.length <= 100 && it.sourceHash.length <= 100 &&
+                runCatching { ReaderTools.teaching(json.encodeToString(it.teaching)) }.isSuccess
+        })
+        require(value.audioTracks.size <= 1000 && value.audioTracks.all {
+            it.page in 0..4999 && it.fileName.matches(Regex("[a-zA-Z0-9-]{1,90}\\.(mp3|wav|m4a|ogg|audio)")) &&
+                it.mime.startsWith("audio/") && it.name.length <= 180
+        })
+        require(value.readerFontSize in 16..32 && value.readerNavigation in setOf("PAGED", "CONTINUOUS"))
+        require(value.books.all { it.zoom.isFinite() && it.zoom in 1f..4f })
         require(value.studySeconds.size <= 370 && value.studySeconds.all { it.key.matches(Regex("\\d{4}-\\d{2}-\\d{2}")) && it.value in 0..86400 })
     }
     suspend fun restore(value: LearningState) {
@@ -53,7 +65,10 @@ class LearningStore(private val context: Context) {
         update { old -> value.copy(
             cards = (old.cards + value.cards).associateBy { it.id }.values.toList().takeLast(5000),
             books = (old.books + value.books).associateBy { it.id }.values.toList().takeLast(300),
-            translations = (old.translations + value.translations).associateBy { it.key }.values.toList().takeLast(500))
+            translations = (old.translations + value.translations).associateBy { it.key }.values.toList().takeLast(500),
+            annotations = (old.annotations + value.annotations).associateBy { it.id }.values.toList().takeLast(5000),
+            pageExplanations = (old.pageExplanations + value.pageExplanations).associateBy { it.key }.values.toList().takeLast(250),
+            audioTracks = (old.audioTracks + value.audioTracks).associateBy { it.bookId + "/" + it.page }.values.toList().takeLast(1000))
         }
     }
 }

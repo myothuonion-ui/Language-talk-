@@ -21,8 +21,8 @@ class ReaderRepository(private val context: Context, val store: LearningStore,
     suspend fun initialize() {
         val courses = books.courses()
         store.update { state -> state.copy(books = courses.map { course ->
-            state.books.firstOrNull { it.id == course.id } ?: ReaderBook(course.id, course.title,
-                assetId = course.id, pageCount = course.pageCount)
+            state.books.firstOrNull { it.id == course.id }?.copy(fingerprint = course.pdfSha256) ?: ReaderBook(course.id, course.title,
+                assetId = course.id, pageCount = course.pageCount, fingerprint = course.pdfSha256)
         } + state.books.filter { it.assetId.isBlank() }) }
     }
     suspend fun import(uri: Uri): ReaderBook = withContext(Dispatchers.IO) {
@@ -49,7 +49,7 @@ class ReaderRepository(private val context: Context, val store: LearningStore,
             if (!file.exists()) require(temporary.renameTo(file)) { "PDF သိမ်း၍မရပါ။" }
             val previous = store.export().books.firstOrNull { it.id == id }
             val book = previous ?: ReaderBook(id, name.removeSuffix(".pdf").removeSuffix(".PDF"),
-                file.name, pageCount = count, addedAt = System.currentTimeMillis())
+                file.name, pageCount = count, addedAt = System.currentTimeMillis(), fingerprint = id.removePrefix("pdf-"))
             store.update { state ->
                 require(state.books.any { it.id == id } || state.books.size < 300) { "စာအုပ်အရေအတွက်များလွန်းပါတယ်။" }
                 state.copy(books = state.books.filterNot { it.id == id } + book)
@@ -114,4 +114,96 @@ class ReaderRepository(private val context: Context, val store: LearningStore,
         }
     }
     suspend fun theme(value: String) { require(value in setOf("DAY", "SEPIA", "NIGHT")); store.update { it.copy(readerTheme = value) } }
+
+    suspend fun addAnnotation(book: ReaderBook, page: Int, quote: String, kind: String, note: String,
+        surrounding: String, rectangles: List<ReaderRect>): ReaderAnnotation {
+        val previous = store.export().annotations.firstOrNull { it.bookId == book.id && it.page == page &&
+            it.quote == quote.trim().take(1200) && it.kind == kind && it.rectangles == rectangles }
+        if (previous != null) {
+            if (kind == "NOTE") updateNote(previous.id,note)
+            return previous
+        }
+        val value = ReaderAnnotation(UUID.randomUUID().toString(), book.id, page, quote.trim().take(1200),
+            kind, note.take(4000), surrounding.take(4000), rectangles.take(400),
+            fingerprint = book.fingerprint, createdAt = System.currentTimeMillis())
+        require(page in 0 until book.pageCount && ReaderTools.valid(value))
+        store.update { state ->
+            require(state.annotations.size < 5000) { "မှတ်သားချက်များလွန်းပါတယ်။ Backup ယူပြီး စီမံပါ။" }
+            state.copy(annotations = state.annotations + value)
+        }
+        return value
+    }
+    suspend fun removeAnnotation(id: String) = store.update { it.copy(annotations = it.annotations.filterNot { a -> a.id == id }) }
+    suspend fun restoreAnnotation(value: ReaderAnnotation) = store.update {
+        require(ReaderTools.valid(value))
+        it.copy(annotations = (it.annotations.filterNot { a -> a.id == value.id } + value).takeLast(5000))
+    }
+    suspend fun updateNote(id: String, note: String) = store.update {
+        it.copy(annotations = it.annotations.map { a -> if (a.id == id) a.copy(note = note.take(4000)) else a })
+    }
+    suspend fun reading(textMode: Boolean? = null, size: Int? = null, navigation: String? = null) = store.update {
+        it.copy(readerTextMode = textMode ?: it.readerTextMode,
+            readerFontSize = size?.coerceIn(16,32) ?: it.readerFontSize,
+            readerNavigation = navigation?.takeIf { mode -> mode in setOf("PAGED","CONTINUOUS") } ?: it.readerNavigation)
+    }
+    suspend fun zoom(id: String, zoom: Float) = store.update {
+        it.copy(books = it.books.map { book -> if (book.id == id) book.copy(zoom = zoom.coerceIn(1f,4f)) else book })
+    }
+    fun sourceHash(text: String) = digest(text)
+    suspend fun explainPage(book: ReaderBook, page: Int, source: String, lines: String,
+        image: ByteArray, force: Boolean): ReaderPageExplanation {
+        val hash = digest(book.fingerprint + "|" + source)
+        val key = digest("page-teaching-v2|" + book.id + "|" + page + "|" + hash)
+        if (!force) store.export().pageExplanations.firstOrNull { it.key == key }?.let { return it }
+        val result = tutor.bookResponse(PAGE_TEACHING_SCHEMA +
+            "\nUse the supplied rendered page, when available, to resolve boxes, illustrations and reading order. " +
+            "For text-only providers base teaching on extracted text; mark missing illustrations/uncertain text explicitly.",
+            "Book: " + book.title + "\nPDF page: " + (page+1) + "\nSOURCE TEXT:\n" + source.take(28000) +
+                "\nOCR LINE REFERENCES:\n" + lines.take(28000),
+            task = AiTask.READER, image = "image/jpeg" to image)
+        val teaching = ReaderTools.teaching(result.reply)
+        require(source.isBlank() || teaching.blocks.isNotEmpty() || teaching.vocabulary.isNotEmpty() ||
+            teaching.grammar.isNotEmpty() || teaching.culture.isNotBlank()) { "စာမျက်နှာအကြောင်းအရာ မစုံသေးပါ။ ပြန်ရှင်းပြခိုင်းပါ။" }
+        val route = tutor.ai.status.value
+        val profile = tutor.settings.first().ai.profiles.firstOrNull { it.label == route.provider }
+        val value = ReaderPageExplanation(key, book.id, page, teaching, hash,
+            vision = profile?.format == ApiFormat.GEMINI, createdAt = System.currentTimeMillis())
+        store.update { it.copy(pageExplanations = (it.pageExplanations.filterNot { old -> old.key == key } + value).takeLast(250)) }
+        return value
+    }
+    suspend fun importAudio(bookId: String, page: Int, uri: Uri, track: String): ReaderAudioTrack = withContext(Dispatchers.IO) {
+        val mime = context.contentResolver.getType(uri).orEmpty()
+        require(mime.startsWith("audio/")) { "Audio ဖိုင်ကို ရွေးပါ။" }
+        val name = context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null,null,null)?.use {
+            if (it.moveToFirst()) it.getString(0) else null
+        }.orEmpty().take(180)
+        val folder = File(context.filesDir, "reader-audio").apply { mkdirs() }
+        val suffix = when { mime.contains("mpeg") -> ".mp3"; mime.contains("wav") -> ".wav"; mime.contains("ogg") -> ".ogg"; else -> ".audio" }
+        val file = File(folder, UUID.randomUUID().toString() + suffix)
+        try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                file.outputStream().use { output ->
+                    val buffer = ByteArray(32768); var total = 0L
+                    while (true) {
+                        val size = input.read(buffer); if (size < 0) break
+                        total += size
+                        require(total <= 30 * 1024 * 1024L) { "Audio ဖိုင်က 30 MB ထက်ကြီးနေပါတယ်။" }
+                        output.write(buffer,0,size)
+                    }
+                }
+            } ?: error("Audio ဖိုင်ကိုဖတ်မရပါ။")
+            val value = ReaderAudioTrack(bookId,page,name.ifBlank { "Original audio" },file.name,mime,track.take(30))
+            val previous = store.export().audioTracks.firstOrNull { it.bookId == bookId && it.page == page }
+            store.update { it.copy(audioTracks = it.audioTracks.filterNot { a -> a.bookId == bookId && a.page == page } + value) }
+            previous?.let { File(folder,it.fileName).delete() }
+            value
+        } catch (failure: Throwable) { file.delete(); throw failure }
+    }
+    suspend fun originalAudio(bookId: String, page: Int): com.myothuonion.languagetalk.network.AudioPayload = withContext(Dispatchers.IO) {
+        val value = store.export().audioTracks.firstOrNull { it.bookId == bookId && it.page == page } ?: error("မူရင်း Audio ဖိုင်ကို ချိတ်ပါ။")
+        require(value.fileName.matches(Regex("[a-zA-Z0-9-]{1,90}\\.(mp3|wav|m4a|ogg|audio)")))
+        val file = File(File(context.filesDir,"reader-audio"),value.fileName)
+        require(file.isFile) { "မူရင်း Audio ဖိုင်ကို ပြန်ချိတ်ပါ။ Backup မှာ ချိတ်ဆက်မှုအချက်အလက်ပဲ ပါပါတယ်။" }
+        com.myothuonion.languagetalk.network.AudioPayload(file.readBytes(),value.mime)
+    }
 }

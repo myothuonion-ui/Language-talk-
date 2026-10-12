@@ -295,6 +295,14 @@ private fun CoachLessonScreen(viewModel: CoachViewModel, settings: AppSettings, 
                 }
             }
         }
+        if (!ui.teaching && !completed) item {
+            MicrophoneStatus(ui.recording,ui.inputLevel,ui.elapsedSeconds,ui.busy,
+                live.takeIf { it.connected || it.error != null },ui.heard)
+            if (!ui.placement && ui.reviewId == null && progress.readyToContinue) {
+                Button(viewModel::continueStep,Modifier.fillMaxWidth().testTag("coach-continue-step"),
+                    enabled = !ui.busy && !ui.recording && !live.connected) { Text("ကိုယ်တိုင် ဆက်လေ့ကျင့်မယ်") }
+            }
+        }
         if (ui.heard.isNotBlank() || ui.feedback.isNotBlank()) item {
             HorizontalDivider()
             if (ui.heard.isNotBlank()) { Text("မင်းပြောခဲ့တာ", fontSize = 12.sp); Text(ui.heard, fontSize = 18.sp) }
@@ -330,7 +338,7 @@ private fun HangulPractice(viewModel: CoachViewModel) {
 @Composable
 internal fun LearningProfileScreen(viewModel: CoachViewModel, settings: AppSettings, onPractice: () -> Unit,
     onRead: (String, Int) -> Unit, onSettings: () -> Unit, onContext: () -> Unit,
-    onHistory: () -> Unit, onTranslate: () -> Unit, onNames: () -> Unit) {
+    onHistory: () -> Unit, onTranslate: () -> Unit, onNames: () -> Unit, onSaved: () -> Unit = {}) {
     val state by viewModel.learning.collectAsState()
     var section by rememberSaveable { mutableStateOf("main") }
     if (section != "main") BackHandler { section = "main" }
@@ -351,6 +359,7 @@ internal fun LearningProfileScreen(viewModel: CoachViewModel, settings: AppSetti
                 Text("ပြီးစီးသင်ခန်းစာ " + state.units.count { it.completed } + " · သိမ်းထားသောဝေါဟာရ " + words.size,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            item { ProfileRow("စာဖတ်မှတ်စု၊ ဝါကျနှင့် စာမျက်နှာများ",state.annotations.size.toString()) { onSaved() } }
             item { ProfileRow("သိမ်းထားတဲ့ဝေါဟာရ", words.size.toString()) { section = "words" } }
             item { ProfileRow("ပြန်လေ့ကျင့်ရန်", mistakes.size.toString()) { section = "mistakes" } }
             item { ProfileRow("တိုးတက်မှုနှင့် အသံမှတ်တမ်း", "") { section = "progress" } }

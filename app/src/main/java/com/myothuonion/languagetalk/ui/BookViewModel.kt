@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 
 data class BookUiState(val courses: List<BookCourse> = emptyList(), val bookId: String = "ttmik-beginner",
     val busy: Boolean = false, val recording: Boolean = false, val explanation: String = "",
-    val error: String? = null)
+    val error: String? = null, val inputLevel: Float = 0f, val elapsedSeconds: Long = 0, val playing: Boolean = false, val lessonRequested: Boolean = false)
 
 class BookViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = (application as LanguageTalkApplication).books
@@ -30,6 +30,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     private var collector: Job? = null
     private var operation: Job? = null
     private var generation = 0L
+    private var playbackGeneration = 0L
 
     init {
         work {
@@ -57,7 +58,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         val progress = repository.progress(id)
         val section = BookEngine.section(repository.book(id), progress)
         if (section.turns.isNotEmpty() || section.exercises.isNotEmpty()) repository.prepare(id, false)
-        val cached = repository.shelf.first().explanations.firstOrNull { it.key == BookEngine.key(progress, section) + "/myanmar" }?.text.orEmpty()
+        val cached = repository.shelf.first().explanations.firstOrNull { it.key == "teaching-v2/" + BookEngine.key(progress, section) + "/myanmar" }?.text.orEmpty()
         _state.update { it.copy(explanation = cached) }
     }
 
@@ -76,7 +77,18 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     fun selectChapter(number: Int) = change { repository.chooseChapter(it, number) }
     fun resume() = change { repository.open(it) }
     fun restart(role: String? = null) = change { repository.restart(it, role) }
-    fun next() = change { repository.next(it) }
+    fun next() = change {
+        if (repository.progress(it).awaitingNext) repository.continueItem(it) else repository.next(it)
+    }
+    fun consumeLessonRequest() { _state.update { it.copy(lessonRequested = false) } }
+    fun selectSection(index: Int) = change { repository.chooseSection(it, index) }
+    fun markStudied() = change { repository.studied(it) }
+    fun retryItem() = change { repository.retryItem(it) }
+    fun openAtPage(id: String, page: Int) {
+        stopVoice()
+        _state.update { it.copy(bookId = id, explanation = "", lessonRequested = true) }
+        work { repository.openAtPage(id, page); prepareText(id) }
+    }
     fun previous() = change { repository.previous(it) }
     fun pace(slow: Boolean) = change { repository.pace(it, slow) }
 
@@ -87,23 +99,34 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun send(text: String) {
-        if (text.isBlank() || state.value.busy || live.value.connected) return
+        if (text.isBlank() || state.value.busy || live.value.connected || state.value.recording) return
         val id = state.value.bookId
         work { repository.answer(id, text); prepareText(id) }
     }
 
     fun speak(text: String) {
-        if (text.isBlank() || state.value.busy || live.value.connected) return
+        if (text.isBlank() || state.value.busy || live.value.connected || state.value.recording) return
         val id = state.value.bookId
+        val playbackToken = ++playbackGeneration
         player.stop()
-        work { player.play(repository.speech(id, text)) {} }
+        work {
+            val audio = repository.speech(id, text)
+            if (playbackToken != playbackGeneration) return@work
+            _state.update { it.copy(playing = true) }
+            player.play(audio,onError = { failure ->
+                if (playbackToken == playbackGeneration) _state.update { it.copy(playing = false,error = failure.message) }
+            }) { if (playbackToken == playbackGeneration) _state.update { it.copy(playing = false) }
+            }
+        }
     }
 
     fun toggleRecording() {
         if (state.value.busy || live.value.connected) return
         if (!state.value.recording) {
             player.stop()
-            runCatching { recorder.start() }.onSuccess { _state.update { it.copy(recording = true, error = null) } }
+            runCatching { recorder.start { level, seconds ->
+                _state.update { it.copy(inputLevel = level, elapsedSeconds = seconds) }
+            } }.onSuccess { _state.update { it.copy(recording = true, playing = false, error = null) } }
                 .onFailure { failure -> _state.update { it.copy(error = failure.message ?: "Microphone စတင်၍မရပါ") } }
         } else {
             val audio = recorder.stop()
@@ -125,7 +148,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         session = created
         collector = viewModelScope.launch {
             created.state.collect { value ->
-                if (value.phase == LivePhase.LISTENING && BookEngine.finished(repository.book(id), repository.progress(id))) stopVoice()
+                if (value.phase == LivePhase.LISTENING && (repository.progress(id).awaitingNext || BookEngine.finished(repository.book(id), repository.progress(id)))) stopVoice()
                 else _live.value = value.copy(activeModel = "Book conversation", diagnostic = "စာအုပ်အလှည့်အတိုင်း")
             }
         }
@@ -135,12 +158,14 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleMic() { session?.setMicEnabled(!live.value.micEnabled) }
     fun microphoneDenied() { _state.update { it.copy(error = "အသံလေ့ကျင့်ဖို့ Microphone permission ဖွင့်ပေးပါ") } }
     fun stopVoice() {
+        playbackGeneration++
         collector?.cancel(); collector = null
         session?.stop(); session = null
         recorder.stopSilently(); player.stop()
         _live.value = LiveState()
-        _state.update { it.copy(recording = false) }
+        _state.update { it.copy(recording = false, inputLevel = 0f, playing = false) }
     }
+    fun stopPlayback() { playbackGeneration++; player.stop(); _state.update { it.copy(playing = false) } }
     fun close() { operation?.cancel(); stopVoice() }
     suspend fun sourcePdf(id: String) = repository.sourcePdf(id)
 

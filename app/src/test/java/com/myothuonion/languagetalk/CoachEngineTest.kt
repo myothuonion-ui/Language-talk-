@@ -15,10 +15,14 @@ class CoachEngineTest {
     @Test fun onlySevenVerifiedResponsesCompleteAUnitAndCompletionIsStable() {
         var state = UnitProgress("course-1-1")
         repeat(6) { index ->
-            state = CoachEngine.accept(state, "PASSED", "안녕하세요", "", index.toLong())
+            val waiting = CoachEngine.accept(state,"PASSED","안녕하세요","",index.toLong())
+            assertEquals(index,waiting.step); assertTrue(waiting.readyToContinue)
+            state = CoachEngine.continueStep(waiting)
             assertFalse(state.completed)
         }
-        state = CoachEngine.accept(state, "PASSED", "안녕하세요", "", 100)
+        state = CoachEngine.accept(state,"PASSED","안녕하세요","",100)
+        assertFalse(state.completed); assertTrue(state.readyToContinue)
+        state = CoachEngine.continueStep(state)
         assertTrue(state.completed)
         assertEquals(7, state.passed)
         assertEquals(state, CoachEngine.accept(state, "PASSED", "안녕하세요", "", 101))

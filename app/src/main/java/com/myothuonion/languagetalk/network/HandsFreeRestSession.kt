@@ -191,7 +191,7 @@ class HandsFreeRestSession(
             it.copy(
                 phase = LivePhase.THINKING,
                 inputLevel = 0f,
-                userCaption = "အသံကို နားလည်နေပါတယ်…",
+                userCaption = "",
                 aiCaption = "",
                 diagnostic = "Understanding"
             )

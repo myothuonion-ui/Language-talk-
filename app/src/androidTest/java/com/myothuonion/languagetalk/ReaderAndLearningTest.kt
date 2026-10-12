@@ -71,13 +71,15 @@ class ReaderAndLearningTest {
             compose.onNodeWithContentDescription("PDF page 1").performTouchInput {
                 longClick(Offset(width * (word.left + word.right) / 2, height * (word.top + word.bottom) / 2), 1100)
             }
+            compose.waitUntil(15000) { compose.onAllNodesWithText("ရှင်းပြ").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("ရှင်းပြ").performScrollTo().performClick()
             compose.waitUntil(15000) { compose.onAllNodesWithText("မင်္ဂလာပါ").fetchSemanticsNodes().isNotEmpty() }
             compose.mainClock.advanceTimeBy(1000)
             compose.waitForIdle()
             compose.onNodeWithText("မင်္ဂလာပါ").assertIsDisplayed()
             compose.onNodeWithTag("pdf-reader").assertExists()
             capture("reader-translate")
-            compose.onNodeWithText("သိမ်းမယ်").performScrollTo().performClick()
+            compose.onNodeWithText("ဝေါဟာရ သိမ်းမယ်").performScrollTo().performClick()
             compose.waitUntil(10000) { runBlocking { app.learningStore.export().cards.any { it.kind == "WORD" && it.bookId == book.id } } }
             val card = runBlocking { app.learningStore.export().cards.first { it.kind == "WORD" && it.bookId == book.id } }
             assertEquals(0, card.page)

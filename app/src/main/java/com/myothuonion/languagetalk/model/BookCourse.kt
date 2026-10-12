@@ -29,11 +29,18 @@ data class BookMistake(val key: String, val target: String, val heard: String, v
     val page: Int, val attempts: Int = 1, val successes: Int = 0)
 
 @Serializable
+data class BookCheckpoint(val chapter: Int, val section: Int, val activity: Int, val role: String,
+    val awaitingNext: Boolean = false, val studied: Boolean = false, val heard: String = "",
+    val feedback: String = "", val lastAssistantText: String = "", val lastAssistantCaption: String = "")
+
+@Serializable
 data class BookProgress(val bookId: String, val version: String = "user-pdf-1", val chapter: Int = 1,
     val section: Int = 0, val activity: Int = 0, val role: String = "", val slow: Boolean = true,
     val completedSections: List<String> = emptyList(), val completedChapters: List<Int> = emptyList(),
     val lastAssistantText: String = "", val lastAssistantCaption: String = "", val heard: String = "",
-    val feedback: String = "", val mistakes: List<BookMistake> = emptyList())
+    val feedback: String = "", val mistakes: List<BookMistake> = emptyList(),
+    val awaitingNext: Boolean = false, val studied: Boolean = false,
+    val checkpoints: List<BookCheckpoint> = emptyList())
 
 @Serializable
 data class BookExplanation(val key: String, val text: String)
@@ -74,6 +81,7 @@ object BookEngine {
 
     fun opening(book: BookCourse, state: BookProgress): BookOpening {
         val section = section(book, state)
+        if (state.awaitingNext) return BookOpening(state, "잘했어요. 다음을 눌러 주세요.", state.feedback)
         val learner = role(section, state)
         var index = state.activity
         val lines = mutableListOf<BookTurn>()
@@ -96,12 +104,14 @@ object BookEngine {
         val section = section(book, state)
         return state.activity >= when {
             section.turns.isNotEmpty() -> section.turns.size
-            else -> section.exercises.size
+            section.exercises.isNotEmpty() -> section.exercises.size
+            else -> return state.studied
         }
     }
 
     fun assessed(book: BookCourse, state: BookProgress, heard: String, assessment: String,
         feedback: String, isCommand: Boolean = false): BookProgress {
+        if (state.awaitingNext) return state
         val target = target(book, state) ?: return state
         if (isCommand || command(heard).isNotEmpty()) return state
         val passed = heard.isNotBlank() && assessment == "PASSED"
@@ -111,8 +121,31 @@ object BookEngine {
             (state.mistakes.filterNot { it.key == mistakeKey } + BookMistake(mistakeKey, target.text,
                 heard.take(600), feedback.take(1000), target.page, (previous?.attempts ?: 0) + 1, previous?.successes ?: 0)).takeLast(100)
         } else state.mistakes.map { if (it.key == mistakeKey && passed) it.copy(successes = it.successes + 1) else it }
-        return state.copy(activity = if (passed) state.activity + 1 else state.activity,
+        return state.copy(awaitingNext = passed,
             heard = heard.take(600), feedback = feedback.take(1600), mistakes = mistakes)
+    }
+
+    fun continueActivity(book: BookCourse, state: BookProgress): BookProgress {
+        require(state.awaitingNext) { "ဒီအဖြေကို အရင်လေ့ကျင့်ပါ။" }
+        return state.copy(activity = state.activity + 1, awaitingNext = false, heard = "", feedback = "",
+            lastAssistantText = "", lastAssistantCaption = "")
+    }
+
+    private fun checkpoint(state: BookProgress): List<BookCheckpoint> =
+        (state.checkpoints.filterNot { it.chapter == state.chapter && it.section == state.section } +
+            BookCheckpoint(state.chapter, state.section, state.activity, state.role, state.awaitingNext,
+                state.studied, state.heard, state.feedback, state.lastAssistantText, state.lastAssistantCaption)).takeLast(2000)
+
+    fun selectSection(book: BookCourse, state: BookProgress, chapter: Int, section: Int): BookProgress {
+        require(chapter in 1..book.chapters.size && section in book.chapters[chapter - 1].sections.indices)
+        if (chapter == state.chapter && section == state.section) return state
+        val saved = checkpoint(state)
+        val place = saved.firstOrNull { it.chapter == chapter && it.section == section }
+        return state.copy(chapter = chapter, section = section, activity = place?.activity ?: 0,
+            role = place?.role.orEmpty(), awaitingNext = place?.awaitingNext ?: false, studied = place?.studied ?: false,
+            heard = place?.heard.orEmpty(), feedback = place?.feedback.orEmpty(),
+            lastAssistantText = place?.lastAssistantText.orEmpty(), lastAssistantCaption = place?.lastAssistantCaption.orEmpty(),
+            checkpoints = saved)
     }
 
     fun completeSection(book: BookCourse, state: BookProgress): BookProgress {
@@ -127,7 +160,7 @@ object BookEngine {
         val destination = if (nextSection < chapter.sections.size) nextSection else if (nextChapter != state.chapter) 0
             else if (!chapterDone) chapter.sections.indexOfFirst { key(state, it) !in complete } else state.section
         return state.copy(chapter = nextChapter, section = destination, activity = if (destination == state.section && nextChapter == state.chapter) state.activity else 0,
-            role = "", completedSections = complete, completedChapters = chapters,
+            role = "", completedSections = complete, completedChapters = chapters, awaitingNext = false, studied = false, checkpoints = checkpoint(state),
             lastAssistantText = "", lastAssistantCaption = "", heard = "", feedback = "")
     }
 
@@ -138,11 +171,12 @@ object BookEngine {
     }
 
     fun selectChapter(book: BookCourse, state: BookProgress, number: Int): BookProgress {
-        require(number in 1..frontier(book, state)) { "အရင်အခန်းကို အစဉ်လိုက်ပြီးအောင် လေ့ကျင့်ပါ" }
-        return state.copy(chapter = number, section = 0, activity = 0, role = "", lastAssistantText = "", lastAssistantCaption = "", heard = "", feedback = "")
+        require(number in 1..book.chapters.size)
+        val resume = state.checkpoints.lastOrNull { it.chapter == number }?.section ?: 0
+        return selectSection(book, state, number, resume)
     }
 
-    fun restart(state: BookProgress, role: String = state.role) = state.copy(activity = 0, role = role,
+    fun restart(state: BookProgress, role: String = state.role) = state.copy(activity = 0, role = role, awaitingNext = false, studied = false,
         lastAssistantText = "", lastAssistantCaption = "", heard = "", feedback = "")
 
     fun validate(book: BookCourse, state: BookProgress): Boolean {
@@ -151,7 +185,13 @@ object BookEngine {
         if (state.section !in chapter.sections.indices) return false
         val section = chapter.sections[state.section]
         val count = if (section.turns.isNotEmpty()) section.turns.size else section.exercises.size
-        return state.activity in 0..count && state.completedChapters.all { it in 1..book.chapters.size } && state.chapter <= frontier(book, state) &&
-            state.completedSections.size <= 500 && state.mistakes.size <= 100 && state.role.length <= 80
+        return state.activity in 0..count && state.completedChapters.all { it in 1..book.chapters.size } &&
+            state.completedSections.size <= 2000 && state.mistakes.size <= 100 && state.role.length <= 80 &&
+            state.checkpoints.size <= 2000 && state.checkpoints.all { place ->
+                val ch = book.chapters.getOrNull(place.chapter - 1)
+                val sec = ch?.sections?.getOrNull(place.section)
+                val countAtPlace = sec?.let { if (it.turns.isNotEmpty()) it.turns.size else it.exercises.size } ?: -1
+                sec != null && place.activity in 0..countAtPlace && place.role.length <= 80
+            }
     }
 }

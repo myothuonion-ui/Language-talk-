@@ -39,6 +39,7 @@ data class AppSettings(
     val defaultSpeakCorrections: Boolean = true,
     val autoSpeak: Boolean = true,
     val darkTheme: Boolean = false,
+    val appAppearance: String = "SYSTEM",
     val ai: AiConfiguration = AiConfiguration()
 )
 
@@ -65,6 +66,9 @@ class SettingsStore(private val context: Context) {
             defaultSpeakCorrections = prefs[DEFAULT_SPEAK_CORRECTIONS] ?: true,
             autoSpeak = prefs[AUTO_SPEAK] ?: true,
             darkTheme = prefs[DARK_THEME] ?: false,
+            appAppearance = prefs[APP_APPEARANCE] ?: if (prefs.contains(DARK_THEME)) {
+                if (prefs[DARK_THEME] == true) "DARK" else "LIGHT"
+            } else "SYSTEM",
             ai = prefs[AI_CONFIG]?.let { raw -> runCatching { Json.decodeFromString<AiConfiguration>(raw) }.getOrNull() }
                 ?: AiConfiguration(profiles = com.myothuonion.languagetalk.model.builtInAiProfiles().map { profile ->
                     if (profile.id == "gemini") profile.copy(
@@ -82,7 +86,10 @@ class SettingsStore(private val context: Context) {
 
     suspend fun update(transform: (AppSettings) -> AppSettings) = updateMutex.withLock {
         val previous = settings.first()
-        val changed = transform(previous)
+        val requested = transform(previous)
+        val changed = if (requested.darkTheme != previous.darkTheme && requested.appAppearance == previous.appAppearance)
+            requested.copy(appAppearance = if (requested.darkTheme) "DARK" else "LIGHT") else requested
+        require(changed.appAppearance in setOf("SYSTEM", "LIGHT", "DARK"))
         val value = changed.copy(geminiModel = GeminiModels.normalize(changed.geminiModel, GeminiTask.TEXT),
             geminiTtsModel = GeminiModels.normalize(changed.geminiTtsModel, GeminiTask.SPEECH), liveModel = GeminiModels.normalize(changed.liveModel, GeminiTask.LIVE))
         val configuration = if (changed.ai != previous.ai) value.ai else value.ai.copy(profiles = value.ai.profiles.map { profile ->
@@ -113,7 +120,8 @@ class SettingsStore(private val context: Context) {
             prefs[DEFAULT_SILENCE_MS] = value.defaultSilenceMs.coerceIn(800, 4000).toString()
             prefs[DEFAULT_SPEAK_CORRECTIONS] = value.defaultSpeakCorrections
             prefs[AUTO_SPEAK] = value.autoSpeak
-            prefs[DARK_THEME] = value.darkTheme
+            prefs[DARK_THEME] = value.appAppearance == "DARK"
+            prefs[APP_APPEARANCE] = value.appAppearance
             prefs[AI_CONFIG] = Json.encodeToString(configuration)
         }
     }
@@ -138,6 +146,7 @@ class SettingsStore(private val context: Context) {
         private val GLOBAL_BEHAVIOR = stringPreferencesKey("global_behavior")
         private val AUTO_SPEAK = booleanPreferencesKey("auto_speak")
         private val DARK_THEME = booleanPreferencesKey("dark_theme")
+        private val APP_APPEARANCE = stringPreferencesKey("app_appearance")
     }
 }
 

@@ -26,7 +26,8 @@ data class BackupPreferences(
     val silenceMs: Int = 2000,
     val speakCorrections: Boolean = true,
     val autoLearningMemory: Boolean = true,
-    val recordPractice: Boolean = true
+    val recordPractice: Boolean = true,
+    val appAppearance: String = "SYSTEM"
 )
 
 @Serializable
@@ -57,6 +58,8 @@ object BackupCodec {
         val text = bytes.decodeToString()
         require(json.parseToJsonElement(text).jsonObject["format"]?.jsonPrimitive?.contentOrNull == "language-talk-backup") { "Not a Language Talk backup" }
         val backup = json.decodeFromString<LearningBackup>(text)
+        require(backup.progress.all { !it.readyToContinue || it.nextStage in setOf("INTRO","REPEAT","APPLY","REVIEW") })
+        require(backup.preferences.appAppearance in setOf("SYSTEM","LIGHT","DARK"))
         require(backup.format == "language-talk-backup" && backup.version == 1) { "Unsupported backup format" }
         require(backup.chats.size <= 2000 && backup.messages.size <= 20000 && backup.memories.size <= 3000) { "Backup contains too many entries" }
         val ids = backup.chats.map { it.id }.toSet()
@@ -69,8 +72,8 @@ object BackupCodec {
         backup.audio.forEach { require(Base64.getDecoder().decode(it.data).size <= 4 * 1024 * 1024) { "A recording is too large" } }
         require(backup.books.progress.size <= 2 && backup.books.progress.map { it.bookId }.distinct().size == backup.books.progress.size) { "Invalid book progress" }
         require(backup.books.progress.all { it.bookId in setOf("ttmik-beginner", "ttmik-intermediate") &&
-            it.chapter in 1..40 && it.section in 0..12 && it.activity in 0..100 && it.mistakes.size <= 100 && it.completedSections.size <= 500 }) { "Invalid book lesson state" }
-        require(backup.books.explanations.size <= 500 && backup.books.explanations.all { it.key.length <= 180 && it.text.length <= 12000 }) { "Book explanations are too large" }
+            it.chapter in 1..40 && it.section in 0..12 && it.activity in 0..100 && it.mistakes.size <= 100 && it.completedSections.size <= 2000 }) { "Invalid book lesson state" }
+        require(backup.books.explanations.size <= 500 && backup.books.explanations.all { it.key.length <= 180 && it.text.length <= 60000 }) { "Book explanations are too large" }
         return backup
     }
 }
@@ -93,7 +96,7 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
                 learning = learningState.copy(attempts = learningState.attempts.map { it.copy(audioName = "") }),
                 preferences = BackupPreferences(preferences.displayName, preferences.learnerProfile, preferences.globalBehavior,
                     preferences.defaultVoiceName, preferences.defaultVoiceStyle, preferences.defaultPace, preferences.defaultSilenceMs,
-                    preferences.defaultSpeakCorrections, preferences.autoLearningMemory, preferences.recordPractice))
+                    preferences.defaultSpeakCorrections, preferences.autoLearningMemory, preferences.recordPractice, preferences.appAppearance))
         }
         return BackupCodec.json.encodeToString(backup).encodeToByteArray().also {
             require(it.size <= BackupCodec.MAX_BYTES) { "Backup exceeds 32 MB. Remove old recordings before exporting." }
@@ -132,10 +135,12 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
         settings.update { it.copy(displayName = prefs.displayName.ifBlank { it.displayName }, learnerProfile = prefs.profile,
             globalBehavior = prefs.globalBehavior, defaultVoiceName = prefs.voiceName, defaultVoiceStyle = prefs.voiceStyle,
             defaultPace = prefs.pace, defaultSilenceMs = prefs.silenceMs.coerceIn(800, 4000), defaultSpeakCorrections = prefs.speakCorrections,
-            autoLearningMemory = prefs.autoLearningMemory, recordPractice = prefs.recordPractice) }
+            autoLearningMemory = prefs.autoLearningMemory, recordPractice = prefs.recordPractice,
+            appAppearance = prefs.appAppearance.takeIf { value -> value in setOf("SYSTEM", "LIGHT", "DARK") } ?: "SYSTEM") }
         if (backup.books.progress.isNotEmpty() || backup.books.explanations.isNotEmpty()) books?.restore(backup.books)
         if (backup.learning.units.isNotEmpty() || backup.learning.books.isNotEmpty() || backup.learning.cards.isNotEmpty() ||
-            backup.learning.placementDone || backup.learning.studySeconds.isNotEmpty()) learning?.restore(backup.learning)
+            backup.learning.placementDone || backup.learning.studySeconds.isNotEmpty() || backup.learning.annotations.isNotEmpty() ||
+            backup.learning.pageExplanations.isNotEmpty() || backup.learning.audioTracks.isNotEmpty()) learning?.restore(backup.learning)
         return backup.chats.size
     }
 }

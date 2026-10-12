@@ -131,29 +131,24 @@ class TutorRepository(
         )
 
         val mode = runCatching { BrainMode.valueOf(chat.brainMode) }.getOrDefault(appSettings.brainMode)
-        val reply = ai.reply(AiTask.CONVERSATION, system, history, effectiveText, audio,
-            chatId = chatId, legacyMode = mode)
-
-        if (userMessageId > 0 && audio != null && reply.heardText.isNotBlank()) {
-            dao.updateMessageContent(userMessageId, reply.heardText.trim())
-        }
-
-        dao.insertMessage(
-            MessageEntity(
-                chatId = chatId,
-                role = MessageRole.ASSISTANT.name,
-                content = listOf(reply.reply, reply.followUpQuestion).filter { it.isNotBlank() }.joinToString("\n\n"),
-                translation = reply.translation,
-                correction = reply.correction,
-                explanation = reply.explanation
-            )
-        )
-        applyAssessment(chat, PracticeAssessment(reply.targetSentence, reply.assessment, reply.correction, reply.lessonNote, reply.voiceCommand, reply.nextTargetSentence),
-            reply.heardText.ifBlank { if (opening) "" else userText }, reply.memoryFact, reply.memoryEvidence)
+        val draft = ai.reply(AiTask.CONVERSATION,system,history,effectiveText,audio,
+            chatId = chatId,legacyMode = mode)
+        val nextState = applyAssessment(chat,PracticeAssessment(draft.targetSentence,draft.assessment,draft.correction,
+            draft.lessonNote,draft.voiceCommand,draft.nextTargetSentence),
+            draft.heardText.ifBlank { if (opening) "" else userText },draft.memoryFact,draft.memoryEvidence)
+        val reply = if (chat.practiceMode == "GUIDED" && nextState.readyToContinue) draft.copy(
+            reply = listOf(draft.correction,draft.explanation).filter { it.isNotBlank() }.joinToString("\n").ifBlank {
+                "ဒီအပိုင်းကို လေ့ကျင့်ပြီးပြီ။ ကိုယ်တိုင် ဆက်မှ နောက်အပိုင်းသွားမယ်။"
+            },followUpQuestion = "",nextTargetSentence = "",answerPattern = "",answerExample = "",answerHint = "",
+            speechText = "같은 문장을 다시 연습하거나 다음을 눌러 주세요.") else draft
+        if (userMessageId > 0 && audio != null && reply.heardText.isNotBlank())
+            dao.updateMessageContent(userMessageId,reply.heardText.trim())
+        dao.insertMessage(MessageEntity(chatId = chatId,role = MessageRole.ASSISTANT.name,
+            content = listOf(reply.reply,reply.followUpQuestion).filter { it.isNotBlank() }.joinToString("\n\n"),
+            translation = reply.translation,correction = reply.correction,explanation = reply.explanation))
         dao.getProgress(chatId)?.let { item ->
-            dao.saveProgress(item.copy(answerPattern = reply.answerPattern.take(500), answerExample = reply.answerExample.take(600),
-                answerHint = reply.answerHint.take(1200), assistedCurrent = item.stage == "APPLY" &&
-                    (reply.answerPattern.isNotBlank() || reply.answerExample.isNotBlank())))
+            dao.saveProgress(item.copy(answerPattern = reply.answerPattern.take(500),answerExample = reply.answerExample.take(600),
+                answerHint = reply.answerHint.take(1200),assistedCurrent = item.assistedCurrent))
         }
         dao.touchChat(chatId)
         reply
@@ -169,7 +164,7 @@ class TutorRepository(
         val prefs = ai.preferences(AiTask.CONVERSATION, chatId)
         val config = settingsStore.settings.first().ai
         val native = AiPlans.candidates(config, AiTask.LIVE, ai::configured, ai.preferences(AiTask.LIVE))
-        return dao.getChat(chatId)?.brainMode != BrainMode.GEMINI_ONLY.name ||
+        return dao.getChat(chatId)?.practiceMode == "GUIDED" || dao.getChat(chatId)?.brainMode != BrainMode.GEMINI_ONLY.name ||
             prefs.primary != null || prefs.mode == AiMode.REVIEW || native.isEmpty()
     }
 
@@ -198,9 +193,9 @@ class TutorRepository(
     /** Book mode never writes fictional textbook identities to personal memory. */
     suspend fun bookResponse(instruction: String, input: String, audio: AudioPayload? = null,
         assessmentOnly: Boolean = false, task: AiTask = AiTask.BOOK,
-        audioEvaluationRequired: Boolean = false): TutorReply =
+        audioEvaluationRequired: Boolean = false, image: Pair<String, ByteArray>? = null): TutorReply =
         ai.reply(task, instruction, emptyList(), input, audio, assessmentOnly,
-            audioEvaluationRequired = audioEvaluationRequired)
+            audioEvaluationRequired = audioEvaluationRequired, image = image)
 
     suspend fun learningContext(): String {
         val current = settingsStore.settings.first()
@@ -479,9 +474,16 @@ class TutorRepository(
         dao.getChat(item.chatId)?.let { dao.updateChat(it.copy(summary = notes.take(1600))) }
     }
 
+    suspend fun continuePractice(chatId: Long) = turnMutex.withLock {
+        val old = dao.getProgress(chatId) ?: error("လေ့ကျင့်မှုမရှိသေးပါ။")
+        val next = PracticeEngine.continueStep(old.state())
+        dao.saveProgress(old.copy(stage = next.stage,targetSentence = next.targetSentence,
+            readyToContinue = false,nextStage = "",answerPattern = "",answerExample = "",answerHint = "",assistedCurrent = false))
+    }
+
     suspend fun beginReview(item: ReviewItemEntity) = turnMutex.withLock {
         val existing = dao.getProgress(item.chatId) ?: LearningProgressEntity(item.chatId, "Review")
-        dao.saveProgress(existing.copy(stage = "REPEAT", targetSentence = item.sentence, updatedAt = System.currentTimeMillis()))
+        dao.saveProgress(existing.copy(stage = "REPEAT", targetSentence = item.sentence, updatedAt = System.currentTimeMillis(),readyToContinue = false,nextStage = ""))
         dao.getChat(item.chatId)?.let { dao.updateChat(it.copy(practiceMode = "GUIDED")) }
     }
 
@@ -494,6 +496,7 @@ class TutorRepository(
         database.withTransaction {
             dao.saveProgress(old.copy(stage = next.stage, targetSentence = next.targetSentence, completed = next.completed,
                 summary = next.summary, lastCorrection = next.lastCorrection, updatedAt = System.currentTimeMillis(),
+                readyToContinue = next.readyToContinue, nextStage = next.nextStage,
                 assistedCurrent = if (heard.isNotBlank() && result.command.isBlank()) false else old.assistedCurrent))
             if (settings.autoLearningMemory) {
                 val sentence = old.targetSentence.ifBlank { result.targetSentence }.take(300)
@@ -524,9 +527,10 @@ class TutorRepository(
             value("lessonNote"), value("voiceCommand"), value("nextTargetSentence")), value("heardText"), value("memoryFact"), value("memoryEvidence"))
         dao.getProgress(chatId)?.let { dao.saveProgress(it.copy(answerPattern = value("answerPattern").take(500),
             answerExample = value("answerExample").take(600), answerHint = value("answerHint").take(1200),
-            assistedCurrent = it.stage == "APPLY" && (value("answerPattern").isNotBlank() || value("answerExample").isNotBlank()))) }
+            assistedCurrent = it.assistedCurrent)) }
         buildJsonObject {
             put("stage", JsonPrimitive(state.stage))
+            put("readyToContinue",JsonPrimitive(state.readyToContinue))
             put("goal", JsonPrimitive(state.goal))
             put("targetSentence", JsonPrimitive(state.targetSentence))
             put("completed", JsonPrimitive(state.completed))
