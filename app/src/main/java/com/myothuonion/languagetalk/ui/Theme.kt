@@ -1,6 +1,5 @@
 package com.myothuonion.languagetalk.ui
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -10,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
+import androidx.activity.compose.LocalActivity
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
@@ -96,7 +95,7 @@ private val LightColors = lightColorScheme(
 @Composable
 fun LanguageTalkTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val colors = if (darkTheme) DarkColors else LightColors
-    val activity = LocalContext.current as? Activity
+    val activity = LocalActivity.current
     val view = LocalView.current
     if (!view.isInEditMode && activity != null) SideEffect {
         val window = activity.window
