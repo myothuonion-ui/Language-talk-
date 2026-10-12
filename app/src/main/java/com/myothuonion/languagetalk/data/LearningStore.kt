@@ -30,6 +30,8 @@ class LearningStore(private val context: Context) {
     }
     suspend fun export() = state.first()
     fun validateRestore(value: LearningState) {
+        require(value.readerTheme in setOf("DAY", "SEPIA", "NIGHT") && value.readerFlow in setOf("HORIZONTAL", "VERTICAL") &&
+            value.readerMode in setOf("PDF", "TEXT") && value.readerFontSize.isFinite() && value.readerFontSize in 16f..32f)
         val ids = curriculum.map { it.id }.toSet()
         require(value.level in 0..5 && value.placementLevel in 0..5 && value.placementIndex in 0..2 &&
             value.placementPasses in 0..2 && value.dailyMinutes in 5..60) { "Invalid learning level" }
@@ -41,7 +43,7 @@ class LearningStore(private val context: Context) {
                 it.meaning.length <= 4000 && it.context.length <= 4000 && it.page >= 0 })
         require(value.books.size <= 300 && value.books.map { it.id }.distinct().size == value.books.size &&
             value.books.all { it.id.matches(Regex("[a-zA-Z0-9-]{1,90}")) && it.pageCount in 1..5000 &&
-                it.page in 0 until it.pageCount && it.bookmarks.all { page -> page in 0 until it.pageCount } &&
+                it.page in 0 until it.pageCount && it.zoom.isFinite() && it.zoom in 1f..4f && it.bookmarks.all { page -> page in 0 until it.pageCount } &&
                 (it.fileName.isBlank() || it.fileName == it.id + ".pdf") &&
                 it.assetId in setOf("", "ttmik-beginner", "ttmik-intermediate") })
         require(value.attempts.size <= 500 && value.attempts.all { it.heard.length <= 4000 && it.feedback.length <= 4000 })

@@ -131,8 +131,14 @@ class TutorRepository(
         )
 
         val mode = runCatching { BrainMode.valueOf(chat.brainMode) }.getOrDefault(appSettings.brainMode)
-        val reply = ai.reply(AiTask.CONVERSATION, system, history, effectiveText, audio,
+        var reply = ai.reply(AiTask.CONVERSATION, system, history, effectiveText, audio,
             chatId = chatId, legacyMode = mode)
+        val assessed = applyAssessment(chat, PracticeAssessment(reply.targetSentence, reply.assessment, reply.correction, reply.lessonNote, reply.voiceCommand, reply.nextTargetSentence),
+            reply.heardText.ifBlank { if (opening) "" else userText }, reply.memoryFact, reply.memoryEvidence)
+        if (practiceMode(chat) == PracticeMode.GUIDED && assessed.readyNext && reply.voiceCommand.isBlank()) {
+            reply = reply.copy(reply = "잘했어요. 다음을 누르면 계속해요.", followUpQuestion = "", speechText = "잘했어요. 다음을 누르면 계속해요.",
+                answerPattern = "", answerExample = "", answerHint = "")
+        }
 
         if (userMessageId > 0 && audio != null && reply.heardText.isNotBlank()) {
             dao.updateMessageContent(userMessageId, reply.heardText.trim())
@@ -148,8 +154,6 @@ class TutorRepository(
                 explanation = reply.explanation
             )
         )
-        applyAssessment(chat, PracticeAssessment(reply.targetSentence, reply.assessment, reply.correction, reply.lessonNote, reply.voiceCommand, reply.nextTargetSentence),
-            reply.heardText.ifBlank { if (opening) "" else userText }, reply.memoryFact, reply.memoryEvidence)
         dao.getProgress(chatId)?.let { item ->
             dao.saveProgress(item.copy(answerPattern = reply.answerPattern.take(500), answerExample = reply.answerExample.take(600),
                 answerHint = reply.answerHint.take(1200), assistedCurrent = item.stage == "APPLY" &&
@@ -198,9 +202,9 @@ class TutorRepository(
     /** Book mode never writes fictional textbook identities to personal memory. */
     suspend fun bookResponse(instruction: String, input: String, audio: AudioPayload? = null,
         assessmentOnly: Boolean = false, task: AiTask = AiTask.BOOK,
-        audioEvaluationRequired: Boolean = false): TutorReply =
+        audioEvaluationRequired: Boolean = false, image: Pair<String, ByteArray>? = null): TutorReply =
         ai.reply(task, instruction, emptyList(), input, audio, assessmentOnly,
-            audioEvaluationRequired = audioEvaluationRequired)
+            audioEvaluationRequired = audioEvaluationRequired, image = image)
 
     suspend fun learningContext(): String {
         val current = settingsStore.settings.first()
@@ -479,9 +483,17 @@ class TutorRepository(
         dao.getChat(item.chatId)?.let { dao.updateChat(it.copy(summary = notes.take(1600))) }
     }
 
+    suspend fun continuePractice(chatId: Long) = turnMutex.withLock {
+        val old = dao.getProgress(chatId) ?: error("လေ့ကျင့်မှု မရှိပါ။")
+        val next = PracticeEngine.continuePractice(old.state())
+        dao.saveProgress(old.copy(stage = next.stage, targetSentence = next.targetSentence, completed = next.completed,
+            readyNext = false, pendingStage = "", pendingTarget = "", pendingCompleted = 0,
+            answerPattern = "", answerExample = "", answerHint = "", assistedCurrent = false, updatedAt = System.currentTimeMillis()))
+    }
+
     suspend fun beginReview(item: ReviewItemEntity) = turnMutex.withLock {
         val existing = dao.getProgress(item.chatId) ?: LearningProgressEntity(item.chatId, "Review")
-        dao.saveProgress(existing.copy(stage = "REPEAT", targetSentence = item.sentence, updatedAt = System.currentTimeMillis()))
+        dao.saveProgress(existing.copy(stage = "REPEAT", readyNext = false, pendingStage = "", pendingTarget = "", pendingCompleted = 0, targetSentence = item.sentence, updatedAt = System.currentTimeMillis()))
         dao.getChat(item.chatId)?.let { dao.updateChat(it.copy(practiceMode = "GUIDED")) }
     }
 
@@ -494,6 +506,7 @@ class TutorRepository(
         database.withTransaction {
             dao.saveProgress(old.copy(stage = next.stage, targetSentence = next.targetSentence, completed = next.completed,
                 summary = next.summary, lastCorrection = next.lastCorrection, updatedAt = System.currentTimeMillis(),
+                readyNext = next.readyNext, pendingStage = next.pendingStage, pendingTarget = next.pendingTarget, pendingCompleted = next.pendingCompleted,
                 assistedCurrent = if (heard.isNotBlank() && result.command.isBlank()) false else old.assistedCurrent))
             if (settings.autoLearningMemory) {
                 val sentence = old.targetSentence.ifBlank { result.targetSentence }.take(300)
@@ -527,6 +540,7 @@ class TutorRepository(
             assistedCurrent = it.stage == "APPLY" && (value("answerPattern").isNotBlank() || value("answerExample").isNotBlank()))) }
         buildJsonObject {
             put("stage", JsonPrimitive(state.stage))
+            put("readyNext", JsonPrimitive(state.readyNext))
             put("goal", JsonPrimitive(state.goal))
             put("targetSentence", JsonPrimitive(state.targetSentence))
             put("completed", JsonPrimitive(state.completed))

@@ -1,3 +1,15 @@
+# v0.9.0 — Persistent reading and deliberate practice
+
+- Add swipe/continuous reader navigation, searchable source-linked annotations, notes and Text-mode bold.
+- Add validated, cached whole-page Myanmar teaching cards, grammar, hint-first exercises and line speakers.
+- Support imported Track audio and a searchable saved collection.
+- Require explicit Next after successful Book/Daily/Guided responses; retain unfinished section cursors and permit free lesson selection.
+- Show real book microphone levels/timer and actual returned transcripts.
+- Persist System/Light/Dark appearance; migrate database 4→5 and extend metadata backup/restore.
+- Include SHA-256 with the development APK and preserve one signing identity per CI branch going forward.
+
+See [usage and limitations](READER_PRACTICE_0_9.md).
+
 # v0.8.1 — Practice choices visible together
 
 - Keep Book lessons, Live conversation and the small daily lesson fully visible on the initial Practice screen.

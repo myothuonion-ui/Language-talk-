@@ -10,6 +10,29 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LanguageTalkDao {
+    @Query("SELECT * FROM reader_annotations ORDER BY updatedAt DESC")
+    fun observeAnnotations(): Flow<List<ReaderAnnotation>>
+    @Query("SELECT * FROM reader_annotations")
+    suspend fun allAnnotations(): List<ReaderAnnotation>
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveAnnotation(value: ReaderAnnotation)
+    @Query("DELETE FROM reader_annotations WHERE id = :id")
+    suspend fun deleteAnnotation(id: String)
+    @Query("SELECT * FROM page_explanations WHERE `key` = :key")
+    suspend fun explanation(key: String): PageExplanation?
+    @Query("SELECT * FROM page_explanations WHERE bookId = :bookId AND page = :page ORDER BY createdAt DESC LIMIT 1")
+    suspend fun latestExplanation(bookId: String, page: Int): PageExplanation?
+    @Query("SELECT * FROM page_explanations")
+    suspend fun allPageExplanations(): List<PageExplanation>
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun savePageExplanation(value: PageExplanation)
+    @Query("SELECT * FROM book_audio_assets ORDER BY track")
+    fun observeBookAudio(): Flow<List<BookAudioAsset>>
+    @Query("SELECT * FROM book_audio_assets")
+    suspend fun allBookAudio(): List<BookAudioAsset>
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveBookAudio(value: BookAudioAsset)
+
     @Query("SELECT * FROM memories ORDER BY updatedAt DESC")
     fun observeAllMemories(): Flow<List<MemoryEntity>>
     @Query("SELECT * FROM messages WHERE audioPath != '' ORDER BY createdAt DESC LIMIT 40")

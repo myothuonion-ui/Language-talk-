@@ -34,7 +34,7 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
 
     suspend fun reply(task: AiTask, instruction: String, history: List<MessageEntity>, input: String,
         audio: AudioPayload? = null, allowEmptyReply: Boolean = false, chatId: Long? = null,
-        legacyMode: BrainMode? = null, audioEvaluationRequired: Boolean = false): TutorReply {
+        legacyMode: BrainMode? = null, audioEvaluationRequired: Boolean = false, image: Pair<String, ByteArray>? = null): TutorReply {
         val config = configuration()
         val explicit = sessionRoute(task, chatId) ?: config.routes[task]
         val route = explicit ?: when (legacyMode) {
@@ -53,14 +53,15 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
             val profile = config.profiles.first { it.id == ref.profileId }
             if (profile.format == ApiFormat.GEMINI) {
                 geminiClient(profile).tutorReply(secrets.apiKey(profile.id), ref.model, instruction,
-                    history, input, audio, if (task == AiTask.CONVERSATION) 0.6 else 0.15, allowEmptyReply)
+                    history, input, audio, if (task == AiTask.CONVERSATION) 0.6 else 0.15, allowEmptyReply, image)
                     .also { if (audio != null && it.heardText.isNotBlank()) transcript = it.heardText }
             } else {
                 val heard = if (audio == null) "" else transcript ?: transcribe(audio).also { transcript = it }
                 val safeSystem = instruction + if (audio == null) "" else
                     "\nYou receive a transcript only, not the recording. Do not assess pronunciation, intonation or 받침 from text. For pronunciation-only tasks use UNSURE."
                 client.tutor(profile, secrets.apiKey(profile.id), ref.model, safeSystem, history,
-                    if (heard.isBlank()) input else "Faithful transcript: $heard\nLearner request: $input", allowEmptyReply)
+                    if (heard.isBlank()) input else "Faithful transcript: $heard\nLearner request: $input", allowEmptyReply,
+                    image = image.takeIf { profile.kind in setOf(AiProviderKind.OPENAI, AiProviderKind.CLAUDE) || ref.model.contains("vision", true) })
                     .let { if (audio == null) it else it.copy(heardText = heard) }
             }
         }
@@ -81,8 +82,9 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
                         AiPlans.models(profile, task, reviewer.model).take(2).map { AiModelRef(profile.id, it) }) { ref ->
                         if (profile.format == ApiFormat.GEMINI)
                             geminiClient(profile).tutorReply(secrets.apiKey(profile.id), ref.model, instruction, history, reviewPrompt,
-                                allowEmptyReply = allowEmptyReply)
-                        else client.tutor(profile, secrets.apiKey(profile.id), ref.model, instruction, history, reviewPrompt, allowEmptyReply)
+                                allowEmptyReply = allowEmptyReply, image = image)
+                        else client.tutor(profile, secrets.apiKey(profile.id), ref.model, instruction, history, reviewPrompt, allowEmptyReply,
+                            image = image.takeIf { profile.kind in setOf(AiProviderKind.OPENAI, AiProviderKind.CLAUDE) || ref.model.contains("vision", true) })
                     }.value
                     // The review cannot manufacture or delete consent to remember a personal fact.
                     result = checked.copy(heardText = result.heardText, memoryFact = result.memoryFact,

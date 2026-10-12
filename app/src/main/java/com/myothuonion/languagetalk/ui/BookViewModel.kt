@@ -12,10 +12,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 data class BookUiState(val courses: List<BookCourse> = emptyList(), val bookId: String = "ttmik-beginner",
     val busy: Boolean = false, val recording: Boolean = false, val explanation: String = "",
-    val error: String? = null)
+    val error: String? = null, val inputLevel: Float = 0f, val recordingSeconds: Int = 0, val speechPhase: String = "READY")
 
 class BookViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = (application as LanguageTalkApplication).books
@@ -29,6 +30,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     private var session: HandsFreeRestSession? = null
     private var collector: Job? = null
     private var operation: Job? = null
+    private var meter: Job? = null
     private var generation = 0L
 
     init {
@@ -45,11 +47,11 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         val token = ++generation
         operation?.cancel()
         operation = viewModelScope.launch {
-            _state.update { it.copy(busy = true, error = null) }
+            _state.update { it.copy(busy = true, error = null, speechPhase = "PROCESSING") }
             try { block() }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (failure: Exception) { _state.update { it.copy(error = failure.message ?: "ထပ်စမ်းပါ") } }
-            finally { if (token == generation) _state.update { it.copy(busy = false) } }
+            finally { if (token == generation) _state.update { it.copy(busy = false, speechPhase = if (it.speechPhase == "SPEAKING") "SPEAKING" else "READY") } }
         }
     }
 
@@ -76,6 +78,9 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     fun selectChapter(number: Int) = change { repository.chooseChapter(it, number) }
     fun resume() = change { repository.open(it) }
     fun restart(role: String? = null) = change { repository.restart(it, role) }
+    fun continueTurn() = change { repository.continueTurn(it) }
+    fun selectSection(section: Int) = change { repository.selectSection(it, section) }
+    fun reviewed() = change { repository.reviewed(it) }
     fun next() = change { repository.next(it) }
     fun previous() = change { repository.previous(it) }
     fun pace(slow: Boolean) = change { repository.pace(it, slow) }
@@ -96,18 +101,37 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         if (text.isBlank() || state.value.busy || live.value.connected) return
         val id = state.value.bookId
         player.stop()
-        work { player.play(repository.speech(id, text)) {} }
+        work {
+            val audio = repository.speech(id, text)
+            _state.update { it.copy(speechPhase = "SPEAKING") }
+            player.play(audio, onError = { error -> _state.update { it.copy(error = error.message, speechPhase = "ERROR") } }) {
+                _state.update { it.copy(speechPhase = "READY") }
+            }
+        }
     }
 
     fun toggleRecording() {
         if (state.value.busy || live.value.connected) return
         if (!state.value.recording) {
             player.stop()
-            runCatching { recorder.start() }.onSuccess { _state.update { it.copy(recording = true, error = null) } }
+            runCatching { recorder.start() }.onSuccess {
+                _state.update { it.copy(recording = true, error = null, inputLevel = 0f, recordingSeconds = 0, speechPhase = "LISTENING") }
+                meter?.cancel()
+                meter = viewModelScope.launch {
+                    val started = android.os.SystemClock.elapsedRealtime()
+                    while (state.value.recording) {
+                        delay(100)
+                        val seconds = ((android.os.SystemClock.elapsedRealtime() - started) / 1000).toInt()
+                        _state.update { it.copy(inputLevel = recorder.level(), recordingSeconds = seconds) }
+                        if (seconds >= 90) { toggleRecording(); break }
+                    }
+                }
+            }
                 .onFailure { failure -> _state.update { it.copy(error = failure.message ?: "Microphone စတင်၍မရပါ") } }
         } else {
+            meter?.cancel(); meter = null
             val audio = recorder.stop()
-            _state.update { it.copy(recording = false) }
+            _state.update { it.copy(recording = false, inputLevel = 0f) }
             if (audio == null) { _state.update { it.copy(error = "အသံမရပါ။ ထပ်စမ်းပါ") }; return }
             val id = state.value.bookId
             work { repository.answer(id, audio = audio); prepareText(id) }
@@ -125,7 +149,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         session = created
         collector = viewModelScope.launch {
             created.state.collect { value ->
-                if (value.phase == LivePhase.LISTENING && BookEngine.finished(repository.book(id), repository.progress(id))) stopVoice()
+                if (value.phase == LivePhase.LISTENING && (BookEngine.finished(repository.book(id), repository.progress(id)) || repository.progress(id).readyNext)) stopVoice()
                 else _live.value = value.copy(activeModel = "Book conversation", diagnostic = "စာအုပ်အလှည့်အတိုင်း")
             }
         }
@@ -137,9 +161,10 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     fun stopVoice() {
         collector?.cancel(); collector = null
         session?.stop(); session = null
+        meter?.cancel(); meter = null
         recorder.stopSilently(); player.stop()
         _live.value = LiveState()
-        _state.update { it.copy(recording = false) }
+        _state.update { it.copy(recording = false, inputLevel = 0f, speechPhase = "READY") }
     }
     fun close() { operation?.cancel(); stopVoice() }
     suspend fun sourcePdf(id: String) = repository.sourcePdf(id)

@@ -26,7 +26,8 @@ data class BackupPreferences(
     val silenceMs: Int = 2000,
     val speakCorrections: Boolean = true,
     val autoLearningMemory: Boolean = true,
-    val recordPractice: Boolean = true
+    val recordPractice: Boolean = true,
+    val appearance: String = "SYSTEM"
 )
 
 @Serializable
@@ -45,7 +46,10 @@ data class LearningBackup(
     val audio: List<BackupAudio> = emptyList(),
     val preferences: BackupPreferences = BackupPreferences(),
     val books: BookShelfState = BookShelfState(),
-    val learning: LearningState = LearningState()
+    val learning: LearningState = LearningState(),
+    val annotations: List<ReaderAnnotation> = emptyList(),
+    val pageExplanations: List<PageExplanation> = emptyList(),
+    val audioTracks: List<BookAudioAsset> = emptyList()
 )
 
 object BackupCodec {
@@ -71,6 +75,22 @@ object BackupCodec {
         require(backup.books.progress.all { it.bookId in setOf("ttmik-beginner", "ttmik-intermediate") &&
             it.chapter in 1..40 && it.section in 0..12 && it.activity in 0..100 && it.mistakes.size <= 100 && it.completedSections.size <= 500 }) { "Invalid book lesson state" }
         require(backup.books.explanations.size <= 500 && backup.books.explanations.all { it.key.length <= 180 && it.text.length <= 12000 }) { "Book explanations are too large" }
+        require(backup.preferences.appearance in setOf("SYSTEM", "LIGHT", "DARK"))
+        require(backup.annotations.size <= 5000 && backup.annotations.map { it.id }.distinct().size == backup.annotations.size)
+        backup.annotations.forEach {
+            require(it.id.length <= 100 && it.bookId.matches(Regex("[a-zA-Z0-9-]{1,90}")) && it.page in 0..4999 &&
+                it.quote.length in 1..1200 && it.context.length <= 4000 && it.note.length <= 4000 && it.rectangles.length <= 60000 &&
+                it.kind in setOf("HIGHLIGHT", "UNDERLINE", "BOLD", "NOTE", "SAVE") &&
+                it.startOffset >= -1 && it.endOffset >= -1 &&
+                com.myothuonion.languagetalk.model.PageTeachingCodec.json.decodeFromString<List<com.myothuonion.languagetalk.model.PageRect>>(it.rectangles).all { rect -> rect.valid() })
+        }
+        require(backup.pageExplanations.size <= 1000 && backup.pageExplanations.map { it.key }.distinct().size == backup.pageExplanations.size)
+        backup.pageExplanations.forEach {
+            require(it.key.length <= 100 && it.page in 0..4999 && it.sourceBlocks.length <= 180000 && it.teaching.length <= 60000)
+            com.myothuonion.languagetalk.model.PageTeachingCodec.decode(it.teaching, it.blocks())
+        }
+        require(backup.audioTracks.size <= 1000 && backup.audioTracks.all { it.id.matches(Regex("[a-f0-9]{64}")) &&
+            it.fileName == it.id + ".audio" && it.track in 1..9999 && it.mimeType.startsWith("audio/") })
         return backup
     }
 }
@@ -88,12 +108,12 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
                 val file = File(recordings, message.audioPath)
                 if (file.isFile) BackupAudio(message.id, Base64.getEncoder().encodeToString(file.readBytes())) else null
             }
-            LearningBackup(chats = dao.allChats(), messages = messages, memories = dao.allMemories(),
+            LearningBackup(annotations = dao.allAnnotations(), pageExplanations = dao.allPageExplanations(), audioTracks = dao.allBookAudio(), chats = dao.allChats(), messages = messages, memories = dao.allMemories(),
                 sources = dao.allSources().map { it.copy(uri = "") }, progress = dao.allProgress(), reviews = dao.allReviews(), audio = audio, books = bookState,
                 learning = learningState.copy(attempts = learningState.attempts.map { it.copy(audioName = "") }),
                 preferences = BackupPreferences(preferences.displayName, preferences.learnerProfile, preferences.globalBehavior,
                     preferences.defaultVoiceName, preferences.defaultVoiceStyle, preferences.defaultPace, preferences.defaultSilenceMs,
-                    preferences.defaultSpeakCorrections, preferences.autoLearningMemory, preferences.recordPractice))
+                    preferences.defaultSpeakCorrections, preferences.autoLearningMemory, preferences.recordPractice, preferences.appearance))
         }
         return BackupCodec.json.encodeToString(backup).encodeToByteArray().also {
             require(it.size <= BackupCodec.MAX_BYTES) { "Backup exceeds 32 MB. Remove old recordings before exporting." }
@@ -117,6 +137,9 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
             }
             db.withTransaction {
                 val dao = db.dao()
+                backup.annotations.forEach { dao.saveAnnotation(it) }
+                backup.pageExplanations.forEach { dao.savePageExplanation(it) }
+                backup.audioTracks.forEach { dao.saveBookAudio(it) }
                 val chatMap = backup.chats.associate { it.id to dao.insertChat(it.copy(id = 0, silenceMs = it.silenceMs.coerceIn(800, 4000))) }
                 backup.messages.forEach { dao.insertMessage(it.copy(id = 0, chatId = chatMap.getValue(it.chatId), audioPath = audio[it.id].orEmpty())) }
                 backup.memories.forEach { dao.insertMemory(it.copy(id = 0, scopeChatId = it.scopeChatId?.let(chatMap::getValue))) }
@@ -132,7 +155,7 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
         settings.update { it.copy(displayName = prefs.displayName.ifBlank { it.displayName }, learnerProfile = prefs.profile,
             globalBehavior = prefs.globalBehavior, defaultVoiceName = prefs.voiceName, defaultVoiceStyle = prefs.voiceStyle,
             defaultPace = prefs.pace, defaultSilenceMs = prefs.silenceMs.coerceIn(800, 4000), defaultSpeakCorrections = prefs.speakCorrections,
-            autoLearningMemory = prefs.autoLearningMemory, recordPractice = prefs.recordPractice) }
+            autoLearningMemory = prefs.autoLearningMemory, recordPractice = prefs.recordPractice, appearance = prefs.appearance, darkTheme = prefs.appearance == "DARK") }
         if (backup.books.progress.isNotEmpty() || backup.books.explanations.isNotEmpty()) books?.restore(backup.books)
         if (backup.learning.units.isNotEmpty() || backup.learning.books.isNotEmpty() || backup.learning.cards.isNotEmpty() ||
             backup.learning.placementDone || backup.learning.studySeconds.isNotEmpty()) learning?.restore(backup.learning)

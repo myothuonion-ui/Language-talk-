@@ -39,6 +39,7 @@ data class AppSettings(
     val defaultSpeakCorrections: Boolean = true,
     val autoSpeak: Boolean = true,
     val darkTheme: Boolean = false,
+    val appearance: String = "SYSTEM",
     val ai: AiConfiguration = AiConfiguration()
 )
 
@@ -65,6 +66,7 @@ class SettingsStore(private val context: Context) {
             defaultSpeakCorrections = prefs[DEFAULT_SPEAK_CORRECTIONS] ?: true,
             autoSpeak = prefs[AUTO_SPEAK] ?: true,
             darkTheme = prefs[DARK_THEME] ?: false,
+            appearance = prefs[APPEARANCE] ?: if (prefs[DARK_THEME] == true) "DARK" else "SYSTEM",
             ai = prefs[AI_CONFIG]?.let { raw -> runCatching { Json.decodeFromString<AiConfiguration>(raw) }.getOrNull() }
                 ?: AiConfiguration(profiles = com.myothuonion.languagetalk.model.builtInAiProfiles().map { profile ->
                     if (profile.id == "gemini") profile.copy(
@@ -114,6 +116,7 @@ class SettingsStore(private val context: Context) {
             prefs[DEFAULT_SPEAK_CORRECTIONS] = value.defaultSpeakCorrections
             prefs[AUTO_SPEAK] = value.autoSpeak
             prefs[DARK_THEME] = value.darkTheme
+            prefs[APPEARANCE] = value.appearance.takeIf { it in setOf("SYSTEM", "LIGHT", "DARK") } ?: "SYSTEM"
             prefs[AI_CONFIG] = Json.encodeToString(configuration)
         }
     }
@@ -137,6 +140,7 @@ class SettingsStore(private val context: Context) {
         private val LIVE_MODEL = stringPreferencesKey("live_model")
         private val GLOBAL_BEHAVIOR = stringPreferencesKey("global_behavior")
         private val AUTO_SPEAK = booleanPreferencesKey("auto_speak")
+        private val APPEARANCE = stringPreferencesKey("app_appearance")
         private val DARK_THEME = booleanPreferencesKey("dark_theme")
     }
 }

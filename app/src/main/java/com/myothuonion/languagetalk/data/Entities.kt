@@ -97,9 +97,10 @@ data class LearningProgressEntity(
     val answerPattern: String = "",
     val answerExample: String = "",
     val answerHint: String = "",
-    val assistedCurrent: Boolean = false
+    val assistedCurrent: Boolean = false,
+    val readyNext: Boolean = false, val pendingStage: String = "", val pendingTarget: String = "", val pendingCompleted: Int = 0
 ) {
-    fun state() = com.myothuonion.languagetalk.model.PracticeState(goal, stage, targetSentence, completed, summary, lastCorrection)
+    fun state() = com.myothuonion.languagetalk.model.PracticeState(goal, stage, targetSentence, completed, summary, lastCorrection, readyNext, pendingStage, pendingTarget, pendingCompleted)
 }
 
 @Serializable

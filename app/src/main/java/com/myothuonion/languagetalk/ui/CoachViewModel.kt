@@ -64,6 +64,7 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
     fun openReview(id: String) { stopVoice(); work {
         _ui.value = CoachUiState(open = true, unitId = repository.currentUnit().id, reviewId = id)
     } }
+    fun continueStep() { stopVoice(); work { repository.continueStep(ui.value.unitId); _ui.update { it.copy(heard = "", feedback = "") } } }
     fun next() { stopVoice(); work {
         val unit = repository.currentUnit()
         _ui.value = CoachUiState(open = true, unitId = unit.id, slow = unit.level < 3, teaching = true)
@@ -123,7 +124,7 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
         return when {
             ui.value.placement -> state.placementDone
             ui.value.reviewId != null -> state.cards.firstOrNull { it.id == ui.value.reviewId }?.dueAt?.let { it > System.currentTimeMillis() } ?: true
-            else -> CoachEngine.progress(state, ui.value.unitId).completed
+            else -> CoachEngine.progress(state, ui.value.unitId).let { it.completed || it.readyNext }
         }
     }
     fun startVoice(silenceMs: Int) {

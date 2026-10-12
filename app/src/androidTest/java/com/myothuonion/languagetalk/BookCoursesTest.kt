@@ -43,8 +43,12 @@ class BookCoursesTest {
         compose.onNodeWithTag("book-courses").performScrollToNode(hasText("အဖြေစစ်"))
         compose.onNodeWithText("အဖြေစစ်").performClick()
         compose.waitUntil(10000) {
-            runBlocking { application.books.progress("ttmik-beginner").activity == 2 }
+            runBlocking { application.books.progress("ttmik-beginner").readyNext }
         }
+        assertEquals(1, runBlocking { application.books.progress("ttmik-beginner").activity })
+        compose.onNodeWithTag("book-courses").performScrollToNode(hasTestTag("book-continue-turn"))
+        compose.onNodeWithTag("book-continue-turn").performClick()
+        compose.waitUntil(10000) { runBlocking { application.books.progress("ttmik-beginner").activity == 2 } }
         compose.onNodeWithTag("book-courses").performScrollToNode(hasTestTag("book-next"))
         compose.onNodeWithTag("book-next").assertIsEnabled().performClick()
         compose.waitUntil(10000) { runBlocking { application.books.progress("ttmik-beginner").section == 1 } }

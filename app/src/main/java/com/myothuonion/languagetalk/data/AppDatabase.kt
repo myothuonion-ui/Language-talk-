@@ -8,8 +8,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [ChatEntity::class, MessageEntity::class, MemoryEntity::class, KnowledgeSourceEntity::class, LearningProgressEntity::class, ReviewItemEntity::class],
-    version = 4,
+    entities = [ChatEntity::class, MessageEntity::class, MemoryEntity::class, KnowledgeSourceEntity::class, LearningProgressEntity::class, ReviewItemEntity::class, ReaderAnnotation::class, PageExplanation::class, BookAudioAsset::class],
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -24,7 +24,22 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun open(context: Context, name: String): AppDatabase = Room.databaseBuilder(
             context.applicationContext, AppDatabase::class.java, name
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
+
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE learning_progress ADD COLUMN readyNext INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE learning_progress ADD COLUMN pendingStage TEXT NOT NULL DEFAULT ''")
+                database.execSQL("ALTER TABLE learning_progress ADD COLUMN pendingTarget TEXT NOT NULL DEFAULT ''")
+                database.execSQL("ALTER TABLE learning_progress ADD COLUMN pendingCompleted INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("CREATE TABLE IF NOT EXISTS reader_annotations (id TEXT NOT NULL PRIMARY KEY, bookId TEXT NOT NULL, fingerprint TEXT NOT NULL, bookTitle TEXT NOT NULL, page INTEGER NOT NULL, quote TEXT NOT NULL, context TEXT NOT NULL, kind TEXT NOT NULL, savedType TEXT NOT NULL, color INTEGER NOT NULL, rectangles TEXT NOT NULL, startOffset INTEGER NOT NULL, endOffset INTEGER NOT NULL, note TEXT NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_reader_annotations_bookId_page ON reader_annotations(bookId, page)")
+                database.execSQL("CREATE TABLE IF NOT EXISTS page_explanations (`key` TEXT NOT NULL PRIMARY KEY, bookId TEXT NOT NULL, fingerprint TEXT NOT NULL, page INTEGER NOT NULL, sourceHash TEXT NOT NULL, teaching TEXT NOT NULL, sourceBlocks TEXT NOT NULL, review TEXT NOT NULL, createdAt INTEGER NOT NULL)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_page_explanations_bookId_page ON page_explanations(bookId, page)")
+                database.execSQL("CREATE TABLE IF NOT EXISTS book_audio_assets (id TEXT NOT NULL PRIMARY KEY, bookId TEXT NOT NULL, track INTEGER NOT NULL, fileName TEXT NOT NULL, mimeType TEXT NOT NULL, title TEXT NOT NULL, createdAt INTEGER NOT NULL)")
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_book_audio_assets_bookId_track ON book_audio_assets(bookId, track)")
+            }
+        }
 
         private val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {

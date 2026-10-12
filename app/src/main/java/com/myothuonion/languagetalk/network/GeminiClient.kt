@@ -37,7 +37,8 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private
         userText: String,
         audio: AudioPayload? = null,
         temperature: Double = 0.7,
-        allowEmptyReply: Boolean = false
+        allowEmptyReply: Boolean = false,
+        image: Pair<String, ByteArray>? = null
     ): TutorReply {
         requireKey(apiKey)
         val contents = buildJsonArray {
@@ -52,6 +53,12 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private
             add(buildJsonObject {
                 put("role", JsonPrimitive("user"))
                 put("parts", buildJsonArray {
+                    if (image != null) add(buildJsonObject {
+                        put("inlineData", buildJsonObject {
+                            put("mimeType", JsonPrimitive(image.first))
+                            put("data", JsonPrimitive(Base64.getEncoder().encodeToString(image.second)))
+                        })
+                    })
                     if (audio != null) {
                         add(buildJsonObject {
                             put("inlineData", buildJsonObject {

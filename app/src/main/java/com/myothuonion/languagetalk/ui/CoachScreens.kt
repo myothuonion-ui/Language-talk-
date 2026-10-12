@@ -303,6 +303,9 @@ private fun CoachLessonScreen(viewModel: CoachViewModel, settings: AppSettings, 
                 TextButton({ viewModel.playRecording(attempt) }, enabled = canControl) { Text("ကိုယ့်အသံ ပြန်နားထောင်") }
             }
         }
+        if (!ui.placement && ui.reviewId == null && progress.readyNext) item {
+            Button(viewModel::continueStep, enabled = canControl, modifier = Modifier.fillMaxWidth().testTag("coach-continue-step")) { Text("Next · နောက်အဆင့်") }
+        }
         if (!ui.placement && ui.reviewId == null) item { TextButton(viewModel::restart, enabled = canControl) { Text("ဒီသင်ခန်းစာ ပြန်စမယ်") } }
     }
 }
@@ -330,7 +333,7 @@ private fun HangulPractice(viewModel: CoachViewModel) {
 @Composable
 internal fun LearningProfileScreen(viewModel: CoachViewModel, settings: AppSettings, onPractice: () -> Unit,
     onRead: (String, Int) -> Unit, onSettings: () -> Unit, onContext: () -> Unit,
-    onHistory: () -> Unit, onTranslate: () -> Unit, onNames: () -> Unit) {
+    onHistory: () -> Unit, onTranslate: () -> Unit, onNames: () -> Unit, onSaved: () -> Unit = {}) {
     val state by viewModel.learning.collectAsState()
     var section by rememberSaveable { mutableStateOf("main") }
     if (section != "main") BackHandler { section = "main" }
@@ -355,6 +358,7 @@ internal fun LearningProfileScreen(viewModel: CoachViewModel, settings: AppSetti
             item { ProfileRow("ပြန်လေ့ကျင့်ရန်", mistakes.size.toString()) { section = "mistakes" } }
             item { ProfileRow("တိုးတက်မှုနှင့် အသံမှတ်တမ်း", "") { section = "progress" } }
             item { ProfileRow("My Context", "ကိုယ်ရေးအခြေအနေ၊ မှတ်ဉာဏ်၊ Backup") { onContext() } }
+            item { ProfileRow("သိမ်းထားတာနဲ့ မှတ်စုများ", "ဝေါဟာရ၊ ဝါကျနဲ့ စာမျက်နှာ") { onSaved() } }
             item { ProfileRow("Review & recordings", "အရင်စကားပြောမှတ်တမ်း") { onHistory() } }
             item { ProfileRow("Settings", "အသံ၊ အရောင်၊ AI ချိတ်ဆက်မှု") { onSettings() } }
             item {

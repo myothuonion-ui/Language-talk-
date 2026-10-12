@@ -134,7 +134,7 @@ import java.util.Locale
 
 private enum class Screen {
     HOME, NEW_CHAT, HISTORY, CHAT_HUB, MEMORY, SETTINGS, MESSAGE_CHAT, LIVE_CHAT, NAME_STUDIO, QUICK_TRANSLATE, BOOKS,
-    LIBRARY, COACH, DAILY, ME, READER, ADVANCED, AI_SETTINGS
+    LIBRARY, COACH, DAILY, ME, READER, SAVED, ADVANCED, AI_SETTINGS
 }
 
 @Composable
@@ -143,7 +143,7 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
     val coachViewModel: CoachViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
     val readerViewModel: ReaderViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
     val settings by viewModel.settings.collectAsState()
-    LanguageTalkTheme(settings.darkTheme) {
+    LanguageTalkTheme(when (settings.appearance) { "DARK" -> true; "LIGHT" -> false; else -> androidx.compose.foundation.isSystemInDarkTheme() }) {
         var screen by rememberSaveable { mutableStateOf(Screen.LIBRARY) }
         var readerReturn by rememberSaveable { mutableStateOf(Screen.LIBRARY) }
         var bookReturn by rememberSaveable { mutableStateOf(Screen.LIBRARY) }
@@ -211,10 +211,13 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
             Box(Modifier.fillMaxSize().padding(padding)) {
                 when (screen) {
                     Screen.LIBRARY -> BookshelfScreen(readerViewModel,
-                        onRead = { readBook(it, null) }, onStudy = { id ->
+                        onSaved = { screen = Screen.SAVED }, onRead = { readBook(it, null) }, onStudy = { id ->
                             bookReturn = Screen.LIBRARY; viewModel.closeChat(); bookViewModel.selectBook(id); screen = Screen.BOOKS
                         })
-                    Screen.READER -> PdfReaderScreen(readerViewModel, onBack = { readerViewModel.close(); screen = readerReturn }, aiViewModel = viewModel)
+                    Screen.READER -> PdfReaderScreen(readerViewModel, onBack = { readerViewModel.close(); screen = readerReturn }, aiViewModel = viewModel,
+                        onPractice = { id -> readerViewModel.close(); coachViewModel.openReview(id); screen = Screen.DAILY })
+                    Screen.SAVED -> ReaderCollectionScreen(readerViewModel, onBack = { screen = Screen.ME },
+                        onRead = { id, page -> readBook(id, page) }, onPractice = { id -> coachViewModel.openReview(id); screen = Screen.DAILY })
                     Screen.COACH -> PracticeHubScreen(settings,
                         onBooks = { bookReturn = Screen.COACH; viewModel.closeChat(); screen = Screen.BOOKS },
                         onLive = { screen = Screen.CHAT_HUB }, onDaily = { screen = Screen.DAILY },
@@ -226,7 +229,7 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                         onPractice = { screen = Screen.COACH }, onRead = { id, page -> readBook(id, page) },
                         onSettings = { screen = Screen.SETTINGS }, onContext = { screen = Screen.MEMORY },
                         onHistory = { screen = Screen.HISTORY }, onTranslate = { screen = Screen.QUICK_TRANSLATE },
-                        onNames = { screen = Screen.NAME_STUDIO })
+                        onNames = { screen = Screen.NAME_STUDIO }, onSaved = { screen = Screen.SAVED })
                     Screen.HOME -> LearningHomeScreen(settings, chats, progress, reviews,
                         onContinue = openLiveChat, onNew = { screen = Screen.NEW_CHAT },
                         onQuick = { config ->
@@ -294,7 +297,7 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                                 onSpeak = { text -> viewModel.speak(chat.id, text) },
                                 onStopSpeaking = viewModel::stopSpeaking,
                                 onCustomize = { profileChatId = chat.id },
-                                answerProgress = progress.firstOrNull { it.chatId == chat.id }, onHelp = viewModel::helpWithAnswer,
+                                answerProgress = progress.firstOrNull { it.chatId == chat.id }, onHelp = viewModel::helpWithAnswer, onContinuePractice = viewModel::continuePractice,
                                 aiChooser = { AiTaskPicker(AiTask.CONVERSATION, viewModel, chat.id) },
                                 aiStatus = viewModel.aiStatus.collectAsState().value
                             )
@@ -313,7 +316,7 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                                 onToggleMic = viewModel::toggleLiveMic,
                                 onStop = viewModel::stopLive,
                                 onBack = { screen = Screen.CHAT_HUB },
-                                onCustomize = { profileChatId = chat.id }, onHelp = viewModel::helpWithAnswer,
+                                onCustomize = { profileChatId = chat.id }, onHelp = viewModel::helpWithAnswer, onContinuePractice = viewModel::continuePractice,
                                 onTextChat = { viewModel.stopLive(); openChat(chat.id) },
                                 aiChooser = { AiTaskPicker(AiTask.CONVERSATION, viewModel, chat.id) },
                                 aiStatus = viewModel.aiStatus.collectAsState().value
@@ -369,7 +372,7 @@ private fun AppBottomBar(screen: Screen, onSelect: (Screen) -> Unit) {
             NavigationBarItem(
                 selected = screen == target,
                 onClick = { onSelect(target) },
-                icon = { Icon(icon, label) },
+                icon = { GlassIcon(icon, label, active = screen == target) },
                 label = { Text(label) }
             )
         }
@@ -696,6 +699,7 @@ private fun ChatScreen(
     onCustomize: () -> Unit,
     answerProgress: LearningProgressEntity? = null,
     onHelp: () -> Unit = {},
+    onContinuePractice: () -> Unit = {},
     aiChooser: @Composable () -> Unit = {},
     aiStatus: AiRouteStatus = AiRouteStatus()
 ) {
@@ -735,6 +739,8 @@ private fun ChatScreen(
             }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = .12f))
+        if (answerProgress?.readyNext == true) Button(onContinuePractice, enabled = !work.isSending,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).testTag("guided-next")) { Text("Next · နောက်အဆင့်") }
         if (work.isSending) LinearProgressIndicator(Modifier.fillMaxWidth(), color = Mint)
 
         LazyColumn(

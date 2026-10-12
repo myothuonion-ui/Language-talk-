@@ -384,6 +384,7 @@ internal fun LiveChatScreen(
     onBack: () -> Unit,
     onCustomize: () -> Unit,
     onHelp: () -> Unit = {},
+    onContinuePractice: () -> Unit = {},
     onTextChat: () -> Unit = {},
     aiChooser: @Composable () -> Unit = {},
     aiStatus: AiRouteStatus = AiRouteStatus()
@@ -459,6 +460,7 @@ internal fun LiveChatScreen(
                 Text("${chat.practiceMode.replace('_', ' ')} · ${elapsedSeconds / 60}:${(elapsedSeconds % 60).toString().padStart(2, '0')} / 30:00",
                     color = Mint, fontSize = 12.sp)
                 progress?.let { item ->
+                    if (item.readyNext) Button(onContinuePractice, modifier = Modifier.testTag("guided-next")) { Text("Next · နောက်အဆင့်") }
                     Text("${item.stage} · ${item.completed}/5", color = Color.White.copy(alpha = .65f), fontSize = 12.sp)
                     if (item.targetSentence.isNotBlank()) Text(item.targetSentence, color = Color.White, fontSize = 18.sp,
                         textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp))

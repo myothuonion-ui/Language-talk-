@@ -37,6 +37,8 @@ class VoiceRecorder(private val context: Context) {
         recorder = mediaRecorder
     }
 
+    fun level(): Float = runCatching { ((recorder?.maxAmplitude ?: 0) / 32768f).coerceIn(0f, 1f) }.getOrDefault(0f)
+
     fun stop(): AudioPayload? {
         val file = outputFile
         return try {

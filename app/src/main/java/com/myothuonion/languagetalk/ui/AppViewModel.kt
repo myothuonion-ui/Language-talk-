@@ -138,6 +138,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private var liveStartJob: Job? = null
     private var liveGeneration = 0L
 
+    fun continuePractice() {
+        val id = currentChatId.value ?: return
+        stopLive(); player.stop(); recorder.stopSilently()
+        viewModelScope.launch {
+            try { repository.continuePractice(id); openingMessage(id) }
+            catch (failure: Exception) { _work.update { it.copy(error = failure.message) } }
+        }
+    }
     fun openChat(id: Long) { _currentChatId.value = id }
     fun closeChat() {
         stopLive()

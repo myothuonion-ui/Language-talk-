@@ -22,7 +22,7 @@ enum class CoachStep(val label: String) {
 
 @Serializable
 data class UnitProgress(val id: String, val step: Int = 0, val completed: Boolean = false,
-    val attempts: Int = 0, val passed: Int = 0, val updatedAt: Long = 0)
+    val attempts: Int = 0, val passed: Int = 0, val updatedAt: Long = 0, val readyNext: Boolean = false)
 
 @Serializable
 data class ReviewCard(val id: String, val title: String, val prompt: String, val criterion: String,
@@ -36,7 +36,7 @@ data class CoachAttempt(val unitId: String, val step: String, val heard: String,
 
 @Serializable
 data class ReaderBook(val id: String, val title: String, val fileName: String = "", val assetId: String = "",
-    val pageCount: Int, val page: Int = 0, val bookmarks: List<Int> = emptyList(), val addedAt: Long = 0)
+    val pageCount: Int, val page: Int = 0, val bookmarks: List<Int> = emptyList(), val addedAt: Long = 0, val fingerprint: String = "", val zoom: Float = 1f)
 
 @Serializable
 data class ReaderTranslation(val key: String, val selected: String, val lemma: String,
@@ -48,7 +48,8 @@ data class LearningState(val level: Int = 0, val activeUnit: String = "", val da
     val attempts: List<CoachAttempt> = emptyList(), val books: List<ReaderBook> = emptyList(),
     val translations: List<ReaderTranslation> = emptyList(), val readerTheme: String = "DAY",
     val placementLevel: Int = 0, val placementIndex: Int = 0, val placementPasses: Int = 0,
-    val placementDone: Boolean = false, val studySeconds: Map<String, Long> = emptyMap())
+    val placementDone: Boolean = false, val studySeconds: Map<String, Long> = emptyMap(),
+    val readerFlow: String = "HORIZONTAL", val readerMode: String = "PDF", val readerFontSize: Float = 21f)
 
 data class CoachTask(val spoken: String, val prompt: String, val criterion: String, val example: String,
     val hint: String, val canDo: String)
@@ -85,9 +86,13 @@ object CoachEngine {
     fun accept(progress: UnitProgress, assessment: String, heard: String, command: String, now: Long): UnitProgress {
         if (progress.completed || heard.isBlank() || command.isNotBlank() || assessment == "UNSURE" || assessment == "NONE") return progress
         val passed = assessment == "PASSED"
-        return progress.copy(attempts = progress.attempts + 1, passed = progress.passed + if (passed) 1 else 0,
-            step = if (passed) (progress.step + 1).coerceAtMost(CoachStep.entries.lastIndex) else progress.step,
-            completed = passed && progress.step == CoachStep.entries.lastIndex, updatedAt = now)
+        return progress.copy(attempts = progress.attempts + 1, passed = progress.passed + if (passed && !progress.readyNext) 1 else 0,
+            readyNext = progress.readyNext || passed, updatedAt = now)
+    }
+    fun continueStep(progress: UnitProgress): UnitProgress {
+        require(progress.readyNext && !progress.completed)
+        return progress.copy(step = (progress.step + 1).coerceAtMost(CoachStep.entries.lastIndex),
+            completed = progress.step == CoachStep.entries.lastIndex, readyNext = false)
     }
     fun review(card: ReviewCard, passed: Boolean, now: Long): ReviewCard {
         val streak = if (passed) (card.streak + 1).coerceAtMost(6) else 0

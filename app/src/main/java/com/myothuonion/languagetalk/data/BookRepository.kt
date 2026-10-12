@@ -53,11 +53,13 @@ class BookRepository(private val context: Context, val store: BookStore, private
         save(BookEngine.restart(state, role ?: state.role))
     }
     suspend fun pace(id: String, slow: Boolean) = turnMutex.withLock { save(progress(id).copy(slow = slow)) }
+    suspend fun continueTurn(id: String) = turnMutex.withLock { save(BookEngine.continueTurn(book(id), progress(id))) }
+    suspend fun selectSection(id: String, section: Int) = turnMutex.withLock { save(BookEngine.selectSection(book(id), progress(id), section)) }
+    suspend fun reviewed(id: String) = turnMutex.withLock { save(progress(id).copy(reviewed = true)) }
     suspend fun next(id: String) = turnMutex.withLock { save(BookEngine.completeSection(book(id), progress(id))) }
     suspend fun previous(id: String) = turnMutex.withLock {
         val state = progress(id)
-        if (state.section > 0) save(state.copy(section = state.section - 1, activity = 0, role = "", heard = "", feedback = "",
-            lastAssistantText = "", lastAssistantCaption = ""))
+        if (state.section > 0) save(BookEngine.selectSection(book(id), state, state.section - 1))
     }
 
     suspend fun prepare(id: String, voice: Boolean): HandsFreeTurn? = turnMutex.withLock {
@@ -141,20 +143,11 @@ class BookRepository(private val context: Context, val store: BookStore, private
             caption = speech
         } else {
             updated = BookEngine.assessed(book, start, heard, reply.assessment, feedback)
-            val passed = updated.activity > start.activity
-            if (passed) {
-                val opening = BookEngine.opening(book, updated)
-                updated = opening.progress
-                // The source controller supplies the audio; generated reply/speechText are ignored.
-                speech = opening.text
-                caption = opening.caption
-            } else {
-                speech = feedback.ifBlank { "ကောင်းကောင်းမကြားရပါ။ ဒီအဖြေကို ထပ်ပြောပါ။" }.take(1600)
-                caption = speech
-            }
+            speech = if (updated.readyNext) "잘했어요. 다음을 누르면 계속해요." else "같은 문장으로 다시 한번 말해 주세요."
+            caption = feedback.ifBlank { if (updated.readyNext) "လေ့ကျင့်ပြီးပြီ။ Next နှိပ်မှ ဆက်မယ်။" else "ဒီအဖြေကို ထပ်စမ်းပါ။" }
         }
-        val speechAudio = if (voice) tutor.bookSpeech(speech, updated.slow) else null
         save(updated)
+        val speechAudio = if (voice) tutor.bookSpeech(speech, updated.slow) else null
         speechAudio?.let { HandsFreeTurn(heard, caption, it) }
     }
 

@@ -16,9 +16,13 @@ class CoachEngineTest {
         var state = UnitProgress("course-1-1")
         repeat(6) { index ->
             state = CoachEngine.accept(state, "PASSED", "안녕하세요", "", index.toLong())
+            assertEquals(index, state.step)
             assertFalse(state.completed)
+            state = CoachEngine.continueStep(state)
         }
         state = CoachEngine.accept(state, "PASSED", "안녕하세요", "", 100)
+        assertFalse(state.completed)
+        state = CoachEngine.continueStep(state)
         assertTrue(state.completed)
         assertEquals(7, state.passed)
         assertEquals(state, CoachEngine.accept(state, "PASSED", "안녕하세요", "", 101))

@@ -75,7 +75,7 @@ class LearningRepository(private val context: Context, val store: LearningStore,
     }
     private fun feedback(result: TutorReply): String = listOf(result.correction, result.explanation, result.lessonNote)
         .filter { it.isNotBlank() }.distinct().joinToString("\n").take(1500).ifBlank {
-            if (result.assessment == "PASSED") "ကောင်းပါတယ်။ နောက်အဆင့်ကို ဆက်လေ့ကျင့်မယ်။"
+            if (result.assessment == "PASSED") "ကောင်းပါတယ်။ Next ကိုနှိပ်မှ နောက်အဆင့် ဆက်မယ်။"
             else "သေချာမကြားရပါ။ ဒီအဆင့်ကို ထပ်စမ်းပါ။"
         }
     suspend fun answer(text: String = "", audio: AudioPayload? = null, reviewId: String? = null,
@@ -137,6 +137,9 @@ class LearningRepository(private val context: Context, val store: LearningStore,
             recordings.listFiles()?.filter { it.name !in keep }?.forEach { it.delete() }
         }
         CoachResult(heard, note, passed, unsure)
+    }
+    suspend fun continueStep(id: String) = mutex.withLock {
+        store.update { state -> state.copy(units = state.units.map { if (it.id == id) CoachEngine.continueStep(it) else it }) }
     }
     suspend fun speech(text: String, slow: Boolean, alternate: Boolean = false): AudioPayload = withContext(Dispatchers.IO) {
         val settings = tutor.settings.first()

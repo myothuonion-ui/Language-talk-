@@ -28,7 +28,9 @@ class BookEngineTest {
         val book = course()
         val ready = BookEngine.opening(book, state()).progress
         val assessed = BookEngine.assessed(book, ready, "저도 반갑습니다", "PASSED", "")
-        val next = BookEngine.opening(book, assessed)
+        assertEquals(ready.activity, assessed.activity)
+        assertTrue(assessed.readyNext)
+        val next = BookEngine.opening(book, BookEngine.continueTurn(book, assessed))
         assertEquals("어디에 사세요?", next.text)
         assertEquals("서울에 살아요.", BookEngine.target(book, next.progress)?.text)
     }
@@ -60,7 +62,10 @@ class BookEngineTest {
     @Test fun cannot_complete_dialogue_or_unlock_future_chapter_early() {
         val book = course()
         assertThrows(IllegalArgumentException::class.java) { BookEngine.completeSection(book, state()) }
-        assertThrows(IllegalArgumentException::class.java) { BookEngine.selectChapter(book, state(), 2) }
+        val future = BookEngine.selectChapter(book, state(), 2)
+        assertEquals(2, future.chapter)
+        assertTrue(future.completedChapters.isEmpty())
+        assertTrue(BookEngine.validate(book, future))
         val done = BookEngine.completeSection(book, state().copy(activity = 5))
         assertEquals(listOf(1), done.completedChapters)
         assertEquals(2, done.chapter)
@@ -83,7 +88,7 @@ class BookEngineTest {
             BookExercise(2, "engineer", "저는 엔지니어예요.", 17)))
         val book = course(listOf(section))
         assertEquals("저는 회사원이에요.", BookEngine.target(book, state())?.text)
-        val after = BookEngine.assessed(book, state(), "저는회사원이에요", "PASSED", "")
+        val after = BookEngine.continueTurn(book, BookEngine.assessed(book, state(), "저는회사원이에요", "PASSED", ""))
         assertEquals("저는 엔지니어예요.", BookEngine.target(book, after)?.text)
         assertFalse(BookEngine.finished(book, after))
     }
@@ -111,4 +116,22 @@ class BookEngineTest {
         assertFalse(BookEngine.validate(book, state().copy(activity = 6)))
         assertFalse(BookEngine.validate(book, state().copy(section = 9)))
     }
+    @Test fun freeChapterSelectionRestoresTheUnfinishedSectionAndDoesNotCompleteSkippedContent() {
+        val book = course()
+        val old = BookEngine.opening(book, state()).progress.copy(heard = "unfinished", feedback = "retry")
+        val future = BookEngine.selectChapter(book, old, 2)
+        val restored = BookEngine.selectChapter(book, future, 1)
+        assertEquals(old.activity, restored.activity)
+        assertEquals(old.role, restored.role)
+        assertEquals(old.heard, restored.heard)
+        assertTrue(restored.completedChapters.isEmpty())
+        assertThrows(IllegalArgumentException::class.java) { BookEngine.continueTurn(book, old) }
+    }
+    @Test fun openingListeningAndEmptySectionsDoNotClaimCompletion() {
+        val book = course(listOf(BookSection("vocabulary", "Words", "VOCABULARY", "안녕", listOf(14))))
+        assertFalse(BookEngine.finished(book, state()))
+        assertThrows(IllegalArgumentException::class.java) { BookEngine.completeSection(book, state()) }
+        assertTrue(BookEngine.finished(book, state().copy(reviewed = true)))
+    }
+
 }

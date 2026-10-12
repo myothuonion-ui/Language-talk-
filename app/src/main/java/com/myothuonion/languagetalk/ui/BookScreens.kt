@@ -22,6 +22,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -153,7 +155,7 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
                 }
             }
             items(book.chapters, key = { it.number }) { unit ->
-                val unlocked = unit.number <= BookEngine.frontier(book, state)
+                val unlocked = true
                 OutlinedCard {
                     Column(Modifier.fillMaxWidth().padding(13.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("${unit.number}. ${unit.title}", fontWeight = FontWeight.Bold)
@@ -174,7 +176,15 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
                 Text(chapter.title, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 Text("${state.section + 1}/${chapter.sections.size} · ${section.label}", color = Mint)
                 if (section.sourceNote.isNotBlank()) Text(section.sourceNote, color = Coral, fontSize = 13.sp)
-                LinearProgressIndicator(progress = { (state.section + 1f) / chapter.sections.size }, modifier = Modifier.fillMaxWidth())
+                var sectionsOpen by remember { mutableStateOf(false) }
+                Box {
+                    OutlinedButton({ sectionsOpen = true }, enabled = canControl) { Text("အပိုင်းရွေးမယ်"); Icon(androidx.compose.material.icons.Icons.Default.MenuBook, null) }
+                    DropdownMenu(sectionsOpen, { sectionsOpen = false }) {
+                        chapter.sections.forEachIndexed { index, value -> DropdownMenuItem(text = { Text(value.label) },
+                            onClick = { viewModel.selectSection(index); sectionsOpen = false }) }
+                    }
+                }
+                LinearProgressIndicator(progress = { state.completedSections.count { it.startsWith("${state.bookId}/${state.version}/${state.chapter}/") }.toFloat() / chapter.sections.size }, modifier = Modifier.fillMaxWidth())
                 TextButton({ viewModel.stopVoice(); pdfPage = section.pages.first() }, enabled = !ui.busy) { Text("မူရင်းစာမျက်နှာ ${section.pages.joinToString()}") }
             }
             if (section.turns.isNotEmpty()) item {
@@ -206,10 +216,26 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
                             TextButton({ hint = !hint }) { Text(if (hint) "အဖြေဖျောက်" else "အဖြေကြည့်") }
                             TextButton({ viewModel.explain(true) }, enabled = canControl) { Text("မြန်မာလိုရှင်းပြ") }
                         }
+                        if (state.readyNext) Button(viewModel::continueTurn, enabled = canControl,
+                            modifier = Modifier.fillMaxWidth().testTag("book-continue-turn")) { Text("Next · နောက်အလှည့်") }
+                        Text(when (ui.speechPhase) {
+                            "LISTENING" -> "အသံဖမ်းနေ · ${ui.recordingSeconds}s"
+                            "PROCESSING" -> "အသံ/အဖြေ ပို့ပြီး စာသားနဲ့ ရလဒ်စောင့်နေ"
+                            "SPEAKING" -> "AI အသံပြောနေ"
+                            "ERROR" -> "အသံချိတ်ဆက်မှု မအောင်မြင်ပါ"
+                            else -> "Mic ပိတ်ထား · ဖြေဖို့နှိပ်ပါ"
+                        }, fontSize = 12.sp)
+                        if (ui.recording) {
+                            LinearProgressIndicator(progress = { ui.inputLevel }, modifier = Modifier.fillMaxWidth())
+                            Text("ဒီအသံတန်းက ဖုန်းမှာ အသံဝင်နေတာကိုပြတယ်။ AI ဖမ်းမိတဲ့စာသားကို အဖြေစစ်ပြီးမှ ပြမယ်။", fontSize = 11.sp)
+                        }
                         OutlinedTextField(answer, { answer = it }, label = { Text("ကိုရီးယားလို ဖြေပါ") }, modifier = Modifier.fillMaxWidth().testTag("book-answer"), enabled = canControl)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button({ viewModel.send(answer) }, enabled = canControl && answer.isNotBlank()) { Text("အဖြေစစ်") }
-                            OutlinedButton({ microphone("record") }, enabled = !ui.busy && !live.connected) { Text(if (ui.recording) "အသံပို့" else "အသံနဲ့ဖြေ") }
+                            FilledTonalButton({ microphone("record") }, enabled = !ui.busy && !live.connected) {
+                                GlassIcon(if (ui.recording) androidx.compose.material.icons.Icons.Default.Send else androidx.compose.material.icons.Icons.Default.Mic, "Microphone")
+                                Spacer(Modifier.width(7.dp)); Text(if (ui.recording) "အသံပို့" else "အသံနဲ့ဖြေ")
+                            }
                         }
                     }
                 }
@@ -243,7 +269,7 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
                     Text("မြန်မာရှင်းပြချက်", fontWeight = FontWeight.Bold, color = Mint)
                     Text(ui.explanation, fontSize = 17.sp)
                     Text("မူရင်းစာကို အခြေခံထားတဲ့ AI ရှင်းပြချက်", fontSize = 11.sp)
-                    TextButton({ viewModel.speak(ui.explanation) }, enabled = canControl) { Text("ရှင်းပြချက်နားထောင်") }
+                    Text("မြန်မာရှင်းပြချက်ကို စာသားနဲ့ဖတ်ပါ။ ကိုရီးယားဥပမာကို အသံဖွင့်နိုင်ပါတယ်။", fontSize = 11.sp)
                 }
             }
             item {
@@ -255,6 +281,8 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
                 }
             }
             item {
+                if (section.turns.isEmpty() && section.exercises.isEmpty() && !state.reviewed)
+                    OutlinedButton(viewModel::reviewed, enabled = canControl) { Text("ဖတ်ပြီး ကိုယ်တိုင်လေ့လာပြီးပြီ") }
                 if (finished) Text("ဒီအပိုင်းကို ဆက်နိုင်ပါပြီ။ လေ့လာပြီးမှုနဲ့ အလွတ်သုံးနိုင်မှုကို သီးခြားလေ့ကျင့်မယ်။", color = Mint)
                 Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                     OutlinedButton(viewModel::previous, enabled = canControl && state.section > 0) { Text("အရင်အပိုင်း") }
