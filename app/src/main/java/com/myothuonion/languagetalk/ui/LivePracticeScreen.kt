@@ -85,6 +85,11 @@ internal fun LiveChatScreen(chat: ChatEntity,state: LiveState,progress: Learning
                 }
             }
         }
+        if (state.error != null) item {
+            Text(state.error.orEmpty(),color = MaterialTheme.colorScheme.error,style = MaterialTheme.typography.bodyMedium)
+            Button({ onStop(); begin() },Modifier.fillMaxWidth()) { Text("ပြန်ချိတ်မယ်") }
+            TextButton(onTextChat) { Text("စာရိုက်ပြီး ဆက်မယ်") }
+        }
         item {
             Text(when (progress?.stage) { "REPEAT" -> "နမူနာကို လိုက်ပြော"; "APPLY" -> "ကိုယ်တိုင် အသုံးချပြော"; "REVIEW" -> "ပြန်လေ့လာ"; else -> "စလေ့လာမယ်" },
                 color = MaterialTheme.colorScheme.primary,fontWeight = FontWeight.SemiBold)
@@ -139,11 +144,6 @@ internal fun LiveChatScreen(chat: ChatEntity,state: LiveState,progress: Learning
         if (denied) item {
             Text("အသံလေ့ကျင့်ဖို့ Microphone permission ဖွင့်ပေးပါ။",color = MaterialTheme.colorScheme.error)
             OutlinedButton({ begin() }) { Text("Mic ခွင့်ပြုမယ်") }
-        }
-        if (state.error != null) item {
-            Text(state.error.orEmpty(),color = MaterialTheme.colorScheme.error,style = MaterialTheme.typography.bodyMedium)
-            Button({ onStop(); begin() },Modifier.fillMaxWidth()) { Text("ပြန်ချိတ်မယ်") }
-            TextButton(onTextChat) { Text("စာရိုက်ပြီး ဆက်မယ်") }
         }
         if (aiStatus.review.isNotBlank()) item { Text(aiStatus.review,style = MaterialTheme.typography.bodySmall) }
     }

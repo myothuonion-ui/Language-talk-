@@ -68,6 +68,8 @@ class PracticeScreensTest {
         compose.activity.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.waitUntil(10000) { compose.onAllNodesWithTag("practice-hub").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Me", useUnmergedTree = true).performClick()
+        compose.waitUntil(10000) { compose.onAllNodesWithTag("learning-profile").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("learning-profile").performScrollToNode(hasText("My Context"))
         compose.onNodeWithText("My Context").performClick()
         compose.onNodeWithText("Save profile").assertIsDisplayed()
         capture("context")

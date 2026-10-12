@@ -97,9 +97,12 @@ class ReaderAndLearningTest {
             compose.onNodeWithContentDescription("Clear text selection").performClick()
             compose.onNodeWithContentDescription("PDF page 1").performTouchInput { swipeLeft() }
             compose.waitUntil(20000) { compose.onAllNodesWithText("2 / 2").fetchSemanticsNodes().isNotEmpty() }
+            try {
+                compose.waitUntil(20000) { runCatching { compose.onNodeWithContentDescription("PDF page 2").assertIsDisplayed() }.isSuccess }
+            } finally { capture("reader-swipe") }
             compose.onNodeWithContentDescription("PDF page 2").assertIsDisplayed()
+            compose.waitUntil(10000) { runBlocking { app.learningStore.export().books.first { it.id == book.id }.page == 1 } }
             assertEquals(1, runBlocking { app.learningStore.export().books.first { it.id == book.id }.page })
-            capture("reader-swipe")
             page.bitmap.recycle()
         } finally {
             compose.activity.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
