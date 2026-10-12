@@ -72,7 +72,7 @@ class ReaderAndLearningTest {
                 longClick(Offset(width * (word.left + word.right) / 2, height * (word.top + word.bottom) / 2), 1100)
             }
             compose.waitUntil(15000) { compose.onAllNodesWithTag("reader-selection").fetchSemanticsNodes().isNotEmpty() }
-            compose.onNodeWithTag("reader-selection").performScrollToNode(hasText("မြန်မာလိုရှင်းပြ"))
+            compose.onNodeWithText("မြန်မာလိုရှင်းပြ").performScrollTo()
             compose.onNodeWithText("မြန်မာလိုရှင်းပြ").performClick()
             compose.waitUntil(15000) { compose.onAllNodesWithText("မင်္ဂလာပါ").fetchSemanticsNodes().isNotEmpty() }
             compose.mainClock.advanceTimeBy(1000)
