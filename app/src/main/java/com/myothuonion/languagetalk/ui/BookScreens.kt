@@ -141,7 +141,7 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
             item {
                 Card {
                     Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(Icons.Default.MenuBook, null, tint = Mint)
+                        Icon(Icons.Default.MenuBook, null, tint = MaterialTheme.colorScheme.primary)
                         Text(book.title, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Text("${book.pageCount} စာမျက်နှာ · လေ့လာပြီး ${state.completedChapters.size}/${book.chapters.size} ခန်း")
                         Text("ရပ်ထားတဲ့နေရာ: ${state.chapter}. ${chapter.title} · ${section.label}")
@@ -159,7 +159,7 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
                     Column(Modifier.fillMaxWidth().padding(13.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text("${unit.number}. ${unit.title}", fontWeight = FontWeight.Bold)
                         Text("${unit.category} · စာမျက်နှာ ${unit.startPage}–${unit.endPage}", fontSize = 12.sp)
-                        if (unit.number in state.completedChapters) Text("လေ့လာပြီး", color = Mint)
+                        if (unit.number in state.completedChapters) Text("လေ့လာပြီး", color = MaterialTheme.colorScheme.primary)
                         Row {
                             TextButton({ if (unit.number != state.chapter) viewModel.selectChapter(unit.number) else viewModel.resume(); lessonOpen = true }, enabled = unlocked && canControl) {
                                 Text(if (unlocked) "သင်ခန်းစာဖွင့်" else "အရင်အခန်းပြီးမှ ဖွင့်မယ်")
@@ -173,8 +173,8 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
         } else {
             item {
                 Text(chapter.title, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-                Text("${state.section + 1}/${chapter.sections.size} · ${section.label}", color = Mint)
-                if (section.sourceNote.isNotBlank()) Text(section.sourceNote, color = Coral, fontSize = 13.sp)
+                Text("${state.section + 1}/${chapter.sections.size} · ${section.label}", color = MaterialTheme.colorScheme.primary)
+                if (section.sourceNote.isNotBlank()) Text(section.sourceNote, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                 var sectionsOpen by remember { mutableStateOf(false) }
                 Box {
                     OutlinedButton({ sectionsOpen = true }, enabled = canControl) { Text("အပိုင်းရွေးမယ်"); Icon(androidx.compose.material.icons.Icons.Default.MenuBook, null) }
@@ -197,7 +197,7 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
             if (state.lastAssistantCaption.isNotBlank()) item {
                 Card {
                     Column(Modifier.fillMaxWidth().padding(15.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
-                        Text("AI အလှည့်", color = Mint, fontWeight = FontWeight.Bold)
+                        Text("AI အလှည့်", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                         Text(state.lastAssistantCaption, fontSize = 19.sp)
                         TextButton({ viewModel.speak(state.lastAssistantText) }, enabled = canControl) { Text("ထပ်နားထောင်") }
                     }
@@ -208,7 +208,7 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
                     Column(Modifier.fillMaxWidth().padding(15.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
                         Text(if (section.exercises.isNotEmpty()) "လေ့ကျင့်ခန်း ${state.activity + 1}/${section.exercises.size}" else "မင်းအလှည့် · ${BookEngine.role(section, state)}", fontWeight = FontWeight.Bold)
                         if (section.exercises.isNotEmpty()) Text(target.prompt, fontSize = 17.sp)
-                        if (hint) Text(target.text, fontSize = 22.sp, color = Mint)
+                        if (hint) Text(target.text, fontSize = 22.sp, color = MaterialTheme.colorScheme.primary)
                         else Text("အဖြေကို မကြည့်ဘဲ အရင်ကြိုးစားပါ")
                         if (english && section.turns.isNotEmpty()) Text(section.turns[state.activity].english)
                         Row {
@@ -241,7 +241,7 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
             }
             if (state.heard.isNotBlank()) item {
                 Text("ကြားခဲ့တာ: ${state.heard}")
-                if (state.feedback.isNotBlank()) Text(state.feedback, color = Coral)
+                if (state.feedback.isNotBlank()) Text(state.feedback, color = if (state.readyNext) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
             }
             if (section.turns.isNotEmpty() || section.exercises.isNotEmpty()) item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -265,7 +265,7 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
                     if (section.turns.isNotEmpty()) TextButton({ english = !english }) { Text("English") }
                 }
                 if (ui.explanation.isNotBlank()) {
-                    Text("မြန်မာရှင်းပြချက်", fontWeight = FontWeight.Bold, color = Mint)
+                    Text("မြန်မာရှင်းပြချက်", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                     Text(ui.explanation, fontSize = 17.sp)
                     Text("မူရင်းစာကို အခြေခံထားတဲ့ AI ရှင်းပြချက်", fontSize = 11.sp)
                     Text("မြန်မာရှင်းပြချက်ကို စာသားနဲ့ဖတ်ပါ။ ကိုရီးယားဥပမာကို အသံဖွင့်နိုင်ပါတယ်။", fontSize = 11.sp)
@@ -282,7 +282,7 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
             item {
                 if (section.turns.isEmpty() && section.exercises.isEmpty() && !state.reviewed)
                     OutlinedButton(viewModel::reviewed, enabled = canControl) { Text("ဖတ်ပြီး ကိုယ်တိုင်လေ့လာပြီးပြီ") }
-                if (finished) Text("ဒီအပိုင်းကို ဆက်နိုင်ပါပြီ။ လေ့လာပြီးမှုနဲ့ အလွတ်သုံးနိုင်မှုကို သီးခြားလေ့ကျင့်မယ်။", color = Mint)
+                if (finished) Text("ဒီအပိုင်းကို ဆက်နိုင်ပါပြီ။ လေ့လာပြီးမှုနဲ့ အလွတ်သုံးနိုင်မှုကို သီးခြားလေ့ကျင့်မယ်။", color = MaterialTheme.colorScheme.primary)
                 Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                     OutlinedButton(viewModel::previous, enabled = canControl && state.section > 0) { Text("အရင်အပိုင်း") }
                     Button(viewModel::next, enabled = canControl && finished, modifier = Modifier.testTag("book-next")) { Text("နောက်အပိုင်း") }

@@ -33,6 +33,12 @@ internal fun ReaderSelectionPanel(viewModel: ReaderViewModel, onPractice: (Strin
             IconButton({ editing = !editing }) { Icon(Icons.Default.Edit, "Correct selected text") }
             IconButton(viewModel::dismissLookup) { Icon(Icons.Default.Close, "Close selection") }
         }
+        if (ui.translating) LinearProgressIndicator(Modifier.fillMaxWidth())
+        ui.translation?.let { value ->
+            Text(value.meaning, fontSize = 17.sp, lineHeight = 28.sp)
+            if (value.grammar.isNotBlank()) Text(value.grammar, lineHeight = 25.sp)
+            TextButton(viewModel::saveWord, enabled = !ui.saved) { Text(if (ui.saved) "ဝေါဟာရသိမ်းပြီး" else "ဝေါဟာရအဖြစ်သိမ်း") }
+        }
         if (editing) {
             OutlinedTextField(corrected, { corrected = it.take(1200) }, Modifier.fillMaxWidth(), label = { Text("OCR စာသားပြင်") })
             TextButton({ viewModel.lookup(corrected, ui.sentence, ui.regions, translate = true) }, enabled = corrected.isNotBlank()) { Text("ပြင်ထားတဲ့စာသားကို ရှင်းပြ") }
@@ -59,12 +65,7 @@ internal fun ReaderSelectionPanel(viewModel: ReaderViewModel, onPractice: (Strin
             TextButton({ viewModel.listen() }) { Icon(Icons.Default.VolumeUp, null); Spacer(Modifier.width(5.dp)); Text("AI အသံ") }
             TextButton({ viewModel.practiceCard(onSaved = onPractice) }) { Text("ဒီစာသားကို လေ့ကျင့်") }
         }
-        if (ui.translating) LinearProgressIndicator(Modifier.fillMaxWidth())
-        ui.translation?.let { value ->
-            Text(value.meaning, fontSize = 17.sp, lineHeight = 28.sp)
-            if (value.grammar.isNotBlank()) Text(value.grammar, lineHeight = 25.sp)
-            TextButton(viewModel::saveWord, enabled = !ui.saved) { Text(if (ui.saved) "ဝေါဟာရသိမ်းပြီး" else "ဝေါဟာရအဖြစ်သိမ်း") }
-        }
+
     }
 }
 
