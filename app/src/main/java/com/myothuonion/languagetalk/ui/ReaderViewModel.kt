@@ -108,13 +108,19 @@ class ReaderViewModel(application: Application) : AndroidViewModel(application) 
     }
     fun dismissLookup() {
         translateJob?.cancel(); stopAudio()
-        _ui.update { it.copy(selection = "", translation = null, translating = false, lookupOpen = false, rectangles = emptyList(), saved = false) }
+        _ui.update { it.copy(selection = "", translation = null, translating = false, lookupOpen = false, rectangles = emptyList(), selectionStart = -1, saved = false) }
     }
     fun lookup(text: String = ui.value.selection, sentence: String = ui.value.sentence) {
         if (text.isBlank()) return
         translateJob?.cancel()
+        stopAudio()
         val id = ui.value.bookId; val page = ui.value.page; val selected = text.trim().take(1200)
-        _ui.update { it.copy(selection = selected, sentence = sentence.take(4000), lookupOpen = true, translating = true, error = null) }
+        _ui.update {
+            val sameSelection = it.selection == selected
+            it.copy(selection = selected, sentence = sentence.take(4000), lookupOpen = true, translating = true,
+                rectangles = if (sameSelection) it.rectangles else emptyList(), selectionStart = if (sameSelection) it.selectionStart else -1,
+                translation = null, saved = false, status = "", error = null)
+        }
         translateJob = viewModelScope.launch {
             try {
                 val result = repository.translate(selected,sentence)
