@@ -74,7 +74,7 @@ object BackupCodec {
         require(backup.books.progress.size <= 2 && backup.books.progress.map { it.bookId }.distinct().size == backup.books.progress.size) { "Invalid book progress" }
         require(backup.books.progress.all { it.bookId in setOf("ttmik-beginner", "ttmik-intermediate") &&
             it.chapter in 1..40 && it.section in 0..12 && it.activity in 0..100 && it.mistakes.size <= 100 && it.completedSections.size <= 500 }) { "Invalid book lesson state" }
-        require(backup.books.explanations.size <= 500 && backup.books.explanations.all { it.key.length <= 180 && it.text.length <= 12000 }) { "Book explanations are too large" }
+        require(backup.books.explanations.size <= 500 && backup.books.explanations.all { it.key.length <= 180 && it.text.length <= 60000 }) { "Book explanations are too large" }
         require(backup.preferences.appearance in setOf("SYSTEM", "LIGHT", "DARK"))
         require(backup.annotations.size <= 5000 && backup.annotations.map { it.id }.distinct().size == backup.annotations.size)
         backup.annotations.forEach {

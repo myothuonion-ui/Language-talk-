@@ -45,7 +45,7 @@ class LiveErrorScreenTest {
                 }
             }
         }
-        compose.onNodeWithText("ပြန်ချိတ်မယ်").performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("ပြန်ချိတ်မယ်").assertIsDisplayed().performClick()
         compose.runOnIdle { assertEquals(2, starts); assertEquals(1, stops) }
         val directory = File(instrumentation.targetContext.getExternalFilesDir(null), "screenshots").apply { mkdirs() }
         File(directory, "live-error-retry.png").outputStream().use { output ->

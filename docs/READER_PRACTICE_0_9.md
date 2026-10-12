@@ -19,3 +19,6 @@ System/Light/Dark app appearance is persisted independently of Original/Sepia/Ni
 Back up first in Me → My Context → Export backup. Keep imported PDF/audio source files. The earlier 0.8.1 release used a newly generated CI debug signing key, so Android may reject an in-place upgrade. Do not uninstall until you have exported the data. Restore the JSON after reinstalling and re-enter your API keys if necessary.
 
 This is a development update (0.9.0), not a v1.0 production claim. Automated tests exercise progress gating, source validation, migrations, backup round trips, OCR selection, swipe navigation and settings. Real noisy-microphone and provider-account checks still require the user's device and credentials. Publisher audio is not bundled by this update.
+
+Book and Live practice now use separate current AI/learner cards, a prominent microphone, real input status and optional typing. Voice controls and explanation cards open only when requested.
+Book grammar teaching uses the same source-validated Myanmar card structure as page teaching; answers remain hidden and extra practice is labelled AI-created. System bar icons follow the selected appearance.

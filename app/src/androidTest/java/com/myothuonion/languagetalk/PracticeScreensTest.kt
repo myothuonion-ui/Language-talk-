@@ -5,6 +5,8 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -66,6 +68,8 @@ class PracticeScreensTest {
         compose.activity.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.waitUntil(10000) { compose.onAllNodesWithTag("practice-hub").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Me", useUnmergedTree = true).performClick()
+        compose.waitUntil(10000) { compose.onAllNodesWithTag("learning-profile").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("learning-profile").performScrollToNode(hasText("My Context"))
         compose.onNodeWithText("My Context").performClick()
         compose.onNodeWithText("Save profile").assertIsDisplayed()
         capture("context")
@@ -76,6 +80,19 @@ class PracticeScreensTest {
         compose.onNodeWithTag("simple-settings").assertExists()
         compose.onNodeWithText("အသံနဲ့ သင်ယူမှု").assertIsDisplayed()
         capture("api-settings")
+        val repository = (compose.activity.application as LanguageTalkApplication).repository
+        val previousAppearance = runBlocking { repository.settings.first().appearance }
+        compose.onNodeWithTag("simple-settings").performScrollToNode(hasTestTag("appearance-DARK"))
+        compose.onNodeWithTag("appearance-DARK").performClick()
+        compose.waitUntil(10000) { runBlocking { repository.settings.first().appearance == "DARK" } }
+        compose.onNodeWithTag("appearance-DARK").assertIsSelected()
+        capture("settings-dark")
+        compose.onNodeWithTag("appearance-LIGHT").performClick()
+        compose.waitUntil(10000) { runBlocking { repository.settings.first().appearance == "LIGHT" } }
+        compose.onNodeWithTag("appearance-LIGHT").assertIsSelected()
+        capture("settings-light")
+        compose.onNodeWithTag("appearance-" + previousAppearance).performClick()
+        compose.waitUntil(10000) { runBlocking { repository.settings.first().appearance == previousAppearance } }
         compose.onNodeWithTag("simple-settings").performScrollToNode(hasTestTag("open-ai-settings"))
         compose.onNodeWithTag("open-ai-settings").performClick()
         compose.onNodeWithTag("ai-settings").assertExists()

@@ -375,7 +375,7 @@ internal fun ChatProfileDialog(
 }
 
 @Composable
-internal fun LiveChatScreen(
+internal fun LegacyLiveChatScreen(
     chat: ChatEntity,
     state: LiveState,
     progress: LearningProgressEntity?,

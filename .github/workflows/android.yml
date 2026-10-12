@@ -98,6 +98,7 @@ jobs:
             app/build/reports/androidTests
             app/build/outputs/androidTest-results
             ui-screenshots
+            ui-instrumentation.log
 
   windows-backup:
     runs-on: windows-latest

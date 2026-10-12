@@ -59,7 +59,7 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         val progress = repository.progress(id)
         val section = BookEngine.section(repository.book(id), progress)
         if (section.turns.isNotEmpty() || section.exercises.isNotEmpty()) repository.prepare(id, false)
-        val cached = repository.shelf.first().explanations.firstOrNull { it.key == BookEngine.key(progress, section) + "/myanmar" }?.text.orEmpty()
+        val cached = repository.shelf.first().explanations.firstOrNull { it.key == "teaching-v2/" + BookEngine.key(progress, section) + "/myanmar" }?.text.orEmpty()
         _state.update { it.copy(explanation = cached) }
     }
 
@@ -81,7 +81,9 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     fun continueTurn() = change { repository.continueTurn(it) }
     fun selectSection(section: Int) = change { repository.selectSection(it, section) }
     fun reviewed() = change { repository.reviewed(it) }
-    fun next() = change { repository.next(it) }
+    fun next() = change { if (repository.progress(it).readyNext) repository.continueTurn(it) else repository.next(it) }
+    fun retryItem() = change { if (BookEngine.finished(repository.book(it), repository.progress(it))) repository.restart(it) else repository.retryItem(it) }
+    fun stopPlayback() { player.stop(); _state.update { it.copy(speechPhase = "READY") } }
     fun previous() = change { repository.previous(it) }
     fun pace(slow: Boolean) = change { repository.pace(it, slow) }
 

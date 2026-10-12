@@ -1,11 +1,18 @@
 package com.myothuonion.languagetalk.ui
 
+import android.app.Activity
+import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
 val Ink = Color(0xFF0B0912)
 val SurfaceDark = Color(0xFF15131F)
@@ -88,5 +95,18 @@ private val LightColors = lightColorScheme(
 
 @Composable
 fun LanguageTalkTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (darkTheme) DarkColors else LightColors, content = content)
+    val colors = if (darkTheme) DarkColors else LightColors
+    val activity = LocalContext.current as? Activity
+    val view = LocalView.current
+    if (!view.isInEditMode && activity != null) SideEffect {
+        val window = activity.window
+        WindowCompat.getInsetsController(window, view).apply {
+            isAppearanceLightStatusBars = !darkTheme
+            isAppearanceLightNavigationBars = !darkTheme
+        }
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = colors.background.toArgb()
+        if (Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced = false
+    }
+    MaterialTheme(colorScheme = colors, content = content)
 }

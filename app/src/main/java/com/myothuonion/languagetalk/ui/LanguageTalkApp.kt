@@ -319,7 +319,9 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                                 onCustomize = { profileChatId = chat.id }, onHelp = viewModel::helpWithAnswer, onContinuePractice = viewModel::continuePractice,
                                 onTextChat = { viewModel.stopLive(); openChat(chat.id) },
                                 aiChooser = { AiTaskPicker(AiTask.CONVERSATION, viewModel, chat.id) },
-                                aiStatus = viewModel.aiStatus.collectAsState().value
+                                aiStatus = viewModel.aiStatus.collectAsState().value,
+                                onSpeak = { viewModel.stopLive(); viewModel.speak(chat.id, it) },
+                                isPlaying = work.isSpeaking, onStopPlayback = viewModel::stopSpeaking
                             )
                         } else LoadingPane("Opening Live conversation…")
                     }
