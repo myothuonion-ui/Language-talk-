@@ -245,6 +245,7 @@ internal fun PdfReaderScreen(viewModel: ReaderViewModel, onBack: () -> Unit, aiV
                     }, enabled = query.isNotBlank() && !searchBusy) { Text("ရှာမယ်") }
                     if (searchBusy) TextButton({ searchJob?.cancel(); searchBusy = false }) { Text("ရပ်မယ်") }
                 }
+                TextButton({ viewModel.lookup(query, ui.pageData?.layer?.text.orEmpty().take(4000)); search = false }, enabled = query.isNotBlank()) { Text("ဒီစာသားကို မြန်မာလို ရှာမယ်") }
                 Text("PDF စာသား/OCR နဲ့ ရှာမယ်။ Scanned စာအုပ်မှာ အချိန်ယူနိုင်ပါတယ်။", fontSize = 12.sp)
                 if (searchError.isNotBlank()) Text(searchError, color = MaterialTheme.colorScheme.error)
                 if (searchBusy) LinearProgressIndicator(Modifier.fillMaxWidth())

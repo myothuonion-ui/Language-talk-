@@ -21,6 +21,8 @@ import com.myothuonion.languagetalk.model.*
 @Composable
 internal fun ReaderSelectionPanel(viewModel: ReaderViewModel, onPractice: (String) -> Unit) {
     val ui by viewModel.ui.collectAsState()
+    var editing by remember(ui.selection) { mutableStateOf(false) }
+    var corrected by remember(ui.selection) { mutableStateOf(ui.selection) }
     var noteOpen by remember(ui.selection) { mutableStateOf(false) }
     var note by remember(ui.selection) { mutableStateOf("") }
     var color by remember { mutableLongStateOf(0xFFFFD666) }
@@ -28,7 +30,12 @@ internal fun ReaderSelectionPanel(viewModel: ReaderViewModel, onPractice: (Strin
         .verticalScroll(rememberScrollState()).padding(14.dp).testTag("reader-selection"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(ui.selection, Modifier.weight(1f), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 3)
+            IconButton({ editing = !editing }) { Icon(Icons.Default.Edit, "Correct selected text") }
             IconButton(viewModel::dismissLookup) { Icon(Icons.Default.Close, "Close selection") }
+        }
+        if (editing) {
+            OutlinedTextField(corrected, { corrected = it.take(1200) }, Modifier.fillMaxWidth(), label = { Text("OCR စာသားပြင်") })
+            TextButton({ viewModel.lookup(corrected, ui.sentence, ui.regions, translate = true) }, enabled = corrected.isNotBlank()) { Text("ပြင်ထားတဲ့စာသားကို ရှင်းပြ") }
         }
         Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
             OutlinedButton({ viewModel.annotate("HIGHLIGHT", color = color) }, Modifier.testTag("add-highlight")) { Text("Highlight") }
