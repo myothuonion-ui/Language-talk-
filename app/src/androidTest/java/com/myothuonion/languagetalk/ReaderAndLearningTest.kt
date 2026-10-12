@@ -45,9 +45,11 @@ class ReaderAndLearningTest {
         }
         val pdf = PdfDocument()
         try {
-            val page = pdf.startPage(PdfDocument.PageInfo.Builder(840, 840, 1).create())
-            page.canvas.drawBitmap(image, 0f, 0f, null)
-            pdf.finishPage(page)
+            for (number in 1..2) {
+                val page = pdf.startPage(PdfDocument.PageInfo.Builder(840, 840, number).create())
+                page.canvas.drawBitmap(image, 0f, 0f, null)
+                pdf.finishPage(page)
+            }
             source.outputStream().use { pdf.writeTo(it) }
         } finally { pdf.close() }
         image.recycle()
@@ -85,6 +87,19 @@ class ReaderAndLearningTest {
             assertEquals(0, card.page)
             assertEquals(word.sentence, card.context)
             assertEquals("မင်္ဂလာပါ", card.meaning)
+            compose.onNodeWithText("Highlight").performScrollTo().performClick()
+            compose.waitUntil(10000) { runBlocking { app.learningStore.export().annotations.any { it.bookId == book.id && it.kind == "HIGHLIGHT" } } }
+            val highlight = runBlocking { app.learningStore.export().annotations.first { it.bookId == book.id } }
+            assertEquals(word.text, highlight.quote)
+            assertEquals(0, highlight.page)
+            assertTrue(highlight.rectangles.isNotEmpty())
+            capture("reader-highlight")
+            compose.onNodeWithContentDescription("Clear text selection").performClick()
+            compose.onNodeWithContentDescription("PDF page 1").performTouchInput { swipeLeft() }
+            compose.waitUntil(20000) { compose.onAllNodesWithText("2 / 2").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithContentDescription("PDF page 2").assertIsDisplayed()
+            assertEquals(1, runBlocking { app.learningStore.export().books.first { it.id == book.id }.page })
+            capture("reader-swipe")
             page.bitmap.recycle()
         } finally {
             compose.activity.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
@@ -103,7 +118,9 @@ class ReaderAndLearningTest {
                 units = listOf(UnitProgress("course-2-1", 3, false, 5, 3, 100)),
                 cards = listOf(ReviewCard("word-test", "먹다", "말해 보세요.", "Use 먹다", "먹었어요", "စားခဲ့တယ်", bookId = "ttmik-beginner", page = 16, kind = "WORD")),
                 books = listOf(ReaderBook("ttmik-beginner", "Beginner", assetId = "ttmik-beginner", pageCount = 332, page = 16, bookmarks = listOf(16))),
-                readerTheme = "SEPIA", studySeconds = mapOf("2026-10-04" to 120))
+                readerTheme = "SEPIA", studySeconds = mapOf("2026-10-04" to 120),
+                annotations = listOf(ReaderAnnotation("reader-note", "ttmik-beginner", 16, "먹다", kind = "NOTE", note = "ကိုယ့်မှတ်စု",
+                    rectangles = listOf(ReaderRect(.1f,.1f,.3f,.2f)))), readerTextMode = true, readerFontSize = 24)
             app.learningStore.update { learning }
             val bytes = app.repository.backup.export()
             assertEquals(learning, BackupCodec.decode(bytes).learning)

@@ -5,6 +5,8 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -76,6 +78,19 @@ class PracticeScreensTest {
         compose.onNodeWithTag("simple-settings").assertExists()
         compose.onNodeWithText("အသံနဲ့ သင်ယူမှု").assertIsDisplayed()
         capture("api-settings")
+        val repository = (compose.activity.application as LanguageTalkApplication).repository
+        val previousAppearance = runBlocking { repository.settings.first().appAppearance }
+        compose.onNodeWithTag("simple-settings").performScrollToNode(hasTestTag("theme-DARK"))
+        compose.onNodeWithTag("theme-DARK").performClick()
+        compose.waitUntil(10000) { runBlocking { repository.settings.first().appAppearance == "DARK" } }
+        compose.onNodeWithTag("theme-DARK").assertIsSelected()
+        capture("settings-dark")
+        compose.onNodeWithTag("theme-LIGHT").performClick()
+        compose.waitUntil(10000) { runBlocking { repository.settings.first().appAppearance == "LIGHT" } }
+        compose.onNodeWithTag("theme-LIGHT").assertIsSelected()
+        capture("settings-light")
+        compose.onNodeWithTag("theme-" + previousAppearance).performClick()
+        compose.waitUntil(10000) { runBlocking { repository.settings.first().appAppearance == previousAppearance } }
         compose.onNodeWithTag("simple-settings").performScrollToNode(hasTestTag("open-ai-settings"))
         compose.onNodeWithTag("open-ai-settings").performClick()
         compose.onNodeWithTag("ai-settings").assertExists()

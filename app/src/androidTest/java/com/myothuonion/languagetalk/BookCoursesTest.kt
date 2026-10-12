@@ -36,6 +36,12 @@ class BookCoursesTest {
         compose.onNodeWithText("Intermediate · 30").assertIsDisplayed()
         capture("built-in-books")
         compose.onNodeWithTag("continue-book").performClick()
+        compose.waitUntil(10000) { compose.onAllNodesWithTag("book-microphone").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("book-courses").performScrollToNode(hasTestTag("book-next"))
+        compose.onNodeWithTag("book-next").assertIsNotEnabled()
+        val before = runBlocking { application.books.progress("ttmik-beginner").activity }
+        compose.onNodeWithTag("book-courses").performScrollToNode(hasText("ရိုက်ဖြေ"))
+        compose.onNodeWithText("ရိုက်ဖြေ").performClick()
         compose.waitUntil(10000) { compose.onAllNodesWithTag("book-answer").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("book-courses").performScrollToNode(hasTestTag("book-answer"))
         capture("book-dialogue")
@@ -43,8 +49,13 @@ class BookCoursesTest {
         compose.onNodeWithTag("book-courses").performScrollToNode(hasText("အဖြေစစ်"))
         compose.onNodeWithText("အဖြေစစ်").performClick()
         compose.waitUntil(10000) {
-            runBlocking { application.books.progress("ttmik-beginner").activity == 2 }
+            runBlocking { application.books.progress("ttmik-beginner").awaitingNext }
         }
+        assertEquals("Passing must wait on the same turn", before, runBlocking { application.books.progress("ttmik-beginner").activity })
+        compose.onNodeWithTag("book-courses").performScrollToNode(hasTestTag("book-next"))
+        compose.onNodeWithTag("book-next").assertIsEnabled().performClick()
+        compose.waitUntil(10000) { runBlocking { application.books.progress("ttmik-beginner").activity == before + 1 } }
+        assertEquals(0, runBlocking { application.books.progress("ttmik-beginner").section })
         compose.onNodeWithTag("book-courses").performScrollToNode(hasTestTag("book-next"))
         compose.onNodeWithTag("book-next").assertIsEnabled().performClick()
         compose.waitUntil(10000) { runBlocking { application.books.progress("ttmik-beginner").section == 1 } }
