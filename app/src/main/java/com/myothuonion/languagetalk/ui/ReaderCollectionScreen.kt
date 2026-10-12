@@ -34,7 +34,7 @@ internal fun ReaderCollectionScreen(viewModel: ReaderViewModel, onBack: () -> Un
             filter == "SENTENCES" && it.savedType != "WORD" || filter == "MARKS" && it.kind in setOf("HIGHLIGHT", "UNDERLINE", "BOLD")) &&
             (query.isBlank() || listOf(it.quote, it.note, it.context, it.bookTitle).any { value -> value.contains(query, true) })
     }
-    BackHandler(onBack)
+    BackHandler(onBack = onBack)
     LazyColumn(Modifier.fillMaxSize().testTag("reader-collection"), contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
