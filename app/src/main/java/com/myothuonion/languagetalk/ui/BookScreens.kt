@@ -104,8 +104,7 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
         item {
             Row(Modifier.statusBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
                 IconButton({ viewModel.close(); if (reviewOpen) reviewOpen = false else if (lessonOpen) lessonOpen = false else onBack() }) { Icon(Icons.Default.ArrowBack, "Back") }
-                Text(if (reviewOpen) "စာအုပ် · ပြန်လေ့ကျင့်ရန်" else if (lessonOpen) "${book.level} · Lesson ${state.chapter}" else "My Books", fontSize = 23.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.weight(1f))
+                Text(if (reviewOpen) "စာအုပ် · ပြန်လေ့ကျင့်ရန်" else if (lessonOpen) "${book.level} · Lesson ${state.chapter}" else "My Books", modifier = Modifier.weight(1f), maxLines = 2, fontSize = 23.sp, fontWeight = FontWeight.Bold)
                 aiViewModel?.let { AiTaskPicker(AiTask.BOOK, it) }
             }
         }
@@ -231,8 +230,8 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
                         }
                         OutlinedTextField(answer, { answer = it }, label = { Text("ကိုရီးယားလို ဖြေပါ") }, modifier = Modifier.fillMaxWidth().testTag("book-answer"), enabled = canControl)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button({ viewModel.send(answer) }, enabled = canControl && answer.isNotBlank()) { Text("အဖြေစစ်") }
-                            FilledTonalButton({ microphone("record") }, enabled = !ui.busy && !live.connected) {
+                            Button({ viewModel.send(answer) }, modifier = Modifier.weight(1f), enabled = canControl && answer.isNotBlank()) { Text("အဖြေစစ်") }
+                            FilledTonalButton({ microphone("record") }, modifier = Modifier.weight(1.4f), enabled = !ui.busy && !live.connected) {
                                 GlassIcon(if (ui.recording) androidx.compose.material.icons.Icons.Default.Send else androidx.compose.material.icons.Icons.Default.Mic, "Microphone")
                                 Spacer(Modifier.width(7.dp)); Text(if (ui.recording) "အသံပို့" else "အသံနဲ့ဖြေ")
                             }
@@ -262,7 +261,7 @@ internal fun BookCoursesScreen(viewModel: BookViewModel, settings: AppSettings,
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                    OutlinedButton({ viewModel.explain() }, enabled = canControl) { Text("ဒီအပိုင်းကို မြန်မာလိုသင်ပေး") }
+                    OutlinedButton({ viewModel.explain() }, modifier = Modifier.weight(1f), enabled = canControl) { Text("ဒီအပိုင်းကို မြန်မာလိုသင်ပေး") }
                     if (section.turns.isNotEmpty()) TextButton({ english = !english }) { Text("English") }
                 }
                 if (ui.explanation.isNotBlank()) {

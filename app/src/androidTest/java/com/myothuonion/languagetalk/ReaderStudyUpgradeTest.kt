@@ -27,7 +27,8 @@ class ReaderStudyUpgradeTest {
     private val app get() = compose.activity.application as LanguageTalkApplication
     private fun pdf(): File {
         val file = File(app.cacheDir, "reader-study-test.pdf")
-        PdfDocument().use { doc ->
+        val doc = PdfDocument()
+        try {
             repeat(3) { index ->
                 val page = doc.startPage(PdfDocument.PageInfo.Builder(600, 800, index + 1).create())
                 page.canvas.drawColor(Color.WHITE)
@@ -35,7 +36,7 @@ class ReaderStudyUpgradeTest {
                 doc.finishPage(page)
             }
             file.outputStream().use { doc.writeTo(it) }
-        }
+        } finally { doc.close() }
         return file
     }
     @Test fun annotationsAndTeachingSurviveDatabaseReopenAndBackupRestore() = runBlocking<Unit> {
@@ -74,6 +75,10 @@ class ReaderStudyUpgradeTest {
             val word = vm.ui.value.pageData!!.layer.words.first()
             compose.activity.runOnUiThread { vm.lookup(word.text, word.sentence, listOf(PageRect(word.left, word.top, word.right, word.bottom)), translate = false) }
             compose.waitUntil(10000) { compose.onAllNodesWithTag("add-highlight").fetchSemanticsNodes().isNotEmpty() }
+            val captures = File(app.getExternalFilesDir(null), "screenshots").apply { mkdirs() }
+            androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()?.let { image ->
+                File(captures, "reader-selection-tools.png").outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }; image.recycle()
+            }
             compose.onNodeWithTag("add-highlight").performClick()
             compose.waitUntil(10000) { runBlocking { AppDatabase.get(app).dao().allAnnotations().any { it.bookId == book.id && it.page == 1 } } }
             compose.activity.runOnUiThread { vm.close(); vm.open(book.id) }
