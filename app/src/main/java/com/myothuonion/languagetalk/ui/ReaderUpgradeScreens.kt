@@ -209,7 +209,7 @@ internal fun PdfReaderScreen(viewModel: ReaderViewModel,onBack: () -> Unit,aiVie
                 horizontalArrangement = Arrangement.spacedBy(7.dp),verticalArrangement = Arrangement.spacedBy(7.dp)) {
                 items(book.pageCount,key = { it }) { page ->
                     val thumb by produceState<android.graphics.Bitmap?>(null,book.id,page) {
-                        value = runCatching { viewModel.thumbnail(page) }.getOrNull()
+                        this.value = try { viewModel.thumbnail(page) } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled } catch (_: Exception) { null }
                     }
                     Column(Modifier.clickable { viewModel.page(page); thumbnails = false },horizontalAlignment = Alignment.CenterHorizontally) {
                         thumb?.let { Image(it.asImageBitmap(),"Page " + (page+1),Modifier.fillMaxWidth().height(110.dp)) }
@@ -244,7 +244,7 @@ private fun ReaderPagePager(viewModel: ReaderViewModel,book: ReaderBook,ui: Read
     val enabled = ui.selection.isBlank() && (learning.readerTextMode || zoom <= 1.01f)
     val content: @Composable (Int) -> Unit = { page ->
         val data by produceState<ReadablePdfPage?>(if (page == ui.page) ui.pageData else null,book.id,page) {
-            value = runCatching { viewModel.pageData(page) }.getOrNull()
+            this.value = try { viewModel.pageData(page) } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled } catch (_: Exception) { null }
         }
         val annotations = learning.annotations.filter { it.bookId == book.id && it.page == page &&
             (it.fingerprint.isBlank() || it.fingerprint == book.fingerprint) }
