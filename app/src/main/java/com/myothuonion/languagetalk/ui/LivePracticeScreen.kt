@@ -49,6 +49,7 @@ internal fun LiveChatScreen(chat: ChatEntity,state: LiveState,progress: Learning
         } else permission.launch(Manifest.permission.RECORD_AUDIO)
     }
     LaunchedEffect(chat.id) { begin() }
+    LaunchedEffect(chat.id,progress?.stage,progress?.targetSentence) { heard = ""; aiLine = "" }
     LaunchedEffect(state.userCaption,state.aiCaption) {
         if (state.userCaption.isNotBlank()) heard = state.userCaption
         if (state.aiCaption.isNotBlank()) aiLine = state.aiCaption

@@ -229,7 +229,9 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val audio = repository.synthesize(chatId, text)
                 _work.update { it.copy(status = "Speaking…") }
-                player.play(audio) {
+                player.play(audio, onError = { failure ->
+                    _work.update { it.copy(isSpeaking = false, status = "Voice failed", error = friendlyError(failure)) }
+                }) {
                     _work.update { it.copy(isSpeaking = false, status = "Ready") }
                 }
             } catch (e: Exception) {
