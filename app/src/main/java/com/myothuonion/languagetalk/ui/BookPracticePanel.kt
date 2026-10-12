@@ -33,7 +33,7 @@ internal fun BookPracticePanel(viewModel: BookViewModel,ui: BookUiState,state: B
     var mode by rememberSaveable(book.id,state.chapter,state.section) { mutableStateOf(if (section.turns.isNotEmpty()) "REPEAT" else "EXERCISE") }
     var hint by rememberSaveable(book.id,state.chapter,state.section,state.activity) { mutableStateOf(false) }
     var typing by remember { mutableStateOf(false) }
-    var answer by remember(state.activity,state.section) { mutableStateOf("") }
+    var answer by remember(book.id,state.chapter,state.section,state.activity) { mutableStateOf("") }
     var help by remember { mutableStateOf(false) }
     var voiceSettings by remember { mutableStateOf(false) }
     var chooseSection by remember { mutableStateOf(false) }
