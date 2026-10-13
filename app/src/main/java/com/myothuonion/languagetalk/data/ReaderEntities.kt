@@ -3,6 +3,7 @@ package com.myothuonion.languagetalk.data
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import androidx.room.ColumnInfo
 import com.myothuonion.languagetalk.model.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -34,5 +35,8 @@ data class PageExplanation(
 @Entity(tableName = "book_audio_assets", indices = [Index(value = ["bookId", "track"], unique = true)])
 data class BookAudioAsset(
     @PrimaryKey val id: String, val bookId: String, val track: Int, val fileName: String,
-    val mimeType: String, val title: String, val createdAt: Long = System.currentTimeMillis()
-)
+    val mimeType: String, val title: String, val createdAt: Long = System.currentTimeMillis(),
+    @ColumnInfo(defaultValue = "'[]'") val pagesJson: String = "[]"
+) {
+    fun pages(): List<Int> = runCatching { PageTeachingCodec.json.decodeFromString<List<Int>>(pagesJson) }.getOrDefault(emptyList())
+}

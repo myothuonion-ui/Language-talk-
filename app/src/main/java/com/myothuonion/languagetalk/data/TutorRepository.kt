@@ -53,7 +53,8 @@ class TutorRepository(
     private val gemini: GeminiClient,
     private val nvidia: NvidiaClient,
     private val bookStore: BookStore? = null,
-    private val learningStore: LearningStore? = null
+    private val learningStore: LearningStore? = null,
+    val replays: ReplayRepository? = null
 ) {
     private val turnMutex = Mutex()
     private val catalogMutex = Mutex()
@@ -119,6 +120,9 @@ class TutorRepository(
             "If no audio is attached, never judge pronunciation. Speech pace: ${chat.speakingPace}. Voice style: ${chat.voiceStyle}."
         val effectiveText = userText.ifBlank { "This is my voice message." }
         val storedAudio = if (appSettings.recordPractice && audio != null) storeAudio(audio) else ""
+        val replayId = replays?.begin("CONVERSATION", "chat-$chatId", chat.topic)
+        val replayClip = if (!opening && replayId != null) replays?.save(replayId, "USER",
+            userText.ifBlank { "အသံအဖြေ" }, audio) else null
 
         val userMessageId = if (opening) 0L else dao.insertMessage(
             MessageEntity(
@@ -142,7 +146,9 @@ class TutorRepository(
 
         if (userMessageId > 0 && audio != null && reply.heardText.isNotBlank()) {
             dao.updateMessageContent(userMessageId, reply.heardText.trim())
+            replays?.transcript(replayClip, reply.heardText.trim())
         }
+        if (replayId != null) replays?.save(replayId, "AI", reply.speech(chat.speakCorrections))
 
         dao.insertMessage(
             MessageEntity(
@@ -166,15 +172,19 @@ class TutorRepository(
     suspend fun synthesize(chatId: Long, text: String): AudioPayload {
         val chat = dao.getChat(chatId) ?: error("Chat not found")
         val settings = settingsStore.settings.first()
-        return ai.speech(text, chat.voiceName, chat.voiceStyle + " Speak at ${chat.speakingPace.lowercase()} pace.")
+        val audio = ai.speech(text, chat.voiceName, chat.voiceStyle + " Speak at ${chat.speakingPace.lowercase()} pace.")
+        replays?.let { it.attachAI(it.begin("CONVERSATION", "chat-$chatId", chat.topic), text, audio) }
+        return audio
     }
 
     suspend fun prefersReliableVoice(chatId: Long): Boolean {
         val prefs = ai.preferences(AiTask.CONVERSATION, chatId)
         val config = settingsStore.settings.first().ai
         val native = AiPlans.candidates(config, AiTask.LIVE, ai::configured, ai.preferences(AiTask.LIVE))
-        return dao.getChat(chatId)?.brainMode != BrainMode.GEMINI_ONLY.name ||
-            prefs.primary != null || prefs.mode == AiMode.REVIEW || native.isEmpty()
+        val brain = dao.getChat(chatId)?.brainMode
+        val chosen = prefs.primary?.let { ref -> config.profiles.firstOrNull { it.id == ref.profileId } }
+        return brain in setOf(BrainMode.NVIDIA_BRAIN.name, BrainMode.BEST_QUALITY.name) ||
+            chosen != null || prefs.mode == AiMode.REVIEW || native.isEmpty()
     }
 
     suspend fun openingTurn(chatId: Long): HandsFreeTurn {
@@ -214,7 +224,7 @@ class TutorRepository(
 
     suspend fun bookSpeech(text: String, slow: Boolean, voiceOverride: String? = null): AudioPayload {
         val current = settingsStore.settings.first()
-        return ai.speech(VoiceText.korean(text).ifBlank { "다시 한번 말해 주세요." }, voiceOverride ?: current.defaultVoiceName,
+        return ai.speech(VoiceText.korean(text), voiceOverride ?: current.defaultVoiceName,
             current.defaultVoiceStyle + if (slow) " Speak slowly and clearly. Read exactly the supplied text." else " Speak at a natural pace. Read exactly the supplied text.")
     }
 
@@ -275,8 +285,14 @@ class TutorRepository(
         )
     }
 
-    suspend fun saveLiveTurn(chatId: Long, userText: String, assistantText: String, audio: AudioPayload? = null) = turnMutex.withLock {
-        if (dao.getChat(chatId) == null) return@withLock
+    suspend fun saveLiveTurn(chatId: Long, userText: String, assistantText: String, audio: AudioPayload? = null,
+        assistantAudio: AudioPayload? = null) = turnMutex.withLock {
+        val chat = dao.getChat(chatId) ?: return@withLock
+        replays?.let { archive ->
+            val session = archive.begin("CONVERSATION", "chat-$chatId", chat.topic)
+            if (userText.isNotBlank() || audio != null) archive.save(session, "USER", userText.ifBlank { "မင်းအသံ" }, audio, "LIVE")
+            if (assistantText.isNotBlank() || assistantAudio != null) archive.save(session, "AI", assistantText.ifBlank { "AI အသံ" }, assistantAudio, "LIVE")
+        }
         if (userText.isNotBlank()) {
             val record = if (audio != null && settingsStore.settings.first().recordPractice) storeAudio(audio) else ""
             dao.insertMessage(MessageEntity(chatId = chatId, role = MessageRole.USER.name, content = userText,

@@ -73,8 +73,8 @@ object GeminiInteractions {
         val status = root["status"]?.jsonPrimitive?.contentOrNull
         if (status != "completed") {
             val error = root["error"] as? JsonObject
-            throw AiApiException(error?.get("message")?.jsonPrimitive?.contentOrNull ?: "Gemini interaction did not complete: $status",
-                error?.get("code")?.jsonPrimitive?.contentOrNull?.toIntOrNull())
+            if (error != null) throw ApiErrors.failure("Gemini", error["code"]?.jsonPrimitive?.contentOrNull?.toIntOrNull() ?: 502, error.toString())
+            throw AiApiException("Gemini interaction did not complete", 502)
         }
         return root["steps"]?.jsonArray.orEmpty().flatMap { step ->
             val item = step.jsonObject

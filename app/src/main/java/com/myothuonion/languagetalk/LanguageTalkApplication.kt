@@ -14,6 +14,7 @@ import com.myothuonion.languagetalk.network.GeminiClient
 import com.myothuonion.languagetalk.network.NvidiaClient
 
 class LanguageTalkApplication : Application() {
+    val replays by lazy { com.myothuonion.languagetalk.data.ReplayRepository(this, AppDatabase.get(this).dao(), SettingsStore(this)) }
     val learningStore by lazy { LearningStore(this) }
     val learning by lazy { LearningRepository(this, learningStore, repository) }
     val reader by lazy { ReaderRepository(this, learningStore, books, repository) }
@@ -29,7 +30,8 @@ class LanguageTalkApplication : Application() {
             gemini = GeminiClient(),
             nvidia = NvidiaClient(),
             bookStore = bookStore,
-            learningStore = learningStore
+            learningStore = learningStore,
+            replays = replays
         )
     }
 }

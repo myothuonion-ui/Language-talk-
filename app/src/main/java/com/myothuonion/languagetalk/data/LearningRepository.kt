@@ -90,8 +90,12 @@ class LearningRepository(private val context: Context, val store: LearningStore,
             card != null -> CoachTask(card.prompt, card.prompt, card.criterion, card.example, "", card.title)
             else -> CoachEngine.task(unit, progress.step)
         }
+        val replay = tutor.replays?.begin("COACH", reviewId ?: unit.id, card?.title ?: unit.title,
+            card?.bookId.orEmpty(), card?.page ?: -1)
+        val clip = replay?.let { tutor.replays?.save(it, "USER", text.ifBlank { "အသံအဖြေ" }, audio) }
         val result = assess(task, text, audio)
         val heard = result.heardText.trim().take(4000)
+        tutor.replays?.transcript(clip, heard)
         val note = feedback(result)
         val passed = CoachEngine.passed(result.assessment, heard, result.voiceCommand)
         val unsure = heard.isBlank() || result.assessment !in setOf("PASSED", "RETRY")
@@ -166,7 +170,12 @@ class LearningRepository(private val context: Context, val store: LearningStore,
             else CoachEngine.task(unit, CoachEngine.progress(state, unit.id).step)
         val spoken = CoachEngine.narration(task)
         val voiceText = VoiceText.korean(spoken).ifBlank { "다시 한번 말해 주세요." }
-        return HandsFreeTurn("", task.prompt, speech(voiceText, slow))
+        val audio = speech(voiceText, slow)
+        tutor.replays?.let { archive ->
+            val id = archive.begin("COACH", reviewId ?: unit.id, card?.title ?: unit.title, card?.bookId.orEmpty(), card?.page ?: -1)
+            archive.attachAI(id, voiceText, audio)
+        }
+        return HandsFreeTurn("", task.prompt, audio)
     }
     fun recording(attempt: CoachAttempt): AudioPayload? {
         if (attempt.audioName.isBlank() || attempt.audioName != File(attempt.audioName).name) return null

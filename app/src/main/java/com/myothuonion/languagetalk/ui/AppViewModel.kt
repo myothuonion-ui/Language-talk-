@@ -32,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -98,6 +99,8 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val aiStatus: StateFlow<AiRouteStatus> = repository.ai.status
     private val _apiStatus = MutableStateFlow<Map<String, String>>(emptyMap())
     val apiStatus: StateFlow<Map<String, String>> = _apiStatus
+    private val _apiFeatureStatus = MutableStateFlow<Map<String, String>>(emptyMap())
+    val apiFeatureStatus = _apiFeatureStatus.asStateFlow()
     private val _apiBusy = MutableStateFlow<Set<String>>(emptySet())
     val apiBusy: StateFlow<Set<String>> = _apiBusy
     private val _apiModels = MutableStateFlow<Map<String, List<String>>>(emptyMap())
@@ -299,7 +302,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 val config = repository.liveSessionConfig(chatId)
                 val session = GeminiLiveSession(
                     config = config,
-                    onTurnComplete = { user, ai, audio -> repository.saveLiveTurn(chatId, user, ai, audio) },
+                    onTurnComplete = { user, ai, audio, assistantAudio -> repository.saveLiveTurn(chatId, user, ai, audio, assistantAudio) },
                     onLearningTool = { args -> repository.handleLiveTool(chatId, args) },
                     onTerminalFailure = { reason ->
                         viewModelScope.launch { if (generation == liveGeneration) startReliableLive(chatId, reason) }
@@ -533,6 +536,23 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 _apiStatus.update { it + (profile.id to repository.ai.test(profile, key)) }
             } catch (cancelled: CancellationException) { throw cancelled }
             catch (failure: Exception) { _apiStatus.update { it + (profile.id to friendlyError(failure)) } }
+            finally { _apiBusy.update { it - profile.id } }
+        }
+    }
+    fun testApiFeature(profile: AiProfile, key: String, feature: ApiFeature) {
+        if (profile.id in _apiBusy.value) return
+        viewModelScope.launch {
+            val id = profile.id + ":" + feature.name
+            _apiBusy.update { it + profile.id }
+            _apiFeatureStatus.update { it + (id to "${feature.label} စမ်းနေတယ်…") }
+            try {
+                val result = repository.ai.testFeature(profile, key, feature)
+                _apiFeatureStatus.update { it + (id to result.first) }
+                result.second?.let { audio -> player.play(audio, onError = { failure ->
+                    _apiFeatureStatus.update { it + (id to "အသံဖိုင်ရပေမယ့် ဖုန်းမှာ ဖွင့်မရပါ။") }
+                }) {} }
+            } catch (cancelled: CancellationException) { throw cancelled }
+            catch (failure: Exception) { _apiFeatureStatus.update { it + (id to friendlyError(failure)) } }
             finally { _apiBusy.update { it - profile.id } }
         }
     }

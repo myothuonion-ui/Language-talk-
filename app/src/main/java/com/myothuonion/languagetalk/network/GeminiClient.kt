@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.put
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -92,6 +93,26 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private
 
         val text = postGenerate(apiKey, model, body)
         return parseTutorReply(text, allowEmptyReply)
+    }
+
+    /** Reader schemas are objects, never JSON escaped inside a generic tutoring string. */
+    suspend fun structuredText(apiKey: String, model: String, instruction: String, input: String,
+        schema: JsonObject, image: Pair<String, ByteArray>? = null): String {
+        val body = buildJsonObject {
+            put("systemInstruction", buildJsonObject { put("parts", buildJsonArray {
+                add(buildJsonObject { put("text", instruction) })
+            }) })
+            put("contents", buildJsonArray { add(buildJsonObject {
+                put("role", "user"); put("parts", buildJsonArray {
+                    image?.let { add(buildJsonObject { put("inlineData", buildJsonObject {
+                        put("mimeType", it.first); put("data", Base64.getEncoder().encodeToString(it.second))
+                    }) }) }
+                    add(buildJsonObject { put("text", input.take(60000)) })
+                })
+            }) })
+            put("generationConfig", buildJsonObject { put("temperature", 0.15); put("responseSchema", schema) })
+        }
+        return postGenerate(apiKey, model, body)
     }
 
     suspend fun finalizeWithReview(
@@ -368,11 +389,7 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private
     }
 
     private fun apiException(body: String, statusCode: Int, fallback: String): AiApiException {
-        val apiMessage = runCatching {
-            json.parseToJsonElement(body).jsonObject["error"]?.jsonObject
-                ?.get("message")?.jsonPrimitive?.contentOrNull
-        }.getOrNull()
-        return AiApiException(apiMessage ?: "$fallback ($statusCode)", statusCode)
+        return ApiErrors.failure("Gemini", statusCode, body)
     }
 
     private fun replyToJson(reply: TutorReply) = buildJsonObject {
@@ -392,7 +409,7 @@ class GeminiClient(private val http: OkHttpClient = defaultHttpClient(), private
         put("nextTargetSentence", JsonPrimitive(reply.nextTargetSentence))
     }
 
-    private fun tutorReplySchema() = buildJsonObject {
+    internal fun tutorReplySchema() = buildJsonObject {
         put("type", JsonPrimitive("object"))
         put("properties", buildJsonObject {
             listOf("reply", "heardText", "translation", "correction", "explanation", "followUpQuestion", "targetSentence", "assessment", "lessonNote", "voiceCommand", "memoryFact", "memoryEvidence", "speechText", "nextTargetSentence", "answerPattern", "answerExample", "answerHint").forEach { key ->

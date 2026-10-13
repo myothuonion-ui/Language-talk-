@@ -55,7 +55,7 @@ data class LiveState(
 
 class GeminiLiveSession(
     private val config: LiveSessionConfig,
-    private val onTurnComplete: suspend (userText: String, aiText: String, audio: AudioPayload?) -> Unit,
+    private val onTurnComplete: suspend (userText: String, aiText: String, audio: AudioPayload?, assistantAudio: AudioPayload?) -> Unit,
     private val onLearningTool: suspend (JsonObject) -> JsonObject,
     private val onTerminalFailure: (reason: String) -> Unit = {}
 ) {
@@ -87,6 +87,8 @@ class GeminiLiveSession(
     private val continuation = config.initialTurns.toMutableList()
     private val audioLock = Any()
     private val capturedAudio = ArrayDeque<ByteArray>()
+    private val capturedAiAudio = ArrayDeque<ByteArray>()
+    private var capturedVoiceDetected = false
     private var finalizing: Job? = null
     private var toolsInTurn = 0
     private val stopped = AtomicBoolean(false)
@@ -136,6 +138,7 @@ class GeminiLiveSession(
 
     fun stop() {
         if (!stopped.compareAndSet(false, true)) return
+        completeTurn()
         reconnectJob?.cancel()
         setupTimeoutJob?.cancel()
         send(buildJsonObject {
@@ -179,7 +182,7 @@ class GeminiLiveSession(
             if (webSocket !== socket || stopped.get()) return
             socket = null
             val reason = response?.let { "Live handshake failed (${it.code})" }
-                ?: t.message ?: "Live connection မရပါ"
+                ?: t.message?.replace(config.apiKey, "[redacted]") ?: "Live connection မရပါ"
             if (response?.code == 403) {
                 switchToReliableVoice(reason)
             } else if (!_state.value.connected && response?.code != 401) {
@@ -261,12 +264,17 @@ class GeminiLiveSession(
         server["modelTurn"]?.jsonObject?.get("parts")?.jsonArray?.forEach { element ->
             val inline = element.jsonObject["inlineData"]?.jsonObject ?: return@forEach
             val data = inline["data"]?.jsonPrimitive?.contentOrNull ?: return@forEach
-            player.enqueue(Base64.decode(data, Base64.DEFAULT))
+            val bytes = Base64.decode(data, Base64.DEFAULT)
+            if (config.recordAudio) synchronized(audioLock) {
+                capturedAiAudio.addLast(bytes.copyOf())
+                while (capturedAiAudio.sumOf { it.size } > 16 * 1024 * 1024) capturedAiAudio.removeFirst()
+            }
+            player.enqueue(bytes)
             _state.update { it.copy(phase = LivePhase.SPEAKING) }
         }
         if (server["interrupted"]?.jsonPrimitive?.content == "true") {
             player.interrupt()
-            _state.update { it.copy(phase = LivePhase.LISTENING, aiCaption = "") }
+            _state.update { it.copy(phase = LivePhase.LISTENING) }
         }
         if (server["turnComplete"]?.jsonPrimitive?.content == "true") {
             finalizing?.cancel()
@@ -291,15 +299,22 @@ class GeminiLiveSession(
         if (user.isNotBlank()) continuation += "user" to user
         if (ai.isNotBlank()) continuation += "model" to ai
         while (continuation.size > 16) continuation.removeAt(0)
+        var detected = false
         val pcm = synchronized(audioLock) {
+            detected = capturedVoiceDetected; capturedVoiceDetected = false
             val bytes = ByteArray(capturedAudio.sumOf { it.size })
             var offset = 0
             capturedAudio.forEach { chunk -> chunk.copyInto(bytes, offset); offset += chunk.size }
             capturedAudio.clear()
             bytes
         }
-        val audio = if (config.recordAudio && user.isNotBlank() && pcm.isNotEmpty()) AudioPayload(pcm16Wave(pcm), "audio/wav") else null
-        if (user.isNotBlank() || ai.isNotBlank()) CoroutineScope(Dispatchers.IO).launch { onTurnComplete(user, ai, audio) }
+        val output = synchronized(audioLock) {
+            val bytes = ByteArray(capturedAiAudio.sumOf { it.size }); var offset = 0
+            capturedAiAudio.forEach { it.copyInto(bytes, offset); offset += it.size }; capturedAiAudio.clear(); bytes
+        }
+        val audio = if (config.recordAudio && (user.isNotBlank() || detected) && pcm.isNotEmpty()) AudioPayload(pcm16Wave(pcm), "audio/wav") else null
+        val assistantAudio = if (config.recordAudio && output.isNotEmpty()) AudioPayload(pcm16Wave(output, 24000), "audio/wav") else null
+        if (user.isNotBlank() || ai.isNotBlank() || audio != null || assistantAudio != null) CoroutineScope(Dispatchers.IO).launch { onTurnComplete(user, ai, audio, assistantAudio) }
     }
 
     private fun startRecorderIfNeeded() {
@@ -308,8 +323,9 @@ class GeminiLiveSession(
             val current = _state.value
             if (!current.connected || !current.micEnabled || stopped.get()) return@start
             if (config.recordAudio) synchronized(audioLock) {
+                if (level > .05f) capturedVoiceDetected = true
                 capturedAudio.addLast(bytes.copyOf())
-                while (capturedAudio.size > 600) capturedAudio.removeFirst()
+                while (capturedAudio.size > 2400) capturedAudio.removeFirst()
             }
             _state.update { it.copy(inputLevel = level) }
             send(buildJsonObject {

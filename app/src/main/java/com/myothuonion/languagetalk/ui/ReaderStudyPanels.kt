@@ -1,5 +1,12 @@
 package com.myothuonion.languagetalk.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -26,6 +33,8 @@ internal fun ReaderSelectionPanel(viewModel: ReaderViewModel, onPractice: (Strin
     var noteOpen by remember(ui.selection) { mutableStateOf(false) }
     var note by remember(ui.selection) { mutableStateOf("") }
     var color by remember { mutableLongStateOf(0xFFFFD666) }
+    var questionOpen by remember(ui.selection, ui.page) { mutableStateOf(false) }
+    var question by remember(ui.selection, ui.page) { mutableStateOf("") }
     Column(Modifier.fillMaxWidth().heightIn(max = 280.dp).background(MaterialTheme.colorScheme.surface)
         .verticalScroll(rememberScrollState()).padding(14.dp).testTag("reader-selection"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -64,8 +73,52 @@ internal fun ReaderSelectionPanel(viewModel: ReaderViewModel, onPractice: (Strin
             TextButton(viewModel::translateSelection, enabled = !ui.translating) { Icon(Icons.Default.Translate, null); Spacer(Modifier.width(5.dp)); Text("မြန်မာလိုရှင်းပြ") }
             TextButton({ viewModel.listen() }) { Icon(Icons.Default.VolumeUp, null); Spacer(Modifier.width(5.dp)); Text("AI အသံ") }
             TextButton({ viewModel.practiceCard(onSaved = onPractice) }) { Text("ဒီစာသားကို လေ့ကျင့်") }
+            TextButton({ questionOpen = true }) { Text("ဒီစာသားကို မေးမယ်") }
+            if (VoiceText.korean(ui.selection).isNotBlank()) TextButton({ viewModel.startShadow(ui.selection) }) { Text("နားထောင်ပြီး လိုက်ပြော") }
         }
 
+    }
+    if (questionOpen) AlertDialog(onDismissRequest = { questionOpen = false }, title = { Text("ဒီစာသားအကြောင်း မေးမယ်") },
+        text = { Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(ui.selection, fontSize = 17.sp)
+            OutlinedTextField(question, { question = it.take(1200) }, label = { Text("အဓိပ္ပာယ် / grammar / သုံးပုံ မေးပါ") }, modifier = Modifier.fillMaxWidth())
+            if (ui.asking) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (ui.questionAnswer.isNotBlank()) Text(ui.questionAnswer, lineHeight = 28.sp)
+            ui.error?.let { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 12.sp) }
+        } }, confirmButton = { TextButton({ viewModel.ask(question) }, enabled = question.isNotBlank() && !ui.asking) { Text("မေးမယ်") } },
+        dismissButton = { TextButton({ questionOpen = false }) { Text("ပိတ်") } })
+}
+
+@Composable
+internal fun ReaderShadowPanel(viewModel: ReaderViewModel) {
+    val ui by viewModel.ui.collectAsState()
+    val context = LocalContext.current
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) viewModel.recordShadow() else viewModel.shadowMicrophoneDenied()
+    }
+    Column(Modifier.fillMaxWidth().heightIn(max = 550.dp).verticalScroll(rememberScrollState()).padding(22.dp).navigationBarsPadding(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("နားထောင် → လိုက်ပြော → ယှဉ်နားထောင်", Modifier.weight(1f), fontWeight = FontWeight.Medium)
+            IconButton(viewModel::stopShadow) { Icon(Icons.Default.Close, "Close shadowing") }
+        }
+        Text(ui.shadowText, fontSize = 24.sp, lineHeight = 34.sp)
+        if (ui.shadowBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
+        OutlinedButton({ viewModel.playShadow("AI") }, enabled = ui.shadowSession.isNotBlank() && !ui.shadowRecording) {
+            Icon(Icons.Default.VolumeUp, null); Spacer(Modifier.width(7.dp)); Text("AI နမူနာအသံ နားထောင်")
+        }
+        Button({
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) viewModel.recordShadow()
+            else permission.launch(Manifest.permission.RECORD_AUDIO)
+        }, enabled = !ui.shadowBusy, modifier = Modifier.fillMaxWidth().testTag("shadow-record")) {
+            Icon(if (ui.shadowRecording) Icons.Default.Stop else Icons.Default.Mic, null)
+            Spacer(Modifier.width(8.dp)); Text(if (ui.shadowRecording) "${ui.shadowSeconds}s · ရပ်ပြီး စစ်မယ်" else "ကိုယ့်အသံနဲ့ လိုက်ပြောမယ်")
+        }
+        if (ui.shadowHeard.isNotBlank()) { Text("ကြားထားတဲ့စာ", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary); Text(ui.shadowHeard, fontSize = 19.sp) }
+        if (ui.shadowFeedback.isNotBlank()) Text(ui.shadowFeedback, lineHeight = 28.sp)
+        OutlinedButton({ viewModel.playShadow("USER") }, enabled = !ui.shadowRecording) { Icon(Icons.Default.Headphones, null); Spacer(Modifier.width(7.dp)); Text("ငါ့အသံ ပြန်နားထောင်") }
+        Text("အသံမှတ်တမ်းဖွင့်ထားရင် Replays ထဲမှာ နှစ်ယောက်စလုံးရဲ့ အသံကို နောက်မှလည်း နားထောင်နိုင်မယ်။", fontSize = 12.sp, lineHeight = 22.sp)
+        ui.error?.let { Text(it, color = MaterialTheme.colorScheme.error, fontSize = 12.sp) }
     }
 }
 
@@ -73,7 +126,8 @@ internal fun ReaderSelectionPanel(viewModel: ReaderViewModel, onPractice: (Strin
 internal fun ReaderTeachingPanel(viewModel: ReaderViewModel, onPractice: (String) -> Unit) {
     val ui by viewModel.ui.collectAsState()
     val value = ui.explanation?.value()
-    Column(Modifier.fillMaxWidth().heightIn(max = 340.dp).background(MaterialTheme.colorScheme.surfaceContainerLow)
+    var tab by remember(ui.page, ui.bookId) { mutableStateOf("MEANING") }
+    Column(Modifier.fillMaxWidth().heightIn(max = 600.dp).background(MaterialTheme.colorScheme.surfaceContainerLow)
         .verticalScroll(rememberScrollState()).padding(16.dp).testTag("page-teaching"), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -88,29 +142,40 @@ internal fun ReaderTeachingPanel(viewModel: ReaderViewModel, onPractice: (String
         }
         if (value == null && !ui.explaining) Button({ viewModel.explain() }) { Text("ဒီစာမျက်နှာကို ရှင်းပြမယ်") }
         value?.let { teaching ->
+            val missing = ui.explanation?.blocks()?.let { PageTeachingCodec.missing(teaching, it) }.orEmpty()
+            if (missing.isNotEmpty()) {
+                Text("ရှင်းပြရန် စာပိုင်း ${missing.size} ခု ကျန်တယ် · ရထားတဲ့အပိုင်းတွေ သိမ်းထားပြီးပြီ", fontSize = 12.sp)
+                TextButton({ viewModel.explain() }, enabled = !ui.explaining) { Text("ကျန်တာ ဆက်ရှင်းပြမယ်") }
+            }
+            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                listOf("MEANING" to "အဓိပ္ပာယ်", "WORDS" to "ဝေါဟာရ", "GRAMMAR" to "Grammar", "EXERCISES" to "လေ့ကျင့်ခန်း").forEach { (id, title) ->
+                    FilterChip(tab == id, { tab = id }, label = { Text(title) })
+                }
+            }
             Text(teaching.overview, fontSize = 17.sp, lineHeight = 29.sp)
-            teaching.sentences.forEach { sentence ->
+            teaching.sentences.filter { tab == "MEANING" }.forEach { sentence ->
                 TeachingCard("ဝါကျ · မူရင်းစာ", sentence.sourceId, viewModel) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(sentence.korean, Modifier.weight(1f), fontSize = 21.sp, lineHeight = 29.sp)
-                        IconButton({ viewModel.listen(sentence.korean) }) { Icon(Icons.Default.VolumeUp, "Listen to Korean sentence") }
+                        if (VoiceText.korean(sentence.korean).isNotBlank()) IconButton({ viewModel.listen(sentence.korean) }) { Icon(Icons.Default.VolumeUp, "Listen to Korean sentence") }
                     }
                     Text(sentence.meaning, fontSize = 17.sp, lineHeight = 28.sp)
-                    TextButton({ viewModel.practiceCard(sentence.korean, onPractice) }) { Text("ဒီဝါကျကို လေ့ကျင့်") }
+                    Row { TextButton({ viewModel.practiceCard(sentence.korean, onPractice) }) { Text("ဒီဝါကျကို လေ့ကျင့်") }
+                        if (VoiceText.korean(sentence.korean).isNotBlank()) TextButton({ viewModel.startShadow(sentence.korean) }) { Text("လိုက်ပြော") } }
                 }
             }
-            if (teaching.vocabulary.isNotEmpty()) Text("ဝေါဟာရ", fontWeight = FontWeight.Bold)
-            teaching.vocabulary.forEach { word ->
+            if (tab == "WORDS" && teaching.vocabulary.isNotEmpty()) Text("ဝေါဟာရ", fontWeight = FontWeight.Bold)
+            teaching.vocabulary.filter { tab == "WORDS" }.forEach { word ->
                 TeachingCard(word.lemma, word.sourceId, viewModel) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(word.word + " · " + word.meaning, Modifier.weight(1f), fontSize = 17.sp, lineHeight = 28.sp)
                         IconButton({ viewModel.listen(word.word) }) { Icon(Icons.Default.VolumeUp, "Listen to Korean word") }
                     }
                     if (word.usage.isNotBlank()) Text(word.usage, lineHeight = 26.sp)
-                    TextButton({ viewModel.lookup(word.word, word.usage, translate = false); viewModel.annotate("SAVE") }) { Text("သိမ်းမယ်") }
+                    TextButton({ viewModel.saveTeachingWord(word) }) { Text("အဓိပ္ပာယ်နဲ့ သိမ်းမယ်") }
                 }
             }
-            teaching.grammar.forEach { grammar ->
+            teaching.grammar.filter { tab == "GRAMMAR" }.forEach { grammar ->
                 TeachingCard(grammar.pattern, grammar.sourceId, viewModel) {
                     Text("အဓိပ္ပာယ် · " + grammar.meaning, lineHeight = 27.sp)
                     Text("ပေါင်းစပ်ပုံ · " + grammar.construction, lineHeight = 27.sp)
@@ -121,16 +186,17 @@ internal fun ReaderTeachingPanel(viewModel: ReaderViewModel, onPractice: (String
                     if (grammar.explanation.isNotBlank()) Text(grammar.explanation, lineHeight = 27.sp)
                     if (grammar.commonError.isNotBlank()) Text("မှားလွယ်တဲ့အချက် · " + grammar.commonError, lineHeight = 27.sp)
                     if (grammar.practice.isNotBlank()) Text("AI ထပ်လေ့ကျင့်ရန် · " + grammar.practice, lineHeight = 27.sp)
+                    TextButton({ viewModel.saveGrammar(grammar) }) { Text("Grammar မှတ်စုသိမ်းမယ်") }
                 }
             }
             teaching.notes.forEach { Text(it, lineHeight = 27.sp) }
             teaching.unreadable.forEach { Text("ဖတ်မရ/မစစ်ရသေး · $it", color = MaterialTheme.colorScheme.error, lineHeight = 27.sp) }
-            teaching.exercises.forEach { exercise ->
+            teaching.exercises.filter { tab == "EXERCISES" }.forEach { exercise ->
                 TeachingCard("စာအုပ်လေ့ကျင့်ခန်း", exercise.sourceId, viewModel) {
                     HiddenAnswerExercise(exercise.question, exercise.hint, exercise.answer)
                 }
             }
-            teaching.addedPractice.forEach { exercise ->
+            teaching.addedPractice.filter { tab == "EXERCISES" }.forEach { exercise ->
                 OutlinedCard { Column(Modifier.padding(12.dp)) {
                     Text("AI ထပ်ဖန်တီးထားတဲ့ လေ့ကျင့်ခန်း", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
                     HiddenAnswerExercise(exercise.question, exercise.hint, exercise.answer)

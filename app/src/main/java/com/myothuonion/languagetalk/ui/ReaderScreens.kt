@@ -65,7 +65,7 @@ internal fun BookshelfScreen(viewModel: ReaderViewModel, onRead: (String) -> Uni
             Row(Modifier.fillMaxWidth().statusBarsPadding(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("YOUR LIBRARY", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
-                    Text("My Books", fontSize = 32.sp, fontWeight = FontWeight.SemiBold)
+                    Text("စာအုပ်ဖတ်မယ်", fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
                     Text("ကိုယ့်အရှိန်နဲ့ ဖတ်ပြီး လေ့လာမယ်", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 FilledTonalIconButton({ picker.launch(arrayOf("application/pdf")) }, enabled = !ui.loading,
@@ -75,11 +75,37 @@ internal fun BookshelfScreen(viewModel: ReaderViewModel, onRead: (String) -> Uni
         if (ui.loading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
         ui.error?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
         item {
-            OutlinedButton({ picker.launch(arrayOf("application/pdf")) }, modifier = Modifier.fillMaxWidth(), enabled = !ui.loading) {
-                Icon(Icons.Default.UploadFile, null); Spacer(Modifier.width(8.dp)); Text("Import PDF")
+            val current = learning.books.firstOrNull { it.id == learning.lastReadBookId } ?: learning.books.firstOrNull()
+            current?.let { book ->
+                Text("ဆက်ဖတ်မယ်", fontSize = 18.sp, fontWeight = FontWeight.Medium)
+                Spacer(Modifier.height(12.dp))
+                Card(shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.width(78.dp).height(110.dp).background(MaterialTheme.colorScheme.primary, RoundedCornerShape(8.dp))) {
+                                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(13.dp)) {
+                                    Icon(Icons.Default.MenuBook, null, tint = MaterialTheme.colorScheme.onPrimary)
+                                    Text(if (book.assetId.isBlank()) "PDF" else "REAL-LIFE\nKOREAN", fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Medium)
+                                }
+                            }
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                                Text(book.title, fontSize = 18.sp, fontWeight = FontWeight.Medium, maxLines = 3)
+                                Text("စာမျက်နှာ ${book.page + 1} / ${book.pageCount}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                LinearProgressIndicator(progress = { (book.page + 1).toFloat() / book.pageCount }, modifier = Modifier.fillMaxWidth().height(3.dp))
+                            }
+                        }
+                        Button({ onRead(book.id) }, Modifier.fillMaxWidth().testTag("continue-reading"), shape = RoundedCornerShape(13.dp)) {
+                            Icon(Icons.Default.MenuBook, null); Spacer(Modifier.width(9.dp)); Text("ဆက်ဖတ်မယ်")
+                        }
+                    }
+                }
             }
         }
-        item { OutlinedButton(onSaved, Modifier.fillMaxWidth()) { Icon(Icons.Default.CollectionsBookmark, null); Spacer(Modifier.width(8.dp)); Text("သိမ်းထားတာနဲ့ မှတ်စုများ") } }
+        item { Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("စာအုပ်စင်", Modifier.weight(1f), fontSize = 18.sp, fontWeight = FontWeight.Medium)
+            TextButton(onSaved) { Icon(Icons.Default.CollectionsBookmark, null, Modifier.size(17.dp)); Spacer(Modifier.width(5.dp)); Text("မှတ်စုများ") }
+        } }
         items(learning.books, key = { it.id }) { book ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.width(86.dp).height(126.dp).clip(RoundedCornerShape(10.dp))
@@ -87,7 +113,7 @@ internal fun BookshelfScreen(viewModel: ReaderViewModel, onRead: (String) -> Uni
                     Column(Modifier.fillMaxSize().padding(10.dp), verticalArrangement = Arrangement.SpaceBetween) {
                         Icon(Icons.Default.MenuBook, null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
                         Text(if (book.assetId.isNotBlank()) if (book.id.contains("beginner")) "BEGINNER" else "INTERMEDIATE" else "PDF",
-                            fontSize = 9.sp, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            fontSize = 11.sp, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                             fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
                 }
@@ -140,6 +166,13 @@ internal fun PdfReaderScreen(viewModel: ReaderViewModel, onBack: () -> Unit, aiV
     val audioImport = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { trackInput.toIntOrNull()?.let { track -> viewModel.importAudio(track, it) } }
     }
+    val audioBatch = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        if (uris.isNotEmpty()) viewModel.importAudioFiles(uris)
+    }
+    val onTrack: (Int) -> Unit = { track ->
+        val asset = tracks.firstOrNull { it.bookId == ui.bookId && it.track == track }
+        if (asset != null) viewModel.playOriginal(asset) else { trackInput = track.toString(); audioPicker = true }
+    }
     BackHandler { when { ui.selection.isNotBlank() -> viewModel.dismissLookup(); ui.explanationOpen -> viewModel.showExplanation(false); else -> onBack() } }
     DisposableEffect(Unit) { onDispose { searchJob?.cancel(); viewModel.close() } }
     val background = when (learning.readerTheme) { "NIGHT" -> Color(0xFF202722); "SEPIA" -> Color(0xFFF5EDDB); else -> Color.White }
@@ -179,7 +212,7 @@ internal fun PdfReaderScreen(viewModel: ReaderViewModel, onBack: () -> Unit, aiV
                     ReaderPageSurface(book, index, viewModel, learning, annotations.filter { it.bookId == book.id && it.page == index &&
                         it.fingerprint == book.fingerprint.ifBlank { book.id } }, if (index == ui.page) focusRegions else emptyList(), continuous,
                         onSelecting = { selecting = it }, onZoom = { zoomed = it },
-                        onSelect = { quote, context, rects, start, end -> viewModel.lookup(quote, context, rects, start, end, translate = false) })
+                        onSelect = { quote, context, rects, start, end -> viewModel.lookup(quote, context, rects, start, end, translate = true) }, onTrack = onTrack)
                 }
                 if (learning.readerFlow == "HORIZONTAL") {
                     val pager = rememberPagerState(initialPage = ui.page.coerceIn(0, book.pageCount - 1)) { book.pageCount }
@@ -204,7 +237,13 @@ internal fun PdfReaderScreen(viewModel: ReaderViewModel, onBack: () -> Unit, aiV
             } else if (ui.loading) CircularProgressIndicator(Modifier.align(Alignment.Center))
         }
         if (ui.selection.isNotBlank()) ReaderSelectionPanel(viewModel, onPractice)
-        if (ui.explanationOpen) ReaderTeachingPanel(viewModel, onPractice)
+        val pageTracks = (ui.pageData?.layer?.let { ReaderTracks.detect(it).map { marker -> marker.number } }.orEmpty() +
+            tracks.filter { it.bookId == ui.bookId && ui.page in it.pages() }.map { it.track }).distinct()
+        if (pageTracks.isNotEmpty()) Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)
+            .horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            pageTracks.forEach { number -> AssistChip({ onTrack(number) }, label = { Text("Track %02d".format(number)) },
+                leadingIcon = { Icon(Icons.Default.VolumeUp, null, Modifier.size(17.dp)) }, modifier = Modifier.testTag("page-track-$number")) }
+        }
         if (ui.preparingAudio || ui.speaking.isNotBlank()) Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically) {
             Text(ui.audioSource + if (ui.preparingAudio) " · ပြင်ဆင်နေ" else " · ဖွင့်နေ", Modifier.weight(1f), fontSize = 12.sp)
@@ -224,6 +263,12 @@ internal fun PdfReaderScreen(viewModel: ReaderViewModel, onBack: () -> Unit, aiV
             IconButton({ search = true }) { Icon(Icons.Default.Search, "Search book") }
             IconButton({ viewModel.page(ui.page + 1) }, enabled = !ui.loading && book != null && ui.page + 1 < book.pageCount) { Icon(Icons.Default.ChevronRight, "Next page") }
         }
+    }
+    if (ui.explanationOpen) ModalBottomSheet(onDismissRequest = { viewModel.showExplanation(false) }) {
+        ReaderTeachingPanel(viewModel, onPractice)
+    }
+    if (ui.shadowText.isNotBlank()) ModalBottomSheet(onDismissRequest = viewModel::stopShadow) {
+        ReaderShadowPanel(viewModel)
     }
     if (navigation && book != null) ReaderNavigationDialog(book, viewModel, { navigation = false })
     if (search && book != null) AlertDialog(onDismissRequest = { searchJob?.cancel(); searchBusy = false; search = false },
@@ -259,6 +304,7 @@ internal fun PdfReaderScreen(viewModel: ReaderViewModel, onBack: () -> Unit, aiV
     if (audioPicker) AlertDialog(onDismissRequest = { audioPicker = false }, title = { Text("စာအုပ်ရဲ့ Track အသံ") },
         text = { Column(Modifier.heightIn(max = 340.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("မူရင်းအသံဖိုင်ကို ကိုယ်တိုင်ရွေးချိတ်ပါ။ ဖိုင်မရှိရင် ကိုရီးယား TTS ကို AI အသံလို့ ပြထားပါတယ်။", fontSize = 13.sp)
+            OutlinedButton({ audioBatch.launch(arrayOf("audio/*")); audioPicker = false }) { Text("Track နံပါတ်ပါတဲ့ ဖိုင်များ အတူရွေးချိတ်မယ်") }
             tracks.filter { it.bookId == ui.bookId }.forEach { asset -> TextButton({ viewModel.playOriginal(asset); audioPicker = false }) { Text("Track ${asset.track} · ဖွင့်မယ်") } }
             OutlinedTextField(trackInput, { trackInput = it.filter(Char::isDigit).take(4) }, label = { Text("Track နံပါတ်") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))

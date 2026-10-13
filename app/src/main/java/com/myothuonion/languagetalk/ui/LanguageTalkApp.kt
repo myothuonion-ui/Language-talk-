@@ -47,6 +47,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Keyboard
@@ -134,7 +135,7 @@ import java.util.Locale
 
 private enum class Screen {
     HOME, NEW_CHAT, HISTORY, CHAT_HUB, MEMORY, SETTINGS, MESSAGE_CHAT, LIVE_CHAT, NAME_STUDIO, QUICK_TRANSLATE, BOOKS,
-    LIBRARY, COACH, DAILY, ME, READER, SAVED, ADVANCED, AI_SETTINGS
+    LIBRARY, COACH, DAILY, ME, READER, SAVED, ADVANCED, AI_SETTINGS, REPLAYS
 }
 
 @Composable
@@ -142,6 +143,7 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
     val bookViewModel: BookViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
     val coachViewModel: CoachViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
     val readerViewModel: ReaderViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val replayViewModel: ReplayViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
     val settings by viewModel.settings.collectAsState()
     LanguageTalkTheme(when (settings.appearance) { "DARK" -> true; "LIGHT" -> false; else -> androidx.compose.foundation.isSystemInDarkTheme() }) {
         var screen by rememberSaveable { mutableStateOf(Screen.LIBRARY) }
@@ -203,13 +205,15 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
             snackbarHost = { SnackbarHost(snackbar) },
             containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
-                if (screen in listOf(Screen.LIBRARY, Screen.COACH, Screen.ME) && !coachUi.open) {
-                    AppBottomBar(screen) { coachViewModel.stopAll(); screen = it }
+                if (screen in listOf(Screen.LIBRARY, Screen.COACH, Screen.REPLAYS, Screen.ME)) {
+                    AppBottomBar(screen) { coachViewModel.stopAll(); replayViewModel.stop(); screen = it }
                 }
             }
         ) { padding ->
             Box(Modifier.fillMaxSize().padding(padding)) {
                 when (screen) {
+                    Screen.REPLAYS -> ReplayScreen(replayViewModel, onLegacy = { screen = Screen.HISTORY },
+                        onRead = { id, page -> readBook(id, page) })
                     Screen.LIBRARY -> BookshelfScreen(readerViewModel,
                         onSaved = { screen = Screen.SAVED }, onRead = { readBook(it, null) }, onStudy = { id ->
                             bookReturn = Screen.LIBRARY; viewModel.closeChat(); bookViewModel.selectBook(id); screen = Screen.BOOKS
@@ -315,7 +319,7 @@ fun LanguageTalkApp(viewModel: AppViewModel) {
                                 onStart = { viewModel.startLive(chat.id) },
                                 onToggleMic = viewModel::toggleLiveMic,
                                 onStop = viewModel::stopLive,
-                                onBack = { screen = Screen.CHAT_HUB },
+                                onBack = { viewModel.stopLive(); screen = Screen.CHAT_HUB },
                                 onCustomize = { profileChatId = chat.id }, onHelp = viewModel::helpWithAnswer, onContinuePractice = viewModel::continuePractice,
                                 onTextChat = { viewModel.stopLive(); openChat(chat.id) },
                                 aiChooser = { AiTaskPicker(AiTask.CONVERSATION, viewModel, chat.id) },
@@ -369,12 +373,13 @@ private fun AppBottomBar(screen: Screen, onSelect: (Screen) -> Unit) {
         listOf(
             Triple(Screen.LIBRARY, Icons.Default.MenuBook, "Books"),
             Triple(Screen.COACH, Icons.Default.Mic, "Practice"),
+            Triple(Screen.REPLAYS, Icons.Default.Headphones, "Replays"),
             Triple(Screen.ME, Icons.Default.Person, "Me")
         ).forEach { (target, icon, label) ->
             NavigationBarItem(
                 selected = screen == target,
                 onClick = { onSelect(target) },
-                icon = { GlassIcon(icon, label, active = screen == target) },
+                icon = { Icon(icon, label, Modifier.size(23.dp)) },
                 label = { Text(label) }
             )
         }

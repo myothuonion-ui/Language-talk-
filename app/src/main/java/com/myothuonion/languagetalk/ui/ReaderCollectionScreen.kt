@@ -30,7 +30,7 @@ internal fun ReaderCollectionScreen(viewModel: ReaderViewModel, onBack: () -> Un
     var unavailable by remember { mutableStateOf(false) }
     fun read(id: String, page: Int) { if (learning.books.any { it.id == id }) onRead(id, page) else unavailable = true }
     val visible = annotations.filter {
-        (filter == "ALL" || filter == "NOTES" && (it.kind == "NOTE" || it.note.isNotBlank()) || filter == "WORDS" && it.savedType == "WORD" ||
+        (filter == "ALL" || filter == "GRAMMAR" && it.savedType == "GRAMMAR" || filter == "NOTES" && (it.kind == "NOTE" || it.note.isNotBlank()) || filter == "WORDS" && it.savedType == "WORD" ||
             filter == "SENTENCES" && it.savedType != "WORD" || filter == "MARKS" && it.kind in setOf("HIGHLIGHT", "UNDERLINE", "BOLD")) &&
             (query.isBlank() || listOf(it.quote, it.note, it.context, it.bookTitle).any { value -> value.contains(query, true) })
     }
@@ -44,7 +44,7 @@ internal fun ReaderCollectionScreen(viewModel: ReaderViewModel, onBack: () -> Un
             }
             OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { Text("စာသား၊ မှတ်စု၊ စာအုပ်နာမည် ရှာ") })
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf("ALL" to "အားလုံး", "WORDS" to "ဝေါဟာရ", "SENTENCES" to "ဝါကျ", "PAGES" to "စာမျက်နှာ", "NOTES" to "မှတ်စု", "MARKS" to "မျဉ်းသား").forEach { (id, label) ->
+                listOf("ALL" to "အားလုံး", "WORDS" to "ဝေါဟာရ", "GRAMMAR" to "Grammar", "SENTENCES" to "ဝါကျ", "PAGES" to "စာမျက်နှာ", "NOTES" to "မှတ်စု", "MARKS" to "မျဉ်းသား").forEach { (id, label) ->
                     FilterChip(filter == id, { filter = id }, label = { Text(label) })
                 }
             }

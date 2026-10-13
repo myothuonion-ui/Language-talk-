@@ -120,6 +120,7 @@ private fun ApiProfileDialog(initial: AiProfile, config: AiConfiguration, viewMo
     val busy by viewModel.apiBusy.collectAsState()
     val statuses by viewModel.apiStatus.collectAsState()
     val catalogs by viewModel.apiModels.collectAsState()
+    val featureStatus by viewModel.apiFeatureStatus.collectAsState()
     val builtIn = initial.id in setOf("gemini", "nvidia", "openai", "claude", "deepseek")
     AlertDialog(onDismissRequest = dismiss, title = { Text(profile.label) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()).testTag("api-profile"), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -157,6 +158,16 @@ private fun ApiProfileDialog(initial: AiProfile, config: AiConfiguration, viewMo
             }
             if (profile.id in busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             statuses[profile.id]?.let { Text(it, fontSize = 12.sp, lineHeight = 21.sp) }
+            Text("လုပ်ဆောင်ချက်တစ်ခုစီ စမ်းမယ်", fontWeight = FontWeight.Medium)
+            ApiFeature.entries.forEach { feature ->
+                val supported = profile.supports(feature.task)
+                OutlinedButton({ viewModel.testApiFeature(profile, key, feature) },
+                    enabled = supported && profile.id !in busy && (key.isNotBlank() || viewModel.apiConfigured(profile.id)),
+                    modifier = Modifier.fillMaxWidth().testTag("api-test-" + feature.name)) { Text(feature.label) }
+                featureStatus[profile.id + ":" + feature.name]?.let { Text(it, fontSize = 12.sp, lineHeight = 21.sp) }
+                if (!supported) Text("ဒီ API မှာ မရပါ · အသံအတွက် Gemini ကို သီးခြားရွေးပါ။", fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             TextButton({ advanced = !advanced }) { Text(if (advanced) "အသေးစိတ်ပိတ်မယ်" else "အသေးစိတ် · models / endpoint") }
             if (advanced) {
                 if (profile.kind == AiProviderKind.CUSTOM) {

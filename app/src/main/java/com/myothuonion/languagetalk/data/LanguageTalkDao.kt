@@ -10,6 +10,30 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LanguageTalkDao {
+    @Query("SELECT * FROM replay_sessions ORDER BY updatedAt DESC")
+    fun observeReplaySessions(): Flow<List<ReplaySession>>
+    @Query("SELECT * FROM replay_sessions")
+    suspend fun allReplaySessions(): List<ReplaySession>
+    @Query("SELECT * FROM replay_clips")
+    suspend fun allReplayClips(): List<ReplayClip>
+    @Query("SELECT * FROM replay_sessions WHERE id = :id")
+    suspend fun replaySession(id: String): ReplaySession?
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun saveReplaySession(value: ReplaySession)
+    @Query("UPDATE replay_sessions SET updatedAt = :time WHERE id = :id")
+    suspend fun touchReplay(id: String, time: Long = System.currentTimeMillis())
+    @Query("SELECT * FROM replay_clips WHERE sessionId = :id ORDER BY id")
+    fun observeReplayClips(id: String): Flow<List<ReplayClip>>
+    @Query("SELECT * FROM replay_clips WHERE sessionId = :id ORDER BY id")
+    suspend fun replayClips(id: String): List<ReplayClip>
+    @Insert
+    suspend fun insertReplayClip(value: ReplayClip): Long
+    @Update
+    suspend fun updateReplayClip(value: ReplayClip)
+    @Query("UPDATE replay_clips SET text = :text WHERE id = :id")
+    suspend fun updateReplayTranscript(id: Long, text: String)
+    @Query("DELETE FROM replay_sessions WHERE id = :id")
+    suspend fun deleteReplaySession(id: String)
     @Query("SELECT * FROM reader_annotations ORDER BY updatedAt DESC")
     fun observeAnnotations(): Flow<List<ReaderAnnotation>>
     @Query("SELECT * FROM reader_annotations")

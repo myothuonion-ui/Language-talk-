@@ -8,8 +8,8 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [ChatEntity::class, MessageEntity::class, MemoryEntity::class, KnowledgeSourceEntity::class, LearningProgressEntity::class, ReviewItemEntity::class, ReaderAnnotation::class, PageExplanation::class, BookAudioAsset::class],
-    version = 5,
+    entities = [ChatEntity::class, MessageEntity::class, MemoryEntity::class, KnowledgeSourceEntity::class, LearningProgressEntity::class, ReviewItemEntity::class, ReaderAnnotation::class, PageExplanation::class, BookAudioAsset::class, ReplaySession::class, ReplayClip::class],
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -24,7 +24,16 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun open(context: Context, name: String): AppDatabase = Room.databaseBuilder(
             context.applicationContext, AppDatabase::class.java, name
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build()
+
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE book_audio_assets ADD COLUMN pagesJson TEXT NOT NULL DEFAULT '[]'")
+                database.execSQL("CREATE TABLE IF NOT EXISTS replay_sessions (id TEXT NOT NULL PRIMARY KEY, title TEXT NOT NULL, kind TEXT NOT NULL, sourceId TEXT NOT NULL, bookId TEXT NOT NULL, page INTEGER NOT NULL, createdAt INTEGER NOT NULL, updatedAt INTEGER NOT NULL)")
+                database.execSQL("CREATE TABLE IF NOT EXISTS replay_clips (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, sessionId TEXT NOT NULL, speaker TEXT NOT NULL, text TEXT NOT NULL, audioName TEXT NOT NULL, mimeType TEXT NOT NULL, durationMs INTEGER NOT NULL, origin TEXT NOT NULL, createdAt INTEGER NOT NULL, FOREIGN KEY(sessionId) REFERENCES replay_sessions(id) ON DELETE CASCADE)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_replay_clips_sessionId ON replay_clips(sessionId)")
+            }
+        }
 
         private val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(database: SupportSQLiteDatabase) {

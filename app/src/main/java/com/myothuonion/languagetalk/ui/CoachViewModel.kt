@@ -19,7 +19,8 @@ data class CoachUiState(val open: Boolean = false, val unitId: String = "", val 
     val teaching: Boolean = false)
 
 class CoachViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = (application as LanguageTalkApplication).learning
+    private val app = application as LanguageTalkApplication
+    private val repository = app.learning
     val curriculum = repository.curriculum
     val learning = repository.state.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), LearningState())
     private val _ui = MutableStateFlow(CoachUiState())
@@ -102,8 +103,18 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
     fun listen(text: String, alternate: Boolean = false) {
         if (ui.value.busy || live.value.connected || ui.value.recording) return
         player.stop()
-        work { player.play(repository.speech(text, ui.value.slow, alternate),
-            onError = { failure -> _ui.update { it.copy(error = failure.message) } }) {} }
+        work {
+            val audio = repository.speech(text, ui.value.slow, alternate)
+            archiveSpeech(text, audio)
+            player.play(audio, onError = { failure -> _ui.update { it.copy(error = failure.message) } }) {}
+        }
+    }
+    private suspend fun archiveSpeech(text: String, audio: AudioPayload) {
+        val current = ui.value
+        val card = learning.value.cards.firstOrNull { it.id == current.reviewId }
+        val unit = curriculum.firstOrNull { it.id == current.unitId }
+        val session = app.replays.begin("COACH", current.reviewId ?: current.unitId, card?.title ?: unit?.title ?: "Korean practice", card?.bookId.orEmpty(), card?.page ?: -1)
+        app.replays.attachAI(session, text, audio)
     }
     fun explain(task: CoachTask) {
         if (ui.value.busy || live.value.connected) return
@@ -134,8 +145,11 @@ class CoachViewModel(application: Application) : AndroidViewModel(application) {
         val created = HandsFreeRestSession(getApplication(), silenceMs,
             opening = { repository.opening(current.slow, current.reviewId, current.placement, current.unitId) }) { audio ->
             assess(audio = audio)
-            if (finished()) HandsFreeTurn(ui.value.heard, ui.value.feedback,
-                repository.speech("수고하셨습니다.", ui.value.slow))
+            if (finished()) {
+                val finalAudio = repository.speech("수고하셨습니다.", ui.value.slow)
+                archiveSpeech("수고하셨습니다.", finalAudio)
+                HandsFreeTurn(ui.value.heard, ui.value.feedback, finalAudio)
+            }
             else {
                 val opening = repository.opening(ui.value.slow, current.reviewId, current.placement, current.unitId, ui.value.feedback)
                 opening.copy(heardText = ui.value.heard, replyText = ui.value.feedback + "\n" + opening.replyText)

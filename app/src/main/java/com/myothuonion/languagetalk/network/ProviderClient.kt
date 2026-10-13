@@ -15,7 +15,7 @@ import java.util.Base64
 /** Native Messages and OpenAI-compatible Chat APIs, with credentials scoped to one endpoint. */
 class ProviderClient(
     private val http: OkHttpClient = OkHttpClient.Builder().connectTimeout(12, TimeUnit.SECONDS)
-        .readTimeout(45, TimeUnit.SECONDS).callTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(75, TimeUnit.SECONDS).callTimeout(90, TimeUnit.SECONDS)
         .followRedirects(false).followSslRedirects(false).build()
 ) {
     private val json = Json { ignoreUnknownKeys = true }
@@ -37,16 +37,19 @@ class ProviderClient(
             you just asked, not a question frame. answerExample is a matching Korean example.
             Give no answer hints for assessments, dictionaries, or book explanations unless instructed.
         """.trimIndent()
-        val raw = text(profile, key, model, instruction + "\n" + contract, history, input, image)
+        val raw = text(profile, key, model, instruction + "\n" + contract, history, input, image,
+            schema = GeminiClient().tutorReplySchema())
         return GeminiClient().parseTutorReply(raw, allowEmptyReply)
     }
 
     suspend fun text(profile: AiProfile, key: String, model: String, instruction: String,
-        history: List<MessageEntity>, input: String, image: Pair<String, ByteArray>? = null): String {
+        history: List<MessageEntity>, input: String, image: Pair<String, ByteArray>? = null,
+        schema: JsonObject? = null): String {
         require(key.isNotBlank()) { "API key ထည့်ပါ။" }
+        val system = instruction + if (schema == null) "" else "\nReturn ONLY JSON matching this schema:\n$schema"
         val messages = buildJsonArray {
             if (profile.format != ApiFormat.CLAUDE_MESSAGES)
-                add(buildJsonObject { put("role", "system"); put("content", instruction) })
+                add(buildJsonObject { put("role", "system"); put("content", system) })
             history.filter { it.role in setOf("USER", "ASSISTANT") }.takeLast(16).forEach {
                 add(buildJsonObject { put("role", if (it.role == "USER") "user" else "assistant"); put("content", it.content.take(12000)) })
             }
@@ -71,10 +74,14 @@ class ProviderClient(
             put("model", model)
             put("messages", messages)
             if (profile.format == ApiFormat.CLAUDE_MESSAGES) {
-                put("system", instruction); put("max_tokens", 8192)
+                put("system", system); put("max_tokens", 8192)
             } else {
                 put(if (profile.kind == AiProviderKind.OPENAI) "max_completion_tokens" else "max_tokens", 8192)
                 put("stream", false)
+                if (schema != null && profile.kind == AiProviderKind.NVIDIA)
+                    put("response_format", buildJsonObject { put("type", "json_object") })
+                if (profile.kind == AiProviderKind.NVIDIA && model.contains("glm-5.3", true))
+                    put("chat_template_kwargs", buildJsonObject { put("enable_thinking", false) })
             }
         }
         val endpoint = if (profile.format == ApiFormat.CLAUDE_MESSAGES) "messages" else "chat/completions"
@@ -146,11 +153,7 @@ class ProviderClient(
         catch (_: Exception) { throw AiApiException("AI returned invalid structured data") }
 
     private fun failure(profile: AiProfile, status: Int, bytes: ByteArray): AiApiException {
-        // Provider bodies may echo a key or user input. Never display or log them.
-        val body = bytes.decodeToString().lowercase()
-        val wholeProvider = status in setOf(401, 403) || (status == 429 &&
-            listOf("insufficient_quota", "billing", "credit", "daily", "perday", "per_day").any(body::contains))
-        return AiApiException("${profile.label} request failed ($status)", status, wholeProvider)
+        return ApiErrors.failure(profile.label, status, bytes.decodeToString())
     }
 }
 

@@ -34,6 +34,9 @@ data class BackupPreferences(
 data class BackupAudio(val messageId: Long, val data: String)
 
 @Serializable
+data class BackupReplayAudio(val clipId: Long, val data: String)
+
+@Serializable
 data class LearningBackup(
     val format: String = "language-talk-backup",
     val version: Int = 1,
@@ -49,7 +52,10 @@ data class LearningBackup(
     val learning: LearningState = LearningState(),
     val annotations: List<ReaderAnnotation> = emptyList(),
     val pageExplanations: List<PageExplanation> = emptyList(),
-    val audioTracks: List<BookAudioAsset> = emptyList()
+    val audioTracks: List<BookAudioAsset> = emptyList(),
+    val replaySessions: List<ReplaySession> = emptyList(),
+    val replayClips: List<ReplayClip> = emptyList(),
+    val replayAudio: List<BackupReplayAudio> = emptyList()
 )
 
 object BackupCodec {
@@ -87,16 +93,26 @@ object BackupCodec {
         require(backup.pageExplanations.size <= 1000 && backup.pageExplanations.map { it.key }.distinct().size == backup.pageExplanations.size)
         backup.pageExplanations.forEach {
             require(it.key.length <= 100 && it.page in 0..4999 && it.sourceBlocks.length <= 180000 && it.teaching.length <= 60000)
-            com.myothuonion.languagetalk.model.PageTeachingCodec.decode(it.teaching, it.blocks())
+            com.myothuonion.languagetalk.model.PageTeachingCodec.decode(it.teaching, it.blocks(), requireComplete = false)
         }
         require(backup.audioTracks.size <= 1000 && backup.audioTracks.all { it.id.matches(Regex("[a-f0-9]{64}")) &&
             it.fileName == it.id + ".audio" && it.track in 1..9999 && it.mimeType.startsWith("audio/") })
+        require(backup.audioTracks.all { it.pagesJson.length <= 30000 && BackupCodec.json.decodeFromString<List<Int>>(it.pagesJson).all { page -> page in 0..4999 } })
+        require(backup.replaySessions.size <= 5000 && backup.replayClips.size <= 50000)
+        val sessionIds = backup.replaySessions.map { it.id }.toSet()
+        val clipIds = backup.replayClips.map { it.id }.toSet()
+        require(sessionIds.size == backup.replaySessions.size && clipIds.size == backup.replayClips.size)
+        require(backup.replaySessions.all { it.id.length in 1..300 && it.title.length <= 300 && it.sourceId.length <= 250 && it.page in -1..4999 })
+        require(backup.replayClips.all { it.id > 0 && it.sessionId in sessionIds && it.speaker in setOf("USER", "AI") && it.text.length <= 6000 && it.durationMs in 0..3600000 })
+        require(backup.replayAudio.map { it.clipId }.distinct().size == backup.replayAudio.size && backup.replayAudio.all { it.clipId in clipIds })
+        backup.replayAudio.forEach { require(Base64.getDecoder().decode(it.data).size <= 4 * 1024 * 1024) { "အသံကြီးလွန်းပါတယ်။ Session ZIP နဲ့ ထုတ်ပါ။" } }
         return backup
     }
 }
 
 class BackupStore(private val db: AppDatabase, private val settings: SettingsStore, private val recordings: File,
     private val books: BookStore? = null, private val learning: LearningStore? = null) {
+    private val replayDirectory = File(recordings.parentFile, "replay-audio")
     suspend fun export(): ByteArray {
         val dao = db.dao()
         val preferences = settings.settings.first()
@@ -108,8 +124,17 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
                 val file = File(recordings, message.audioPath)
                 if (file.isFile) BackupAudio(message.id, Base64.getEncoder().encodeToString(file.readBytes())) else null
             }
+            val replayClips = dao.allReplayClips()
+            val replayAudio = replayClips.mapNotNull { clip ->
+                val file = File(replayDirectory, clip.audioName)
+                if (clip.audioName.matches(Regex("[a-zA-Z0-9._-]{1,100}")) && file.isFile) {
+                    require(file.length() <= 4 * 1024 * 1024) { "ဒီအသံက 4 MB ကျော်ပါတယ်။ Replays မှ Session ZIP ထုတ်ပါ။" }
+                    BackupReplayAudio(clip.id, Base64.getEncoder().encodeToString(file.readBytes()))
+                } else null
+            }
             LearningBackup(annotations = dao.allAnnotations(), pageExplanations = dao.allPageExplanations(), audioTracks = dao.allBookAudio(), chats = dao.allChats(), messages = messages, memories = dao.allMemories(),
                 sources = dao.allSources().map { it.copy(uri = "") }, progress = dao.allProgress(), reviews = dao.allReviews(), audio = audio, books = bookState,
+                replaySessions = dao.allReplaySessions(), replayClips = replayClips, replayAudio = replayAudio,
                 learning = learningState.copy(attempts = learningState.attempts.map { it.copy(audioName = "") }),
                 preferences = BackupPreferences(preferences.displayName, preferences.learnerProfile, preferences.globalBehavior,
                     preferences.defaultVoiceName, preferences.defaultVoiceStyle, preferences.defaultPace, preferences.defaultSilenceMs,
@@ -126,6 +151,7 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
         learning?.validateRestore(backup.learning)
         val stagedFiles = mutableListOf<File>()
         recordings.mkdirs()
+        replayDirectory.mkdirs()
         try {
             val audio = backup.audio.associate { item ->
                 val message = backup.messages.first { it.id == item.messageId }
@@ -134,6 +160,13 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
                 stagedFiles += file
                 file.writeBytes(Base64.getDecoder().decode(item.data))
                 item.messageId to file.name
+            }
+            val replayAudio = backup.replayAudio.associate { item ->
+                val clip = backup.replayClips.first { it.id == item.clipId }
+                val suffix = if (clip.mimeType.contains("wav")) ".wav" else ".m4a"
+                val file = File(replayDirectory, UUID.randomUUID().toString() + suffix)
+                stagedFiles += file; file.writeBytes(Base64.getDecoder().decode(item.data))
+                item.clipId to file.name
             }
             db.withTransaction {
                 val dao = db.dao()
@@ -146,6 +179,15 @@ class BackupStore(private val db: AppDatabase, private val settings: SettingsSto
                 backup.sources.forEach { dao.insertKnowledgeSource(it.copy(id = 0, uri = "")) }
                 backup.progress.forEach { dao.saveProgress(it.copy(chatId = chatMap.getValue(it.chatId), completed = it.completed.coerceIn(0, 5))) }
                 backup.reviews.forEach { dao.saveReview(it.copy(id = 0, chatId = chatMap.getValue(it.chatId))) }
+                val replayMap = backup.replaySessions.associate { session ->
+                    val id = "restored-" + UUID.randomUUID()
+                    val source = if (session.kind == "CONVERSATION") session.sourceId.removePrefix("chat-").toLongOrNull()?.let { old ->
+                        chatMap[old]?.let { "chat-$it" }
+                    } ?: session.sourceId else session.sourceId
+                    dao.saveReplaySession(session.copy(id = id, sourceId = source)); session.id to id
+                }
+                backup.replayClips.forEach { clip -> dao.insertReplayClip(clip.copy(id = 0, sessionId = replayMap.getValue(clip.sessionId),
+                    audioName = replayAudio[clip.id].orEmpty(), durationMs = if (clip.id in replayAudio) clip.durationMs else 0)) }
             }
         } catch (failure: Throwable) {
             stagedFiles.forEach { it.delete() }

@@ -28,7 +28,7 @@ import kotlin.math.*
 internal fun ReaderPageSurface(book: ReaderBook, index: Int, viewModel: ReaderViewModel, learning: LearningState,
     annotations: List<ReaderAnnotation>, focus: List<PageRect>, continuous: Boolean,
     onSelecting: (Boolean) -> Unit, onZoom: (Boolean) -> Unit,
-    onSelect: (String, String, List<PageRect>, Int, Int) -> Unit) {
+    onSelect: (String, String, List<PageRect>, Int, Int) -> Unit, onTrack: (Int) -> Unit = {}) {
     var data by remember(book.id, index) { mutableStateOf<ReadablePdfPage?>(null) }
     var error by remember(book.id, index) { mutableStateOf("") }
     LaunchedEffect(book.id, index) {
@@ -134,7 +134,14 @@ internal fun ReaderPageSurface(book: ReaderBook, index: Int, viewModel: ReaderVi
                     } while (event.changes.any { it.pressed })
                     viewModel.zoom(scale)
                 }
-            }.pointerInput(page) { detectTapGestures(onDoubleTap = { scale = 1f; pan = Offset.Zero; viewModel.zoom(1f) }) }
+            }.pointerInput(page) { detectTapGestures(
+                onDoubleTap = { scale = 1f; pan = Offset.Zero; viewModel.zoom(1f) },
+                onTap = { point ->
+                    val x = point.x / size.width; val y = point.y / size.height
+                    ReaderTracks.detect(page.layer).firstOrNull { marker -> marker.region?.let {
+                        x in (it.left - .015f)..(it.right + .015f) && y in (it.top - .015f)..(it.bottom + .015f)
+                    } == true }?.let { viewModel.activatePage(book, index, page); onTrack(it.number) }
+                }) }
             .pointerInput(page) {
                 var anchor = -1; var end = -1; var pointer = Offset.Zero
                 fun hit(point: Offset) = page.layer.words.indexOfFirst {

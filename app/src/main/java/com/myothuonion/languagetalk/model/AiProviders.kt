@@ -10,6 +10,11 @@ enum class AiProviderKind(val label: String) {
 @Serializable
 enum class ApiFormat { OPENAI_CHAT, CLAUDE_MESSAGES, GEMINI }
 
+/** Known input capability, separate from a model's arbitrary display name. */
+fun supportsImages(profile: AiProfile, model: String): Boolean =
+    profile.format == ApiFormat.GEMINI || profile.kind in setOf(AiProviderKind.OPENAI, AiProviderKind.CLAUDE) ||
+        model in setOf("meta/llama-3.2-90b-vision-instruct", "meta/llama-3.2-11b-vision-instruct", "google/paligemma")
+
 @Serializable
 enum class AiTask(val label: String) {
     TRANSLATE("Translate"), READER("Reader dictionary"), BOOK("စာအုပ်သင်ခန်းစာ"),
@@ -91,13 +96,16 @@ object AiPlans {
         val defaults = when (task) {
             AiTask.SPEECH -> listOf(profile.speechModel) + profile.speechBackups
             AiTask.TRANSCRIBE -> if (profile.format == ApiFormat.GEMINI)
-                listOf(profile.textModel) + profile.textBackups else listOf(profile.transcribeModel)
+                (if (profile.taskDefaults) listOf("gemini-3.5-flash-lite", profile.textModel) else listOf(profile.textModel)) + profile.textBackups
+                else listOf(profile.transcribeModel)
             AiTask.LIVE -> listOf(profile.liveModel, "gemini-3.8-live-extended-thinking")
             else -> when {
-                profile.id == "gemini" && profile.taskDefaults && task in setOf(AiTask.TRANSLATE, AiTask.READER) ->
+                profile.id == "gemini" && profile.taskDefaults && task in setOf(AiTask.TRANSLATE, AiTask.READER, AiTask.CONVERSATION, AiTask.COACH, AiTask.BOOK) ->
                     listOf("gemini-3.5-flash-lite", profile.textModel) + profile.textBackups
                 profile.id == "nvidia" && profile.taskDefaults && task in setOf(AiTask.BOOK, AiTask.COACH, AiTask.DOCUMENT) ->
                     listOf("z-ai/glm-5.3", "moonshotai/kimi-k3", profile.textModel) + profile.textBackups
+                profile.id == "nvidia" && profile.taskDefaults && task in setOf(AiTask.READER, AiTask.TRANSLATE, AiTask.CONVERSATION) ->
+                    listOf("nvidia/nemotron-3.5-lightning-30b-a3b", profile.textModel) + profile.textBackups
                 else -> listOf(profile.textModel) + profile.textBackups
             }
         }

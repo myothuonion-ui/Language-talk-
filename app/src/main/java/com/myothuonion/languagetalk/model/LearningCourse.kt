@@ -49,7 +49,8 @@ data class LearningState(val level: Int = 0, val activeUnit: String = "", val da
     val translations: List<ReaderTranslation> = emptyList(), val readerTheme: String = "DAY",
     val placementLevel: Int = 0, val placementIndex: Int = 0, val placementPasses: Int = 0,
     val placementDone: Boolean = false, val studySeconds: Map<String, Long> = emptyMap(),
-    val readerFlow: String = "HORIZONTAL", val readerMode: String = "PDF", val readerFontSize: Float = 21f)
+    val readerFlow: String = "HORIZONTAL", val readerMode: String = "PDF", val readerFontSize: Float = 21f,
+    val lastReadBookId: String = "")
 
 data class CoachTask(val spoken: String, val prompt: String, val criterion: String, val example: String,
     val hint: String, val canDo: String)

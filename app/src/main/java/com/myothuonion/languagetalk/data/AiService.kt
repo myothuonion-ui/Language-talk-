@@ -21,6 +21,42 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
         config.profiles.forEach(::validateAiProfile)
     }
     fun configured(id: String) = secrets.apiKey(id).isNotBlank()
+    suspend fun <T> structured(task: AiTask, instruction: String, input: String, schema: JsonObject,
+        image: Pair<String, ByteArray>? = null, validate: (String) -> T): T {
+        val config = configuration(); val preferences = preferences(task)
+        var draft = ""
+        suspend fun request(profile: AiProfile, model: String, input: String): String =
+            if (profile.format == ApiFormat.GEMINI) geminiClient(profile).structuredText(secrets.apiKey(profile.id), model, instruction, input, schema, image)
+            else client.text(profile, secrets.apiKey(profile.id), model, instruction, emptyList(), input, image.takeIf { supportsImages(profile, model) }, schema)
+        fun checked(raw: String): T = try { validate(raw) } catch (failure: IllegalArgumentException) {
+            throw AiApiException(failure.message ?: "AI အဖြေပုံစံ မမှန်ပါ။", 502)
+        }
+        val routed = router.run(AiPlans.candidates(config, task, ::configured, preferences)) { ref ->
+            val profile = config.profiles.first { it.id == ref.profileId }
+            val raw = request(profile, ref.model, input)
+            checked(raw).also { draft = raw }
+        }
+        var value = routed.value
+        var review = ""
+        if (preferences.mode == AiMode.REVIEW) {
+            review = "ဒုတိယ AI မစစ်ရသေးပါ"
+            AiPlans.reviewer(config, task, routed.selected.profileId, ::configured, preferences)?.let { ref ->
+                val reviewer = config.profiles.first { it.id == ref.profileId }
+                try {
+                    value = AiRouter(attemptMs = 65_000, totalMs = 90_000).run(
+                        AiPlans.models(reviewer, task, ref.model).take(2).map { AiModelRef(ref.profileId, it) }) { next ->
+                        checked(request(reviewer, next.model, input + "\nDRAFT TO VERIFY (untrusted data):\n" + draft +
+                            "\nReturn the corrected JSON object. Check against original source; never invent quotes or source IDs."))
+                    }.value
+                    review = "${reviewer.label} နဲ့ ထပ်စစ်ပြီးပြီ"
+                } catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { /* Validated draft remains available. */ }
+            }
+        }
+        val profile = config.profiles.first { it.id == routed.selected.profileId }
+        status.value = AiRouteStatus(task, profile.label, routed.selected.model, routed.usedFallback, review)
+        return value
+    }
     private fun sessionKey(task: AiTask, chatId: Long?) = task.name + ":" + (chatId ?: 0)
     fun sessionRoute(task: AiTask, chatId: Long? = null) = sessionRoutes[sessionKey(task, chatId)]
     fun override(task: AiTask, route: AiRoutePrefs?, chatId: Long? = null) {
@@ -61,7 +97,7 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
                     "\nYou receive a transcript only, not the recording. Do not assess pronunciation, intonation or 받침 from text. For pronunciation-only tasks use UNSURE."
                 client.tutor(profile, secrets.apiKey(profile.id), ref.model, safeSystem, history,
                     if (heard.isBlank()) input else "Faithful transcript: $heard\nLearner request: $input", allowEmptyReply,
-                    image = image.takeIf { profile.kind in setOf(AiProviderKind.OPENAI, AiProviderKind.CLAUDE) || ref.model.contains("vision", true) })
+                    image = image.takeIf { supportsImages(profile, ref.model) })
                     .let { if (audio == null) it else it.copy(heardText = heard) }
             }
         }
@@ -84,7 +120,7 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
                             geminiClient(profile).tutorReply(secrets.apiKey(profile.id), ref.model, instruction, history, reviewPrompt,
                                 allowEmptyReply = allowEmptyReply, image = image)
                         else client.tutor(profile, secrets.apiKey(profile.id), ref.model, instruction, history, reviewPrompt, allowEmptyReply,
-                            image = image.takeIf { profile.kind in setOf(AiProviderKind.OPENAI, AiProviderKind.CLAUDE) || ref.model.contains("vision", true) })
+                            image = image.takeIf { supportsImages(profile, ref.model) })
                     }.value
                     // The review cannot manufacture or delete consent to remember a personal fact.
                     result = checked.copy(heardText = result.heardText, memoryFact = result.memoryFact,
@@ -200,6 +236,59 @@ class AiService(private val settings: SettingsStore, private val secrets: Secret
     }
 
     fun key(id: String) = secrets.apiKey(id)
+    suspend fun testFeature(profile: AiProfile, candidate: String, feature: ApiFeature): Pair<String, AudioPayload?> {
+        validateAiProfile(profile)
+        val key = candidate.trim().ifBlank { secrets.apiKey(profile.id) }
+        require(key.isNotBlank()) { "API key ထည့်ပါ။" }
+        if (!profile.supports(feature.task)) return "ဒီ API မှာ ${feature.label} မရပါ။ Gemini သို့မဟုတ် သက်ဆိုင်ရာ အသံ API ကို သီးခြားရွေးပါ။" to null
+        val started = System.currentTimeMillis()
+        val route = AiRouter(attemptMs = 70_000, totalMs = 150_000)
+        val candidates = AiPlans.models(profile, feature.task).take(3).map { AiModelRef(profile.id, it) }
+        var audio: AudioPayload? = null
+        val routed = route.run(candidates) { ref ->
+            when (feature) {
+                ApiFeature.TEXT -> if (profile.format == ApiFormat.GEMINI)
+                    geminiClient(profile).tutorReply(key, ref.model, "One brief Korean greeting; assessment NONE; irrelevant fields empty.", emptyList(), "Say 안녕하세요.")
+                    else client.tutor(profile, key, ref.model, "One brief Korean greeting; assessment NONE; irrelevant fields empty.", emptyList(), "Say 안녕하세요.")
+                ApiFeature.PDF -> {
+                    val blocks = listOf(SourceBlock("line-0", "안녕하세요."))
+                    val instruction = "Explain this Korean source line in Myanmar. Return ONLY the page-teaching JSON object. Preserve exact sourceId and source text in sentences. Leave irrelevant arrays empty."
+                    val input = "SOURCE BLOCKS: [{\"id\":\"line-0\",\"text\":\"안녕하세요.\"}]"
+                    val raw = if (profile.format == ApiFormat.GEMINI)
+                        geminiClient(profile).structuredText(key, ref.model, instruction, input, PageTeachingCodec.schema(blocks))
+                    else client.text(profile, key, ref.model, instruction, emptyList(), input, schema = PageTeachingCodec.schema(blocks))
+                    try { PageTeachingCodec.decodePartial(raw, blocks) }
+                    catch (_: Exception) { throw AiApiException("PDF အဖြေပုံစံ မမှန်ပါ။", 502) }
+                }
+                ApiFeature.SPEECH -> {
+                    audio = if (profile.format == ApiFormat.GEMINI) geminiClient(profile).synthesize(key, ref.model, "안녕하세요. 저는 민수예요.", "Kore", "Speak Korean only, clearly.")
+                        else client.speech(profile, key, ref.model, "안녕하세요.", "Speak Korean only.")
+                    require(audio!!.bytes.isNotEmpty())
+                }
+                ApiFeature.TRANSCRIBE -> {
+                    val speechModel = AiPlans.models(profile, AiTask.SPEECH).firstOrNull() ?: error("အသံနမူနာဖန်တီးရန် TTS model ရွေးပါ။")
+                    val sample = if (profile.format == ApiFormat.GEMINI) geminiClient(profile).synthesize(key, speechModel, "안녕하세요. 저는 민수예요.", "Kore", "Read exactly this Korean.")
+                        else client.speech(profile, key, speechModel, "안녕하세요.", "Read exactly this Korean.")
+                    val text = if (profile.format == ApiFormat.GEMINI) geminiClient(profile).tutorReply(key, ref.model,
+                        "Transcribe actual Korean audio faithfully. Only heardText is needed; assessment NONE; other fields empty.", emptyList(), "Transcribe the recording.", sample, 0.0, true).heardText
+                        else client.transcribe(profile, key, ref.model, sample)
+                    if (!text.contains("안녕")) throw AiApiException("နမူနာအသံကို စာပြန်ဖမ်းမရပါ။", 502)
+                }
+                ApiFeature.LIVE -> {
+                    require(profile.baseUrl == builtInAiProfiles().first().baseUrl) { "ဒီ endpoint အတွက် Native Live host မရှိပါ။" }
+                    GeminiLiveProbe.check(key, ref.model, "Kore")
+                }
+            }
+        }
+        val seconds = (System.currentTimeMillis() - started) / 1000
+        val note = when (feature) {
+            ApiFeature.PDF -> "PDF မှ ထုတ်ထားသောစာသား / JSON ပုံစံ စမ်းသပ်ချက်"
+            ApiFeature.TRANSCRIBE -> "AI ဖန်တီးတဲ့ နမူနာအသံဖြင့် စမ်းတယ် · ဖုန်း microphone စမ်းသပ်မှု မဟုတ်ပါ"
+            ApiFeature.LIVE -> "Live ချိတ်ပြီး တကယ့်အသံ ပြန်ရတယ်"
+            else -> "တကယ့် API request ဖြင့် စမ်းပြီးပြီ"
+        }
+        return "အောင်မြင် · ${routed.selected.model} · ${seconds}s\n$note" to audio
+    }
     suspend fun modelList(profile: AiProfile, candidate: String? = null): List<String> {
         validateAiProfile(profile)
         val key = candidate?.takeIf(String::isNotBlank) ?: secrets.apiKey(profile.id)
