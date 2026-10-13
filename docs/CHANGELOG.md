@@ -1,3 +1,16 @@
+# v0.10.0 — Balanced reading and paired voice replays
+
+- Keep app identity and existing content; add the selected Book & Voice icon and Books / Practice / Replays / Me navigation.
+- Probe Text, PDF JSON, Speech, Transcribe and native Live separately, with safe, specific error reasons.
+- Use dedicated source-linked PDF schemas, retain partial results and resume missing sections.
+- Tap printed Track numbers to open imported original audio; batch import numbered filenames and manually link pages.
+- Save actual user/AI audio, filter by speaker, seek by turn, slow playback and loop A–B intervals offline.
+- Add source-linked grammar notes, passage questions and listen–repeat–compare.
+- Migrate database 5→6; include paired recordings in bounded backups and export long sessions as ZIP.
+- Reuse main's CI development signing cache across branches.
+
+See [usage and limitations](BALANCED_0_10.md).
+
 # v0.9.0 — Persistent reading and deliberate practice
 
 - Add swipe/continuous reader navigation, searchable source-linked annotations, notes and Text-mode bold.

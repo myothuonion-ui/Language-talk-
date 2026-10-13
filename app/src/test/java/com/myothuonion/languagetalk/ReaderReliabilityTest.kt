@@ -2,6 +2,8 @@ package com.myothuonion.languagetalk
 
 import com.myothuonion.languagetalk.model.*
 import com.myothuonion.languagetalk.data.*
+import com.myothuonion.languagetalk.util.PdfTextLayer
+import com.myothuonion.languagetalk.util.PdfWord
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 import org.junit.Assert.*
@@ -9,6 +11,17 @@ import org.junit.Test
 
 class ReaderReliabilityTest {
     private val blocks = listOf(SourceBlock("line-0", "안녕하세요."), SourceBlock("line-1", "저는 학생이에요."))
+    @Test fun printedTrackNumbersHaveTapRegionsAndAmbiguousNamesAreNotGuessed() {
+        val layer = PdfTextLayer("Track 02", listOf(PdfWord("Track", .1f, .2f, .2f, .3f, "Track 02", 0),
+            PdfWord("02", .21f, .2f, .25f, .3f, "Track 02", 0)))
+        val marker = ReaderTracks.detect(layer).single()
+        assertEquals(2, marker.number)
+        assertTrue(marker.region!!.valid())
+        assertEquals(2, ReaderTracks.numberFromName("TTMIK Track 02.mp3"))
+        assertEquals(3, ReaderTracks.numberFromName("003.mp3"))
+        assertNull(ReaderTracks.numberFromName("lesson-2-page-13.mp3"))
+        assertTrue(ReaderTracks.detect(PdfTextLayer("Track 99999")).isEmpty())
+    }
     @Test fun malformedPageReplyIsReportedWithoutDumpingTheProviderText() {
         val error = assertThrows(IllegalArgumentException::class.java) { PageTeachingCodec.decodePartial("ဒီစာမျက်နှာကို ရှင်းပြပါမယ်", blocks) }
         assertFalse(error.message.orEmpty().contains("JSON input"))

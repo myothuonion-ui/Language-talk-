@@ -117,7 +117,9 @@ class GeminiHttpTest {
         val failure = runCatching { client.synthesize("test-key-only", GeminiModels.SPEECH, "Hello", "Kore", "Clear") }.exceptionOrNull() as AiApiException
         assertEquals(429, failure.statusCode)
         val check = GeminiKeyCheck(61, GeminiModels.TEXT, null, GeminiModels.LIVE, listOf(failure.message!!))
-        assertFalse(check.ready); assertTrue(check.summary.contains("Speech daily quota exhausted"))
+        assertFalse(check.ready)
+        assertTrue(check.summary.contains("Quota / credit"))
+        assertFalse(check.summary.contains("Speech daily quota exhausted"))
     }
 
     @Test fun missingAudioCannotPassTheSpeechCheck() = runBlocking<Unit> {

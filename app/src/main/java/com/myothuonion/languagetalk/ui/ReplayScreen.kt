@@ -111,11 +111,11 @@ internal fun ReplayScreen(viewModel: ReplayViewModel, onLegacy: () -> Unit, onRe
                         }
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             listOf(.5f, .75f, 1f, 1.25f).forEach { speed -> FilterChip(playback.speed == speed,
-                                { viewModel.speed(speed) }, label = { Text("${speed}×") }) }
+                                { viewModel.speed(speed) }, label = { Text("${speed}×") }, modifier = Modifier.testTag("replay-speed-$speed")) }
                         }
                         FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            OutlinedButton(viewModel::markA, enabled = playback.durationMs > 0) { Text("A · " + (playback.loopStart?.let(::audioTime) ?: "ရွေး")) }
-                            OutlinedButton(viewModel::markB, enabled = playback.loopStart != null) { Text("B · " + (playback.loopEnd?.let(::audioTime) ?: "ရွေး")) }
+                            OutlinedButton(viewModel::markA, enabled = playback.durationMs > 0, modifier = Modifier.testTag("replay-mark-A")) { Text("A · " + (playback.loopStart?.let(::audioTime) ?: "ရွေး")) }
+                            OutlinedButton(viewModel::markB, enabled = playback.loopStart != null, modifier = Modifier.testTag("replay-mark-B")) { Text("B · " + (playback.loopEnd?.let(::audioTime) ?: "ရွေး")) }
                             if (playback.loopStart != null) TextButton(viewModel::clearLoop) { Text("Loop ပိတ်") }
                         }
                         if (playback.loopEnd != null) Text("A–B ကို ထပ်တလဲလဲ နားထောင်နေမယ်", fontSize = 12.sp)
@@ -133,7 +133,7 @@ internal fun ReplayScreen(viewModel: ReplayViewModel, onLegacy: () -> Unit, onRe
             items(clips.filter { speaker == "BOTH" || it.speaker == speaker }, key = { it.id }) { clip ->
                 Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor =
                     if (playback.clipId == clip.id) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface),
-                    modifier = Modifier.fillMaxWidth().clickable { viewModel.seekClip(clip) }) {
+                    modifier = Modifier.fillMaxWidth().testTag("replay-clip-${clip.speaker}").clickable { viewModel.seekClip(clip) }) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(if (clip.speaker == "USER") "မင်း" else "AI", fontSize = 12.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Medium)

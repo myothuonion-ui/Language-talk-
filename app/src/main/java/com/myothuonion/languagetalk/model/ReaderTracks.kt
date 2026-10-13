@@ -5,9 +5,9 @@ import com.myothuonion.languagetalk.util.PdfTextLayer
 data class TrackMarker(val number: Int, val region: PageRect? = null)
 
 object ReaderTracks {
-    private val number = Regex("(?i)(?:track|트랙)\\s*[:#.-]?\\s*([0-9]{1,4})")
+    private val number = Regex("(?i)(?:track|트랙)\\s*[:#.-]?\\s*([0-9]{1,4})(?![0-9])")
     fun numberFromName(name: String): Int? = number.find(name)?.groupValues?.get(1)?.toIntOrNull()
-        ?: Regex("(?:^|[^0-9])([0-9]{1,3})(?:[^0-9]|$)").find(name)?.groupValues?.get(1)?.toIntOrNull()
+        ?: Regex("(?<![0-9])([0-9]{1,3})(?![0-9])").findAll(name.substringBeforeLast('.')).toList().singleOrNull()?.groupValues?.get(1)?.toIntOrNull()
     fun detect(layer: PdfTextLayer): List<TrackMarker> {
         val found = mutableListOf<TrackMarker>()
         layer.words.groupBy { it.line }.values.forEach { words ->

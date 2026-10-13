@@ -7,10 +7,10 @@ test_status=$?
 capture_test_status=0
     adb install -t app/build/outputs/apk/debug/app-debug.apk &&
         adb install -t app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk &&
-        adb shell am instrument -w -r -e class com.myothuonion.languagetalk.PracticeScreensTest,com.myothuonion.languagetalk.LiveErrorScreenTest,com.myothuonion.languagetalk.BookCoursesTest,com.myothuonion.languagetalk.ReaderAndLearningTest,com.myothuonion.languagetalk.ReaderStudyUpgradeTest com.myothuonion.languagetalk.test/androidx.test.runner.AndroidJUnitRunner > ui-instrumentation.log
+        adb shell am instrument -w -r -e class com.myothuonion.languagetalk.PracticeScreensTest,com.myothuonion.languagetalk.LiveErrorScreenTest,com.myothuonion.languagetalk.BookCoursesTest,com.myothuonion.languagetalk.ReaderAndLearningTest,com.myothuonion.languagetalk.ReaderStudyUpgradeTest,com.myothuonion.languagetalk.ReplayScreensTest com.myothuonion.languagetalk.test/androidx.test.runner.AndroidJUnitRunner > ui-instrumentation.log
     capture_test_status=$?
     if [ "$capture_test_status" -eq 0 ]; then
-        python3 -c 'from pathlib import Path; text = Path("ui-instrumentation.log").read_text(); print(text); assert "OK (9 tests)" in text, "UI capture test failed"'
+        python3 -c 'from pathlib import Path; text = Path("ui-instrumentation.log").read_text(); print(text); assert "OK (10 tests)" in text, "UI capture test failed"'
         capture_test_status=$?
     fi
     if [ "$test_status" -eq 0 ] && [ "$capture_test_status" -eq 0 ]; then

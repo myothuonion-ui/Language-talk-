@@ -80,7 +80,7 @@ class ProviderClient(
                 put("stream", false)
                 if (schema != null && profile.kind == AiProviderKind.NVIDIA)
                     put("response_format", buildJsonObject { put("type", "json_object") })
-                if (profile.kind == AiProviderKind.NVIDIA && model.contains("glm-5.3", true))
+                if (profile.kind == AiProviderKind.NVIDIA && model in setOf("z-ai/glm-5.3", "z-ai/glm-5.3-flash", "nvidia/nemotron-3.5-lightning-30b-a3b"))
                     put("chat_template_kwargs", buildJsonObject { put("enable_thinking", false) })
             }
         }

@@ -92,7 +92,7 @@ class AiRoutingTest {
         assertEquals("ㅏ ㅓ ㅗ", VoiceText.korean("ㅏ ㅓ ㅗ"))
     }
 
-    @Test fun nvidiaHostedModelsUseTheNvidiaCredentialAndNoUniversalThinkingOptions() = runTest {
+    @Test fun nvidiaGlmUsesItsOwnCredentialAndSupportedFastThinkingOption() = runTest {
         MockWebServer().use { server ->
             server.enqueue(chatReply("""{"reply":"물 주세요.","assessment":"NONE","answerPattern":"[အရာ] 주세요."}"""))
             val profile = builtInAiProfiles().first { it.id == "nvidia" }.copy(baseUrl = server.url("/v1/").toString())
@@ -103,7 +103,7 @@ class AiRoutingTest {
             assertEquals("Bearer nvidia-test-only", request.getHeader("Authorization"))
             val body = Json.parseToJsonElement(request.body.readUtf8()).jsonObject
             assertEquals("z-ai/glm-5.3-flash", body["model"]?.jsonPrimitive?.content)
-            assertFalse(body.containsKey("chat_template_kwargs"))
+            assertEquals(false, body["chat_template_kwargs"]!!.jsonObject["enable_thinking"]!!.jsonPrimitive.boolean)
         }
     }
 

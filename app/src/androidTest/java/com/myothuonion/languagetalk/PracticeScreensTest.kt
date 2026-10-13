@@ -98,6 +98,14 @@ class PracticeScreensTest {
         compose.onNodeWithTag("ai-settings").assertExists()
         compose.onNodeWithText("Gemini + NVIDIA").assertIsDisplayed()
         capture("provider-settings")
+        compose.onNodeWithTag("ai-settings").performScrollToNode(hasText("Gemini"))
+        compose.onNodeWithText("Gemini").performClick()
+        for (feature in listOf("TEXT", "PDF", "SPEECH", "TRANSCRIBE", "LIVE")) {
+            compose.onNodeWithTag("api-test-$feature").assertExists()
+        }
+        compose.onNodeWithTag("api-profile").performScrollToNode(hasTestTag("api-test-SPEECH"))
+        capture("api-feature-tests")
+        compose.onNodeWithText("ပိတ်မယ်").performClick()
         compose.activity.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithTag("simple-settings").performScrollToNode(hasText("Advanced settings"))
         compose.onNodeWithText("Advanced settings").performClick()

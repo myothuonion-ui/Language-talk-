@@ -1,11 +1,11 @@
-# Language Talk AI v0.9.0
+# Language Talk AI v0.10.0
 
-Books / Practice / Me, Korean-only speech with written Myanmar teaching, guided answer frames, and flexible Gemini / NVIDIA / OpenAI / Claude / DeepSeek API connections.
+Balanced Books / Practice / Replays / Me, source-linked PDF teaching, numbered original Track audio, paired user/AI recordings, and flexible APIs. App name and package ID are unchanged.
 
-Reader/practice update guide: [0.9.0](docs/READER_PRACTICE_0_9.md).
+Update and usage guide: [0.10.0](docs/BALANCED_0_10.md).
 
-- [Download APK](https://github.com/myothuonion-ui/Language-talk-/releases/download/v0.9.0/language-talk-v0.9.0.apk)
-- [Release and complete source](https://github.com/myothuonion-ui/Language-talk-/releases/tag/v0.9.0)
+- [Download APK](https://github.com/myothuonion-ui/Language-talk-/releases/download/v0.10.0/language-talk-v0.10.0.apk)
+- [Release and complete source](https://github.com/myothuonion-ui/Language-talk-/releases/tag/v0.10.0)
 - [New Practice and API guide](docs/AI_AND_PRACTICE.md)
 - [Korean Coach and PDF reader guide](docs/LEARNING_READER.md)
 
@@ -29,7 +29,7 @@ An Android Korean/English voice tutor with an editable personal profile, persist
 
 Generated speech uses Korean only. Myanmar meanings, explanations and corrections stay as written text. **Me** shows saved words, mistakes, progress and recordings.
 
-Books opens at the saved page and supports PDF imports with dictionary lookup inside the reader. Practice offers the Korean Coach, book lessons and hands-free conversation. Me → My Context holds your profile, memories, documents, learning notes and backup controls. Me → Review & recordings keeps prior conversation reviews.
+Books opens at the saved page and supports PDF imports with dictionary lookup inside the reader. Practice offers the Korean Coach, book lessons and hands-free conversation. Me → My Context holds your profile, memories, documents, learning notes and backup controls. Replays holds new paired recordings; Me → Review & recordings retains prior conversation reviews.
 
 The initial editable profile focuses on Myanmar explanations and practical Korean for factory work and daily life, within 30 minutes a day. Change it to your own needs in My Context. Employer, shift and proficiency are not assumed.
 
@@ -47,7 +47,7 @@ Room stores chats, messages, scoped memories, source summaries, lesson progress 
 
 Learning notes and recordings each have an off switch. Disabling automatic learning notes stops new notes and review entries; minimal lesson navigation state remains so guided practice can continue. Personal facts are remembered only after an explicit remember request with matching verbatim evidence, and never from roleplay. All memories and learning notes are visible, editable and removable. Recordings remain inside the app and can be replayed or deleted.
 
-**Export** creates a portable JSON backup of conversations, memories, source summaries, progress, reviews, preferences and recordings. API keys and original imported documents are excluded. New Korean Coach progress, saved reader words, lookup cache and reader page/bookmark metadata are included; imported PDF bytes and new Coach audio files are excluded. Keep original PDFs for reimport after reinstalling. **Restore** validates the format and chat references, remaps IDs and adds restored conversations without deleting existing ones. The backup limit is 32 MB; delete old recordings to reduce its size.
+**Export** creates a portable JSON backup of conversations, memories, source summaries, progress, reviews, preferences and recordings. API keys and original imported documents are excluded. New Korean Coach progress, saved reader words, lookup cache and reader page/bookmark metadata are included; imported PDF and original Track bytes are excluded. New paired replay audio is included within the backup size limits; use session ZIP for longer recordings. Keep original PDFs for reimport after reinstalling. **Restore** validates the format and chat references, remaps IDs and adds restored conversations without deleting existing ones. The backup limit is 32 MB; delete old recordings to reduce its size.
 
 ## Providers
 
@@ -57,7 +57,7 @@ Each feature has an Auto picker. Choose a primary provider/model, same-key backu
 
 Native Live uses Gemini. The hands-free voice pipeline can combine Gemini/OpenAI transcription, a chosen text AI, and Gemini/OpenAI Korean speech. Text-only NVIDIA, Claude and DeepSeek do not generate audio or assess pronunciation from a transcript. Book pronunciation checks use an audio-capable Gemini evaluator. Original finalized history and selected My Context are supplied again when the brain changes.
 
-Test text makes a real structured request; Models only lists the catalog. Speech and native Live access are checked when started. Catalog listings do not establish quota or access. Models are editable, and custom task choices override built-in fast/quality defaults. See [AI setup and fallback behavior](docs/AI_AND_PRACTICE.md).
+Each provider profile has separate Text, PDF, Speech, Transcribe and Live probes. PDF tests extracted-text JSON; the actual reader also uses images with supported models. Transcribe uses a generated sample and does not test the physical microphone. Models only lists the catalog. Catalog listings do not establish quota or access. Models are editable, and custom task choices override built-in fast/quality defaults. See [AI setup and fallback behavior](docs/AI_AND_PRACTICE.md).
 
 ## Other tools
 
@@ -65,7 +65,7 @@ Quick Translate handles typed/spoken Korean, English and Myanmar. Korean Name St
 
 ## Install and development
 
-Android 8.0 or newer. Install the APK from Releases and enter your own API key. **Back up before reinstalling: debug APKs use runner-generated signing keys and can differ between versions.** In v0.5.0 or later use My Context → Export backup. For v0.4.0 use the Windows backup helper from Releases. Restore the JSON in Me → My Context after installing v0.9.0 and re-enter your API key. See [Upgrade instructions](docs/UPGRADING.md). Database v5 includes migrations from previous app databases and does not reset existing chats when the signing key matches.
+Android 8.0 or newer. Install the APK from Releases and enter your own API key. **Back up before reinstalling.** CI reuses the main development signing identity when its cache is available; a lost cache can require backup/reinstall. In v0.5.0 or later use My Context → Export backup. For v0.4.0 use the Windows backup helper from Releases. Restore the JSON in Me → My Context after installing v0.10.0 and re-enter your API key. See [Upgrade instructions](docs/UPGRADING.md). Database v6 includes migrations from previous app databases and does not reset existing chats when the signing key matches.
 
 Requirements: JDK 17, Android SDK 35, Gradle 8.10.2.
 
@@ -75,6 +75,6 @@ gradle wrapper --gradle-version 8.10.2
 ./gradlew connectedDebugAndroidTest
 ```
 
-GitHub Actions runs unit tests, lint, APK compilation and Android emulator migration, backup restoration and screen checks on Android 10 and 15 before publishing v0.9.0. HTTP tests simulate Gemini and compatible provider requests, structured output, quota, timeout, cancellation, fallback, transcription and speech. CI does not make real provider calls because no personal API keys are supplied. Actual provider checks are documented in [Provider validation](docs/PROVIDER_VALIDATION.md). Microphone quality, pronunciation judgments and provider availability require device testing.
+GitHub Actions runs unit tests, lint, APK compilation and Android emulator migration, backup restoration and screen checks on Android 10 and 15 before publishing v0.10.0. HTTP tests simulate Gemini and compatible provider requests, structured output, quota, timeout, cancellation, fallback, transcription and speech. CI does not make real provider calls because no personal API keys are supplied. Actual provider checks are documented in [Provider validation](docs/PROVIDER_VALIDATION.md). Microphone quality, pronunciation judgments and provider availability require device testing.
 
 See [Architecture](docs/ARCHITECTURE.md).
