@@ -49,4 +49,6 @@ Database 5→6 adds replay tables and Track page links without resetting chats, 
 
 Use the GitHub release APK for updates. CI reuses main's development signing identity while its cache exists; losing that cache can require backup/reinstall. This is a development APK, not a Play Store release.
 
+The 0.10.0 signing certificate differs from the published 0.9.0 APK. **အဟောင်းကို မဖျက်ခင် Me → My Context → Export မှ backup အရင်ယူပါ။** Android rejects an in-place update with a different certificate: after exporting, reinstall 0.10.0, restore the JSON in My Context and re-enter your keys. Retain imported PDFs and Track originals separately.
+
 Android emulator checks cover migration, actual encoded audio playback, speaker controls, source anchors and screens. Physical microphone quality, echo cancellation and accent feedback depend on the phone/provider. Live account checks are recorded in [Provider validation](PROVIDER_VALIDATION.md).

@@ -158,6 +158,8 @@ jobs:
             Provider congestion can still cause timeouts. Tests use supplied credentials temporarily;
             no personal keys are included in source, CI or APK. Enter your own keys in Me → Settings → AI & APIs.
             Back up before upgrading. Original imported PDFs/tracks must be retained separately.
+            Signing differs from the published 0.9.0 APK: export in the old app before uninstalling,
+            reinstall 0.10.0 and restore JSON. Re-enter your keys after restoring.
             Physical microphone/echo behavior still depends on your device.
             Guide: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/BALANCED_0_10.md
           files: |

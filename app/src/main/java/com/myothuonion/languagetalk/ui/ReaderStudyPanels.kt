@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -36,8 +37,11 @@ internal fun ReaderSelectionPanel(viewModel: ReaderViewModel, onPractice: (Strin
     var color by remember { mutableLongStateOf(0xFFFFD666) }
     var questionOpen by remember(ui.selection, ui.page) { mutableStateOf(false) }
     var question by remember(ui.selection, ui.page) { mutableStateOf("") }
+    val selectionScroll = rememberScrollState()
+    val selectionScope = rememberCoroutineScope()
+    LaunchedEffect(ui.selection) { selectionScroll.scrollTo(0) }
     Column(Modifier.fillMaxWidth().heightIn(max = 280.dp).background(MaterialTheme.colorScheme.surface)
-        .verticalScroll(rememberScrollState()).padding(14.dp).testTag("reader-selection"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        .verticalScroll(selectionScroll).padding(14.dp).testTag("reader-selection"), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(ui.selection, Modifier.weight(1f), fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 3)
             IconButton({ editing = !editing }) { Icon(Icons.Default.Edit, "Correct selected text") }
@@ -71,7 +75,7 @@ internal fun ReaderSelectionPanel(viewModel: ReaderViewModel, onPractice: (Strin
         }
         Text("Bold ကို Text (Aa) ပုံစံမှာ ဖတ်နိုင်မယ်။", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-            TextButton(viewModel::translateSelection, enabled = !ui.translating) { Icon(Icons.Default.Translate, null); Spacer(Modifier.width(5.dp)); Text("မြန်မာလိုရှင်းပြ") }
+            TextButton({ viewModel.translateSelection(); selectionScope.launch { selectionScroll.animateScrollTo(0) } }, enabled = !ui.translating) { Icon(Icons.Default.Translate, null); Spacer(Modifier.width(5.dp)); Text("မြန်မာလိုရှင်းပြ") }
             TextButton({ viewModel.listen() }) { Icon(Icons.Default.VolumeUp, null); Spacer(Modifier.width(5.dp)); Text("AI အသံ") }
             TextButton({ viewModel.practiceCard(onSaved = onPractice) }) { Text("ဒီစာသားကို လေ့ကျင့်") }
             TextButton({ questionOpen = true }) { Text("ဒီစာသားကို မေးမယ်") }

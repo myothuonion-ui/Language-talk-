@@ -140,6 +140,8 @@ internal fun ReplayScreen(viewModel: ReplayViewModel, onLegacy: () -> Unit, onRe
                             Text(if (clip.audioName.isBlank()) "အသံမရှိ" else audioTime(clip.durationMs), fontSize = 12.sp)
                         }
                         Text(clip.text, fontSize = 17.sp, lineHeight = 28.sp)
+                        if (clip.speaker == "AI" && clip.origin == "GENERATED") Text("စာသားကို AI ဖတ်ပြထားတဲ့အသံ", fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (clip.audioName.isNotBlank()) Text("နှိပ်ပြီး ဒီစာကြောင်းကို နားထောင်မယ်", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }

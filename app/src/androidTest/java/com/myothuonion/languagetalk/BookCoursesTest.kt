@@ -30,7 +30,8 @@ class BookCoursesTest {
     @Test fun packagedBooksRenderAndOriginalAnswerAdvancesOnlyOneTurn() {
         runBlocking { application.bookStore.update { BookShelfState() } }
         compose.waitUntil(10000) { compose.onAllNodesWithTag("open-books").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithTag("open-books").performClick()
+        compose.onNodeWithTag("bookshelf").performScrollToNode(hasTestTag("open-books"))
+        compose.onNodeWithTag("open-books").assertIsDisplayed().performClick()
         compose.waitUntil(10000) { compose.onAllNodesWithTag("continue-book").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Beginner · 40").assertIsDisplayed()
         compose.onNodeWithText("Intermediate · 30").assertIsDisplayed()

@@ -17,7 +17,7 @@ Update and usage guide: [0.10.0](docs/BALANCED_0_10.md).
 
 An Android Korean/English voice tutor with an editable personal profile, persistent learning state, guided speaking practice and Gemini voice output.
 
-[Download the APK](https://github.com/myothuonion-ui/Language-talk-/releases/latest) · [Changes](docs/CHANGELOG.md)
+[Download the APK](https://github.com/myothuonion-ui/Language-talk-/releases/download/v0.10.0/language-talk-v0.10.0.apk) · [Changes](docs/CHANGELOG.md)
 
 ## Practice
 
