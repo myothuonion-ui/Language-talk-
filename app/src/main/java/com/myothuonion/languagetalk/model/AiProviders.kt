@@ -104,8 +104,6 @@ object AiPlans {
                     listOf("gemini-3.5-flash-lite", profile.textModel) + profile.textBackups
                 profile.id == "nvidia" && profile.taskDefaults && task in setOf(AiTask.BOOK, AiTask.COACH, AiTask.DOCUMENT) ->
                     listOf("z-ai/glm-5.3", "moonshotai/kimi-k3", profile.textModel) + profile.textBackups
-                profile.id == "nvidia" && profile.taskDefaults && task in setOf(AiTask.READER, AiTask.TRANSLATE, AiTask.CONVERSATION) ->
-                    listOf("nvidia/nemotron-3.5-lightning-30b-a3b", profile.textModel) + profile.textBackups
                 else -> listOf(profile.textModel) + profile.textBackups
             }
         }

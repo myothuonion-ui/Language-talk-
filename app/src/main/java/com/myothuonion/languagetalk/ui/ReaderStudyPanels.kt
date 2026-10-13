@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.myothuonion.languagetalk.model.*
 
 @Composable
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 internal fun ReaderSelectionPanel(viewModel: ReaderViewModel, onPractice: (String) -> Unit) {
     val ui by viewModel.ui.collectAsState()
     var editing by remember(ui.selection) { mutableStateOf(false) }
@@ -69,7 +70,7 @@ internal fun ReaderSelectionPanel(viewModel: ReaderViewModel, onPractice: (Strin
             Button({ viewModel.annotate("NOTE", note, color) }, enabled = note.isNotBlank()) { Text("မှတ်စုသိမ်း") }
         }
         Text("Bold ကို Text (Aa) ပုံစံမှာ ဖတ်နိုင်မယ်။", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+        FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
             TextButton(viewModel::translateSelection, enabled = !ui.translating) { Icon(Icons.Default.Translate, null); Spacer(Modifier.width(5.dp)); Text("မြန်မာလိုရှင်းပြ") }
             TextButton({ viewModel.listen() }) { Icon(Icons.Default.VolumeUp, null); Spacer(Modifier.width(5.dp)); Text("AI အသံ") }
             TextButton({ viewModel.practiceCard(onSaved = onPractice) }) { Text("ဒီစာသားကို လေ့ကျင့်") }

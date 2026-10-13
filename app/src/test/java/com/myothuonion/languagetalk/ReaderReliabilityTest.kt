@@ -11,6 +11,10 @@ import org.junit.Test
 
 class ReaderReliabilityTest {
     private val blocks = listOf(SourceBlock("line-0", "안녕하세요."), SourceBlock("line-1", "저는 학생이에요."))
+    @Test fun sourceLinkedEnglishOnlyTeachingIsRejectedForTheMyanmarReader() {
+        val value = PageTeaching("Greetings", sentences = listOf(TeachingSentence("line-0", blocks[0].text, "Hello")))
+        assertThrows(IllegalArgumentException::class.java) { PageTeachingCodec.decodePartial(PageTeachingCodec.json.encodeToString(value), blocks) }
+    }
     @Test fun printedTrackNumbersHaveTapRegionsAndAmbiguousNamesAreNotGuessed() {
         val layer = PdfTextLayer("Track 02", listOf(PdfWord("Track", .1f, .2f, .2f, .3f, "Track 02", 0),
             PdfWord("02", .21f, .2f, .25f, .3f, "Track 02", 0)))

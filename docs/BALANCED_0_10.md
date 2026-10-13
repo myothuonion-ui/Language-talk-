@@ -8,7 +8,7 @@ Me → Settings → AI & APIs → provider profile မှာ ကိုယ့် 
 
 Text checks structured tutor JSON. PDF checks extracted-text source JSON; the actual reader also sends its page image to supported models. Speech generates and plays Korean audio. Transcribe recognizes a generated Korean sample; it does not test the physical microphone. Live waits for actual Gemini socket audio. NVIDIA's text API does not provide Gemini native Live, speech or transcription.
 
-Fast task defaults favor verified Gemini Flash Lite and NVIDIA Nemotron routes. Explicit model choices take priority. Slow replies have longer bounded timeouts and fallback. Authentication, quota, request format, congestion and timeouts have distinct reasons. No personal key is included in the APK, GitHub or backups.
+Fast task defaults favor Gemini Flash Lite, with NVIDIA GLM Flash as the configured text route. Use Gemini for Myanmar PDF teaching; text-only NVIDIA receives extracted source text. Explicit model choices take priority. Slow replies have longer bounded timeouts and fallback. Authentication, quota, request format, congestion and timeouts have distinct reasons. No personal key is included in the APK, GitHub or backups.
 
 ## PDF ရှင်းပြချက်
 

@@ -153,7 +153,6 @@ private fun ApiProfileDialog(initial: AiProfile, config: AiConfiguration, viewMo
                 profile = profile.copy(textModel = it, taskDefaults = false)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                OutlinedButton({ viewModel.testApi(profile, key) }, enabled = profile.id !in busy && (key.isNotBlank() || viewModel.apiConfigured(profile.id))) { Text("Test text") }
                 TextButton({ viewModel.loadApiModels(profile) }, enabled = viewModel.apiConfigured(profile.id)) { Text("Models") }
             }
             if (profile.id in busy) LinearProgressIndicator(Modifier.fillMaxWidth())

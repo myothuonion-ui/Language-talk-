@@ -96,6 +96,9 @@ object PageTeachingCodec {
             addedPractice = value.addedPractice.take(3), notes = value.notes.take(30).map { it.take(2000) },
             unreadable = value.unreadable.take(30).map { it.take(2000) })
         require(result.overview.isNotBlank() && covered(result).isNotEmpty()) { "မူရင်းစာနဲ့ ချိတ်ထားတဲ့ AI ရှင်းပြချက် မရသေးပါ။" }
+        fun myanmar(text: String) = text.any { it in '\u1000'..'\u102A' }
+        require(myanmar(result.overview) && (result.sentences.map { it.meaning } + result.vocabulary.map { it.meaning } +
+            result.grammar.map { it.meaning }).all(::myanmar)) { "AI ရှင်းပြချက်ကို မြန်မာလို မရသေးပါ။ အခြား model နဲ့ စမ်းပါ။" }
         return result
     }
     fun merge(a: PageTeaching?, b: PageTeaching): PageTeaching = if (a == null) b else a.copy(

@@ -59,7 +59,10 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
         val progress = repository.progress(id)
         val section = BookEngine.section(repository.book(id), progress)
         if (section.turns.isNotEmpty() || section.exercises.isNotEmpty()) repository.prepare(id, false)
-        val cached = repository.shelf.first().explanations.firstOrNull { it.key == "teaching-v2/" + BookEngine.key(progress, section) + "/myanmar" }?.text.orEmpty()
+        val explanations = repository.shelf.first().explanations
+        val suffix = BookEngine.key(progress, section) + "/myanmar"
+        val cached = (explanations.firstOrNull { it.key == "teaching-v3/" + suffix }
+            ?: explanations.firstOrNull { it.key == "teaching-v2/" + suffix })?.text.orEmpty()
         _state.update { it.copy(explanation = cached) }
     }
 
@@ -73,7 +76,13 @@ class BookViewModel(application: Application) : AndroidViewModel(application) {
     fun selectBook(id: String) {
         stopVoice()
         _state.update { it.copy(bookId = id, explanation = "") }
-        work { repository.open(id); prepareText(id) }
+        work {
+            // A quick shelf tap can cancel startup before its course list has been published.
+            val courses = state.value.courses.ifEmpty { repository.courses() }
+            require(courses.any { it.id == id }) { "ဒီစာအုပ် သင်ခန်းစာ မရှိပါ။" }
+            _state.update { it.copy(courses = courses, bookId = id) }
+            repository.open(id); prepareText(id)
+        }
     }
     fun selectChapter(number: Int) = change { repository.chooseChapter(it, number) }
     fun resume() = change { repository.open(it) }

@@ -27,9 +27,9 @@ class PracticeScreensTest {
     }
 
     @Test fun homeReviewContextAndSavedVoiceSettingsAreAccessible() {
-        compose.waitUntil(10000) { compose.onAllNodesWithText("My Books").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(10000) { compose.onAllNodesWithTag("bookshelf").fetchSemanticsNodes().isNotEmpty() }
         compose.waitUntil(15000) { compose.onAllNodesWithTag("open-books").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithText("My Books").assertIsDisplayed()
+        compose.onNodeWithText("စာအုပ်ဖတ်မယ်").assertIsDisplayed()
         capture("home")
         compose.onNodeWithText("Practice", useUnmergedTree = true).performClick()
         compose.onNodeWithTag("practice-books").assertIsDisplayed()

@@ -152,7 +152,9 @@ jobs:
             - Database migration and additive backup restoration; per-session ZIP export
 
             Real account checks on 13 October 2026: Gemini PDF-image reading, speech generation,
-            generated-sample transcription and native Live audio; NVIDIA structured text and extracted-text PDF JSON.
+            generated-sample transcription and native Live audio; NVIDIA structured text.
+            NVIDIA page JSON was source-linked but failed the Myanmar-language requirement;
+            later page requests encountered provider congestion/timeouts. See the validation guide.
             Provider congestion can still cause timeouts. Tests use supplied credentials temporarily;
             no personal keys are included in source, CI or APK. Enter your own keys in Me → Settings → AI & APIs.
             Back up before upgrading. Original imported PDFs/tracks must be retained separately.
