@@ -14,3 +14,7 @@ app/build/
 secrets.properties
 *.apk
 *.aab
+node_modules/
+desktop/dist/
+desktop/test-output/
+desktop/.test-data/

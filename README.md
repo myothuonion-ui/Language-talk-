@@ -1,5 +1,8 @@
 # Language Talk AI v0.10.0
 
+**Windows PC preview:** [Download Windows Setup](https://github.com/myothuonion-ui/Language-talk-/releases/download/windows-v0.1.0/Language-Talk-Setup-0.1.0-x64.exe) · [Portable](https://github.com/myothuonion-ui/Language-talk-/releases/download/windows-v0.1.0/Language-Talk-Portable-0.1.0-x64.exe) · [Windows guide](docs/WINDOWS.md). Windows 10/11 x64; separate local data from Android.
+
+
 Balanced Books / Practice / Replays / Me, source-linked PDF teaching, numbered original Track audio, paired user/AI recordings, and flexible APIs. App name and package ID are unchanged.
 
 Update and usage guide: [0.10.0](docs/BALANCED_0_10.md).

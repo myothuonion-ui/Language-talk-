@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="my">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; connect-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Language Talk</title>
+    <link
+      rel="stylesheet"
+      href="../node_modules/@fontsource/noto-sans-myanmar/400.css"
+    />
+    <link
+      rel="stylesheet"
+      href="../node_modules/@fontsource/noto-sans-myanmar/600.css"
+    />
+    <link
+      rel="stylesheet"
+      href="../node_modules/@fontsource/noto-sans-kr/400.css"
+    />
+    <link
+      rel="stylesheet"
+      href="../node_modules/@fontsource/noto-sans-kr/600.css"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="logo.svg" alt="" />
+          <div>Language Talk<small>KOREAN, EVERY DAY</small></div>
+        </div>
+        <nav id="nav">
+          <button data-nav="books" class="active">
+            <span data-icon="books"></span>Books
+            <small>စာအုပ်စင်</small></button
+          ><button data-nav="practice">
+            <span data-icon="mic"></span>Practice
+            <small>စကားပြောလေ့ကျင့်</small></button
+          ><button data-nav="replays">
+            <span data-icon="replay"></span>Replays
+            <small>ပြန်နားထောင်</small></button
+          ><button data-nav="me">
+            <span data-icon="user"></span>Me <small>ကိုယ်ပိုင်နေရာ</small>
+          </button>
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="offline-dot"></div>
+          <span
+            >Made for your daily progress<small
+              >Windows · <span id="version">0.1.0</span></small
+            ></span
+          >
+        </div>
+      </aside>
+      <div class="main">
+        <header class="topbar">
+          <div id="breadcrumb">Your learning space</div>
+          <div class="top-actions">
+            <span class="pill" id="api-badge">ကိုယ့်အရှိန်နဲ့ လေ့လာပါ</span
+            ><button
+              class="icon-button"
+              id="theme-toggle"
+              title="Light / Dark"
+              aria-label="Toggle theme"
+            ></button>
+          </div>
+        </header>
+        <main id="content">
+          <div class="loading">စာအုပ်စင် ဖွင့်နေပါသည်…</div>
+        </main>
+      </div>
+    </div>
+    <div id="toast" role="status"></div>
+    <dialog id="modal"></dialog>
+    <script type="module" src="app.mjs"></script>
+  </body>
+</html>

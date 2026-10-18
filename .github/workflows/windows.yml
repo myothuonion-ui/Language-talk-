@@ -1,0 +1,93 @@
+name: Windows Desktop
+on:
+  push:
+    branches: [main]
+    paths:
+      [
+        "desktop/**",
+        ".github/workflows/windows.yml",
+        "app/src/main/assets/**",
+        "docs/WINDOWS.md",
+      ]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: windows-desktop-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm ci
+      - name: Verify persistence, backup, source grounding and API request contracts
+        run: npm test
+      - name: Exercise desktop PDF, notes, practice, recording and replay controls
+        run: npm run test:ui
+      - name: Build Windows installer and portable executable
+        run: npm run build:win
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - name: Exercise the packaged Windows app
+        run: npm run test:ui
+        env:
+          LANGUAGE_TALK_EXECUTABLE: dist/win-unpacked/Language Talk.exe
+      - name: Verify executable version and produce checksums
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem dist/*.exe
+          if ($files.Count -ne 2) { throw "Expected installer and portable EXE" }
+          $lines = $files | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" }
+          $lines | Set-Content dist/SHA256SUMS-Windows.txt -Encoding ascii
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-desktop-validation
+          path: desktop/test-output/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: language-talk-windows
+          path: |
+            desktop/dist/*.exe
+            desktop/dist/SHA256SUMS-Windows.txt
+      - uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: windows-v0.1.0
+          name: Language Talk for Windows v0.1.0
+          prerelease: true
+          make_latest: false
+          body: |
+            First Windows desktop edition of Language Talk. App name and Android app are preserved.
+
+            - Balanced Books / Practice / Replays / Me desktop layout
+            - Both existing Korean books and 70 original chapters, plus the 48-unit daily course
+            - Import PDFs, selectable PDF text, saved highlights/underline/notes, text-mode bold
+            - Per-section Myanmar PDF teaching with exact source links and cached partial results
+            - Original audio imported by Track number or linked manually to a page
+            - Korean speaking practice, explicit Next, Gemini voice and native Live
+            - Original user/AI recordings, speaker filters, playback speed and A–B repeat
+            - Gemini and NVIDIA keys encrypted with Windows DPAPI; no keys included
+            - Local desktop backup includes imported PDF, Track and replay audio within size limits
+
+            Windows 10/11 x64. Use Setup to install or Portable to run without installation.
+            API-backed features require your own Gemini/NVIDIA key and internet.
+            NVIDIA's hosted text endpoint does not provide speech, transcription or native Live.
+            Desktop data does not automatically sync with Android. Android backup import is not supported yet.
+            This is an unsigned preview; Windows may show an unknown-publisher notice.
+            Checks: Node persistence/provider tests and UI checks on both source and packaged Windows builds.
+            Physical microphone/echo behavior and live provider availability require testing on your device.
+            Guide: https://github.com/myothuonion-ui/Language-talk-/blob/main/docs/WINDOWS.md
+          files: |
+            desktop/dist/*.exe
+            desktop/dist/SHA256SUMS-Windows.txt
