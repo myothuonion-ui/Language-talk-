@@ -87,6 +87,21 @@ function wav(pcm, rate = 24000) {
   header.writeUInt32LE(data.length, 40);
   return Buffer.concat([header, data]);
 }
+function annotationRects(value) {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length > 100)
+    throw Error("Invalid annotation coordinates");
+  if (
+    value.some(
+      (r) =>
+        !Array.isArray(r) ||
+        r.length !== 4 ||
+        r.some((n) => !Number.isFinite(n) || n < 0 || n > 1),
+    )
+  )
+    throw Error("Invalid annotation coordinates");
+  return value;
+}
 function safeState(s) {
   if (!s || s.format !== "language-talk-windows" || s.version !== 1)
     throw Error(
@@ -128,6 +143,7 @@ function safeState(s) {
     requireId(a.bookId);
     text(a.quote, 4000);
     text(a.note || "", 6000);
+    annotationRects(a.rects);
     if (
       !Number.isInteger(a.page) ||
       a.page < 1 ||
@@ -298,4 +314,5 @@ module.exports = {
   parseJson,
   wav,
   safeState,
+  annotationRects,
 };

@@ -1,3 +1,9 @@
+import {
+  dialogueForPage,
+  parseDialogue,
+  speakersOf,
+  quoteSpanIndexes,
+} from "./dialogue.mjs";
 import * as pdfjs from "../node_modules/pdfjs-dist/build/pdf.mjs";
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "../node_modules/pdfjs-dist/build/pdf.worker.mjs",
@@ -19,6 +25,14 @@ let data,
   pageText = "",
   pageImage = "",
   readerTab = "meaning",
+  readerMode = "pdf",
+  readerPanel = true,
+  readerFocus = false,
+  readerFit = "width",
+  readerObserver = null,
+  readerResizeTimer = null,
+  selectionRects = [],
+  roleplay = null,
   selection = "",
   renderGeneration = 0,
   pdfRenderTask = null,
@@ -154,11 +168,14 @@ async function refresh() {
       : "Offline books · AI key ထည့်နိုင်သည်";
 }
 async function navigate(next) {
-  if (recorder || liveActive) {
+  if (recorder || liveActive || roleplay?.busy) {
     toast("အသံဖမ်းခြင်း / Live ကို အရင်ရပ်ပါ။");
     return;
   }
   if (view === "replays") cleanupReplay();
+  stopBookRole();
+  readerObserver?.disconnect();
+  document.body.classList.remove("reading", "reader-focus");
   view = next;
   book = null;
   renderGeneration++;
@@ -227,6 +244,17 @@ function chooseChapter(id, practice = false) {
   );
 }
 async function openBook(id, page) {
+  if (!canLeaveRole()) return;
+  stopBookRole();
+  cleanupReplay();
+  readerObserver?.disconnect();
+  readerFit = state.preferences.readerFit || "width";
+  readerMode = "pdf";
+  zoom = 1;
+  view = "books";
+  $$("[data-nav]").forEach((b) =>
+    b.classList.toggle("active", b.dataset.nav === "books"),
+  );
   sessionId = null;
   book = [...courses, ...state.books].find((b) => b.id === id);
   if (!book) return;
@@ -259,7 +287,10 @@ async function openBook(id, page) {
   }
 }
 function showReader() {
-  el.innerHTML = `<div class="toolbar"><button id="reader-back" class="small">← စာအုပ်စင်</button><strong style="flex:1">${esc(book.title)}</strong>${book.chapters ? '<button id="reader-chapters" class="small">အခန်းများ</button>' : ""}</div><div class="toolbar"><button id="prev-page" class="small" aria-label="Previous page">←</button><label class="row small">Page <input id="page-input" type="number" min="1" max="${pdf.numPages}" value="${pageNo}"> / ${pdf.numPages}</label><button id="next-page" class="small" aria-label="Next page">→</button><button id="zoom-out" class="small" aria-label="Zoom out">−</button><span id="zoom-label" class="small">${Math.round(zoom * 100)}%</span><button id="zoom-in" class="small" aria-label="Zoom in">＋</button><select id="reader-theme" aria-label="Reader theme">${["paper", "sepia", "night"].map((t) => `<option value="${t}" ${state.preferences.readerTheme === t ? "selected" : ""}>${t === "paper" ? "Original" : t === "sepia" ? "Sepia" : "Night"}</option>`).join("")}</select><div style="flex:1"></div><button id="track-import" class="small">Track ဖိုင်များထည့်</button><button id="track-link" class="small">Track ချိတ်မယ်</button></div><div class="reader-layout"><div id="pdf-area" class="pdf-area ${state.preferences.readerTheme}"><div id="pdf-frame" class="pdf-frame"><canvas id="pdf-canvas"></canvas><div id="text-layer" class="textLayer"></div></div></div><div class="reader-side"><div class="card"><div class="row between"><div><div class="eyebrow no-margin">PAGE COMPANION</div><h3 class="no-margin">စာဖတ်ဖော်</h3></div><button id="reader-notes" class="small">မှတ်စုများ</button></div><div id="track-controls"></div><div class="notice">PDF သို့မဟုတ် Text ထဲက စာသားကို mouse နဲ့ ရွေးပါ။</div><div id="selection-tools"></div><div class="tabs">${[
+  $("#breadcrumb").textContent = "Language Talk / Study Desk";
+  document.body.classList.add("reading");
+  document.body.classList.toggle("reader-focus", readerFocus);
+  el.innerHTML = `<section class="study-desk"><div class="reader-heading"><div><div class="eyebrow no-margin">STUDY DESK</div><strong>${esc(book.title)}</strong></div><div class="row"><button id="reader-back" class="small">← စာအုပ်စင်</button>${book.chapters ? '<button id="reader-chapters" class="small">အခန်းများ</button>' : ""}<button id="reader-bookmark" class="small">${state.annotations.some((a) => a.bookId === book.id && a.page === pageNo && a.kind === "save" && !a.quote) ? "မှတ်သားပြီး ✓" : "စာမျက်နှာ မှတ်သား"}</button></div></div><div class="toolbar reader-toolbar"><div class="row"><button id="prev-page" class="small" aria-label="Previous page">←</button><label class="row small">Page <input id="page-input" type="number" min="1" max="${pdf.numPages}" value="${pageNo}"> / ${pdf.numPages}</label><button id="next-page" class="small" aria-label="Next page">→</button></div><div class="row"><select id="reading-mode" aria-label="Reading mode"><option value="pdf" ${readerMode === "pdf" ? "selected" : ""}>မူရင်း PDF</option><option value="text" ${readerMode === "text" ? "selected" : ""}>Text mode</option></select><button id="fit-width" class="small" aria-pressed="${readerFit === "width"}">Fit width</button><button id="fit-page" class="small" aria-pressed="${readerFit === "page"}">Fit page</button><button id="zoom-out" class="small" aria-label="Zoom out">−</button><span id="zoom-label" class="small">${Math.round(zoom * 100)}%</span><button id="zoom-in" class="small" aria-label="Zoom in">＋</button><select id="reader-theme" aria-label="Reader theme">${["paper", "sepia", "night"].map((t) => `<option value="${t}" ${state.preferences.readerTheme === t ? "selected" : ""}>${t === "paper" ? "Original" : t === "sepia" ? "Sepia" : "Night"}</option>`).join("")}</select></div><div class="row"><button id="reader-focus" class="small">${readerFocus ? "Focus ပိတ်" : "Focus"}</button><button id="reader-panel-toggle" class="small" aria-expanded="${readerPanel}">${readerPanel ? "AI / panel ပိတ်" : "AI ဖွင့်"}</button></div></div><div class="reader-layout ${readerPanel ? "" : "panel-hidden"}"><div class="reader-page"><div id="pdf-area" class="pdf-area ${state.preferences.readerTheme}"><div id="pdf-frame" class="pdf-frame"><canvas id="pdf-canvas"></canvas><div id="text-layer" class="textLayer"></div><div id="annotation-layer"></div><div id="pdf-track-layer"></div></div><div id="reader-text-main" ${readerMode === "text" ? "" : "hidden"}></div></div><div class="reader-caption"><span id="reader-mode-caption">မူရင်း PDF · ပုံနဲ့ layout မပြောင်းထားပါ</span><span>Mouse နဲ့စာသားရွေး / ဝါကျကိုနှိပ်ပါ</span></div></div><aside class="reader-side" ${readerPanel ? "" : "hidden"}><div class="row between"><div><div class="eyebrow no-margin">READING COMPANION</div><h3 class="no-margin">စာဖတ်ဖော်</h3></div><button id="reader-side-close" class="small ghost" aria-label="Close companion">×</button></div><div id="selection-tools"></div><section id="teaching-tools"><div class="tabs">${[
     ["meaning", "အဓိပ္ပာယ်"],
     ["vocabulary", "ဝေါဟာရ"],
     ["grammar", "Grammar"],
@@ -270,20 +301,84 @@ function showReader() {
       ([k, v]) =>
         `<button data-tab="${k}" class="${readerTab === k ? "active" : ""}">${v}</button>`,
     )
-    .join("")}</div><div id="reader-panel"></div></div></div></div>`;
+    .join(
+      "",
+    )}</div><div id="reader-panel"></div></section><section id="book-role-panel" hidden></section></aside></div><footer class="reader-footer"><div class="row"><div id="track-controls"></div><button id="track-link" class="small">Track ချိတ်</button><button id="track-import" class="small ghost">Track ဖိုင်များထည့်</button></div><div class="row"><button id="reader-notes" class="small">မှတ်စု</button><button id="reader-roleplay" class="primary small">${icon("mic")} ဇာတ်ကောင်နဲ့ ပြောမယ်</button></div><div id="track-player"></div></footer></section>`;
   $("#reader-back").onclick = () => navigate("books");
   if ($("#reader-chapters"))
     $("#reader-chapters").onclick = () => chooseChapter(book.id);
-  $("#prev-page").onclick = () => changePage(pageNo - 1);
-  $("#next-page").onclick = () => changePage(pageNo + 1);
-  $("#page-input").onchange = (e) => changePage(Number(e.target.value));
-  $("#zoom-in").onclick = () => changeZoom(0.2);
-  $("#zoom-out").onclick = () => changeZoom(-0.2);
+  $("#prev-page").onclick = () => action(null, () => changePage(pageNo - 1));
+  $("#next-page").onclick = () => action(null, () => changePage(pageNo + 1));
+  $("#page-input").onchange = (e) =>
+    action(null, () => changePage(Number(e.target.value)));
+  $("#page-input").onkeydown = (e) => {
+    if (e.key === "Enter") e.target.blur();
+  };
+  $("#zoom-in").onclick = () => action(null, () => changeZoom(0.15));
+  $("#zoom-out").onclick = () => action(null, () => changeZoom(-0.15));
+  for (const fit of ["width", "page"])
+    $("#fit-" + fit).onclick = () =>
+      action(null, async () => {
+        readerFit = fit;
+        zoom = 1;
+        await save("preferences", { readerFit: fit });
+        await renderPdf(false);
+        updateReaderButtons();
+      });
+  $("#reading-mode").onchange = (e) => {
+    readerMode = e.target.value;
+    updateReadingMode();
+  };
+  $("#reader-focus").onclick = () =>
+    action(null, async () => {
+      if (!canLeaveRole()) return;
+      stopBookRole();
+      readerFocus = !readerFocus;
+      readerPanel = false;
+      document.body.classList.toggle("reader-focus", readerFocus);
+      await updateReaderLayout();
+    });
+  $("#reader-panel-toggle").onclick = () =>
+    action(null, async () => {
+      if (!readerPanel) {
+        readerFocus = false;
+        document.body.classList.remove("reader-focus");
+      } else {
+        if (!canLeaveRole()) return;
+        stopBookRole();
+      }
+      readerPanel = !readerPanel;
+      await updateReaderLayout();
+    });
+  $("#reader-side-close").onclick = () => $("#reader-panel-toggle").click();
   $("#reader-theme").onchange = async (e) => {
     await save("preferences", { readerTheme: e.target.value });
     $("#pdf-area").className = "pdf-area " + e.target.value;
   };
   $("#reader-notes").onclick = () => showNotebook(book.id);
+  $("#reader-roleplay").onclick = () => action(null, chooseBookRole);
+  $("#reader-bookmark").onclick = (e) =>
+    action(e.currentTarget, async () => {
+      const item = state.annotations.find(
+        (a) =>
+          a.bookId === book.id &&
+          a.page === pageNo &&
+          a.kind === "save" &&
+          !a.quote,
+      );
+      if (item) await save("delete-annotation", item.id);
+      else
+        state.annotations.push(
+          await save("annotation", {
+            bookId: book.id,
+            page: pageNo,
+            quote: "",
+            note: "စာမျက်နှာ မှတ်သားထားသည်",
+            kind: "save",
+          }),
+        );
+      e.target.textContent = item ? "စာမျက်နှာ မှတ်သား" : "မှတ်သားပြီး ✓";
+    });
   $("#track-import").onclick = (e) =>
     action(e.currentTarget, () => importTracks());
   $("#track-link").onclick = () => linkTrack();
@@ -291,53 +386,146 @@ function showReader() {
     (b) =>
       (b.onclick = () => {
         readerTab = b.dataset.tab;
+        if (readerTab === "text") {
+          readerMode = "text";
+          updateReadingMode();
+        }
         $$("[data-tab]").forEach((t) => t.classList.toggle("active", t === b));
         renderReaderPanel();
       }),
   );
   $("#pdf-area").onmouseup = captureSelection;
-  $("#reader-panel").onmouseup = captureSelection;
-  let startX;
+  $("#text-layer").onclick = (e) => {
+    if (!getSelection()?.isCollapsed) return;
+    const span = e.target.closest("span");
+    if (span?.textContent.trim()) {
+      selection = span.textContent.trim();
+      selectionRects = [];
+      showSelectionPanel();
+      markPage(selection);
+    }
+  };
+  let startX, startY;
   $("#pdf-area").addEventListener(
     "touchstart",
     (e) => {
-      if (e.touches.length === 1) startX = e.touches[0].clientX;
+      if (e.touches.length === 1) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }
     },
     { passive: true },
   );
   $("#pdf-area").addEventListener(
     "touchend",
     (e) => {
-      if (startX != null && Math.abs(e.changedTouches[0].clientX - startX) > 90)
-        changePage(pageNo + (e.changedTouches[0].clientX < startX ? 1 : -1));
+      const dx = e.changedTouches[0].clientX - startX,
+        dy = e.changedTouches[0].clientY - startY;
+      if (zoom <= 1 && Math.abs(dx) > 90 && Math.abs(dx) > Math.abs(dy) * 1.5)
+        action(null, () => changePage(pageNo + (dx < 0 ? 1 : -1)));
       startX = null;
     },
     { passive: true },
   );
+  readerObserver?.disconnect();
+  let lastWidth = 0,
+    lastHeight = 0;
+  readerObserver = new ResizeObserver((entries) => {
+    const r = entries[0].contentRect;
+    if (
+      Math.abs(r.width - lastWidth) < 2 &&
+      (readerFit !== "page" || Math.abs(r.height - lastHeight) < 2)
+    )
+      return;
+    lastWidth = r.width;
+    lastHeight = r.height;
+    clearTimeout(readerResizeTimer);
+    readerResizeTimer = setTimeout(() => {
+      if (book && $("#pdf-area")) action(null, () => renderPdf(false));
+    }, 150);
+  });
+  readerObserver.observe($("#pdf-area"));
+  updateReadingMode();
+}
+function canLeaveRole() {
+  if (recorder || roleplay?.busy) {
+    toast("အသံဖမ်းခြင်း / အဖြေစစ်ခြင်း ပြီးမှ ဆက်ပါ။");
+    return false;
+  }
+  return true;
+}
+function updateReaderButtons() {
+  if (!$("#reader-focus")) return;
+  $("#reader-focus").textContent = readerFocus ? "Focus ပိတ်" : "Focus";
+  $("#reader-panel-toggle").textContent = readerPanel
+    ? "AI / panel ပိတ်"
+    : "AI ဖွင့်";
+  $("#reader-panel-toggle").setAttribute("aria-expanded", String(readerPanel));
+  for (const f of ["width", "page"])
+    $("#fit-" + f).setAttribute("aria-pressed", String(readerFit === f));
+  $("#zoom-label").textContent = Math.round(zoom * 100) + "%";
+}
+async function updateReaderLayout() {
+  $(".reader-layout").classList.toggle("panel-hidden", !readerPanel);
+  $(".reader-side").hidden = !readerPanel;
+  updateReaderButtons();
+  await renderPdf(false);
+}
+function showSelectionPanel() {
+  readerPanel = true;
+  readerFocus = false;
+  document.body.classList.remove("reader-focus");
+  $(".reader-layout").classList.remove("panel-hidden");
+  $(".reader-side").hidden = false;
+  updateReaderButtons();
+  renderSelection();
 }
 async function changeZoom(delta) {
-  zoom = Math.max(0.7, Math.min(2.4, zoom + delta));
-  $("#zoom-label").textContent = Math.round(zoom * 100) + "%";
+  zoom = Math.max(0.5, Math.min(3, zoom + delta));
+  updateReaderButtons();
+  if (readerMode === "text") {
+    updateReadingMode();
+    return;
+  }
   await renderPdf(false);
 }
 async function changePage(n) {
-  if (!Number.isInteger(n) || n < 1 || n > pdf.numPages) return;
+  if (!pdf || !Number.isInteger(n) || n < 1 || n > pdf.numPages) {
+    if ($("#page-input")) $("#page-input").value = pageNo;
+    return;
+  }
+  if (!canLeaveRole()) return;
+  stopBookRole();
   pageNo = n;
   selection = "";
+  selectionRects = [];
+  pageText = "";
+  pageImage = "";
   $("#page-input").value = pageNo;
+  $("#pdf-area").scrollTo(0, 0);
   await renderPdf();
 }
 async function renderPdf(persist = true) {
   const generation = ++renderGeneration;
   pdfRenderTask?.cancel();
-  const p = await pdf.getPage(pageNo);
+  const thisBook = book,
+    thisPage = pageNo;
+  if (!pdf || !thisBook) return;
+  const p = await pdf.getPage(thisPage);
   if (generation !== renderGeneration) return;
   const area = $("#pdf-area");
   if (!area) return;
+  const base = p.getViewport({ scale: 1 }),
+    availableWidth = Math.max(200, area.clientWidth - 36);
   const scale =
-    ((area.clientWidth - 38) / p.getViewport({ scale: 1 }).width) * zoom;
-  const viewport = p.getViewport({ scale });
-  const canvas = $("#pdf-canvas"),
+    (readerFit === "page"
+      ? Math.min(
+          availableWidth / base.width,
+          Math.max(200, area.clientHeight - 36) / base.height,
+        )
+      : availableWidth / base.width) * zoom;
+  const viewport = p.getViewport({ scale }),
+    canvas = $("#pdf-canvas"),
     frame = $("#pdf-frame"),
     layer = $("#text-layer");
   frame.style.width = viewport.width + "px";
@@ -363,11 +551,20 @@ async function renderPdf(persist = true) {
   }
   if (generation !== renderGeneration) return;
   const tc = await p.getTextContent();
+  if (generation !== renderGeneration) return;
   pageText = tc.items
     .map((i) => i.str + (i.hasEOL ? "\n" : " "))
     .join("")
     .trim();
-  pageImage = canvas.toDataURL("image/png").split(",")[1];
+  // Bound the AI image independently of reader zoom and display pixel density.
+  const aiCanvas = document.createElement("canvas"),
+    aiScale = Math.min(1, 1400 / canvas.width, 1800 / canvas.height);
+  aiCanvas.width = Math.round(canvas.width * aiScale);
+  aiCanvas.height = Math.round(canvas.height * aiScale);
+  aiCanvas
+    .getContext("2d")
+    .drawImage(canvas, 0, 0, aiCanvas.width, aiCanvas.height);
+  pageImage = aiCanvas.toDataURL("image/png").split(",")[1];
   layer.replaceChildren();
   const tl = new pdfjs.TextLayer({
     textContentSource: tc,
@@ -376,50 +573,125 @@ async function renderPdf(persist = true) {
   });
   await tl.render();
   if (generation !== renderGeneration) return;
-  markPage();
-  if (persist) await save("page", { bookId: book.id, page: pageNo });
+  markPage(selection);
+  renderPdfTracks();
+  if (persist) await save("page", { bookId: thisBook.id, page: thisPage });
+  if (generation !== renderGeneration) return;
   renderTrackControls();
   renderSelection();
   renderReaderPanel();
-  $("#prev-page").disabled = pageNo === 1;
-  $("#next-page").disabled = pageNo === pdf.numPages;
+  updateReadingMode();
+  $("#prev-page").disabled = thisPage === 1;
+  $("#next-page").disabled = thisPage === pdf.numPages;
+}
+function updateReadingMode() {
+  if (!$("#pdf-frame")) return;
+  $("#pdf-frame").hidden = readerMode === "text";
+  $("#reader-text-main").hidden = readerMode !== "text";
+  $("#reading-mode").value = readerMode;
+  $("#reader-mode-caption").textContent =
+    readerMode === "pdf"
+      ? "မူရင်း PDF · ပုံနဲ့ layout မပြောင်းထားပါ"
+      : "Text mode · ထုတ်ယူထားသော စာသားကို လိုင်းပြန်စီဖတ်ခြင်း";
+  if (readerMode === "text") renderTextMode();
+}
+function renderTextMode() {
+  const target = $("#reader-text-main");
+  if (!target) return;
+  let html = esc(pageText);
+  for (const a of state.annotations.filter(
+    (x) => x.bookId === book.id && x.page === pageNo && x.quote,
+  )) {
+    const q = esc(a.quote);
+    html = html.replace(
+      q,
+      a.kind === "bold"
+        ? `<strong>${q}</strong>`
+        : a.kind === "underline"
+          ? `<u>${q}</u>`
+          : `<mark>${q}</mark>`,
+    );
+  }
+  target.innerHTML = pageText
+    ? `<div class="reader-text" style="font-size:${Math.round(18 * zoom)}px">${html}</div>`
+    : '<div class="notice">စကင်ပုံဖြစ်လို့ စာသားမရွေးနိုင်ပါ။ မူရင်း PDF ကို ဖတ်နိုင်သည်။</div>';
 }
 function markPage(quote) {
+  if (!book || !$("#annotation-layer")) return;
   const notes = state.annotations.filter(
     (a) => a.bookId === book.id && a.page === pageNo,
   );
-  $$("#text-layer span").forEach((s) => {
-    s.classList.toggle(
-      "marked",
-      !!s.textContent.trim() &&
-        (quote
-          ? quote.includes(s.textContent.trim())
-          : notes.some((n) => n.quote.includes(s.textContent.trim()))),
-    );
-  });
+  $("#annotation-layer").replaceChildren();
+  for (const a of notes.filter(
+    (n) => n.rects?.length && ["highlight", "underline"].includes(n.kind),
+  ))
+    for (const r of a.rects) {
+      const m = document.createElement("span");
+      m.className = "pdf-mark " + a.kind;
+      Object.assign(m.style, {
+        left: r[0] * 100 + "%",
+        top: r[1] * 100 + "%",
+        width: r[2] * 100 + "%",
+        height: r[3] * 100 + "%",
+      });
+      $("#annotation-layer").append(m);
+    }
+  const spans = $$("#text-layer span"),
+    strings = spans.map((s) => s.textContent);
+  spans.forEach((s) =>
+    s.classList.remove("marked", "marked-under", "source-hit"),
+  );
+  for (const n of notes.filter(
+    (n) =>
+      !n.rects?.length &&
+      n.quote &&
+      ["highlight", "underline"].includes(n.kind),
+  ))
+    for (const i of quoteSpanIndexes(strings, n.quote))
+      spans[i].classList.add(
+        n.kind === "underline" ? "marked-under" : "marked",
+      );
+  for (const i of quoteSpanIndexes(strings, quote))
+    spans[i].classList.add("source-hit");
 }
 function captureSelection() {
   const sel = getSelection();
   if (!sel || sel.isCollapsed) return;
   const q = sel.toString().trim();
-  if (
-    q &&
-    q.length <= 4000 &&
-    ($("#pdf-area")?.contains(sel.anchorNode) ||
-      $("#reader-panel")?.contains(sel.anchorNode))
-  ) {
-    selection = q;
-    renderSelection();
+  if (!q || q.length > 4000 || !$("#pdf-area")?.contains(sel.anchorNode))
+    return;
+  selection = q;
+  selectionRects = [];
+  if (readerMode === "pdf" && sel.rangeCount) {
+    const frame = $("#pdf-frame").getBoundingClientRect();
+    selectionRects = [...sel.getRangeAt(0).getClientRects()]
+      .filter(
+        (r) =>
+          r.width > 0 &&
+          r.height > 0 &&
+          r.left >= frame.left - 2 &&
+          r.top >= frame.top - 2,
+      )
+      .slice(0, 100)
+      .map((r) => [
+        Math.max(0, (r.left - frame.left) / frame.width),
+        Math.max(0, (r.top - frame.top) / frame.height),
+        Math.min(1, r.width / frame.width),
+        Math.min(1, r.height / frame.height),
+      ]);
   }
+  showSelectionPanel();
 }
+
 function renderSelection() {
+  if (roleplay) return;
   const target = $("#selection-tools");
   if (!target) return;
   target.innerHTML = selection
     ? `<div class="selected-quote">${esc(selection)}</div><div class="row">${[
-        ["highlight", "မျဉ်းသား"],
-        ["underline", "Underline"],
-        ["bold", "Bold"],
+        ["highlight", "Highlight"],
+        ["underline", "မျဉ်းသား"],
+        ["bold", "Bold · Text"],
         ["note", "မှတ်စု"],
         ["save", "သိမ်း"],
       ]
@@ -461,10 +733,15 @@ async function addAnnotation(kind, note) {
     quote: selection,
     note,
     kind,
+    rects: selectionRects,
   });
   state.annotations.push(item);
+  if (kind === "bold") {
+    readerMode = "text";
+    updateReadingMode();
+  }
   markPage();
-  if (readerTab === "text") renderReaderPanel();
+  if (readerMode === "text") renderTextMode();
   toast("မှတ်သားထားပြီးပြီ။");
 }
 const explanationKey = () => `${book.id}:${pageNo}:${readerTab}`;
@@ -472,22 +749,8 @@ function renderReaderPanel() {
   const panel = $("#reader-panel");
   if (!panel) return;
   if (readerTab === "text") {
-    let html = esc(pageText);
-    const ann = state.annotations.filter(
-      (x) => x.bookId === book.id && x.page === pageNo,
-    );
-    for (const a of ann) {
-      const q = esc(a.quote);
-      html = html.replace(
-        q,
-        a.kind === "bold"
-          ? `<strong>${q}</strong>`
-          : a.kind === "underline"
-            ? `<u>${q}</u>`
-            : `<mark>${q}</mark>`,
-      );
-    }
-    panel.innerHTML = `${pageText ? "" : '<div class="notice">ဒီစာမျက်နှာက စကင်ပုံဖြစ်ပြီး စာသားမထုတ်နိုင်ပါ။ PDF ပုံကို Gemini နဲ့ ရှင်းပြနိုင်သည်။</div>'}<div class="reader-text">${html}</div>`;
+    panel.innerHTML =
+      '<div class="notice">Text mode မှာ လိုင်းပြန်စီဖတ်နိုင်သည်။ မူရင်းစာမျက်နှာကို ပြန်ဖတ်ဖို့ အပေါ်က မူရင်း PDF ကို ရွေးပါ။</div>';
     return;
   }
   const value = state.explanations[explanationKey()];
@@ -539,8 +802,15 @@ function bindExplanation(panel) {
     (b) =>
       (b.onclick = () => {
         selection = b.dataset.source;
+        readerMode = "pdf";
+        updateReadingMode();
         markPage(selection);
         renderSelection();
+        $("#text-layer .source-hit")?.scrollIntoView({
+          block: "center",
+          inline: "nearest",
+          behavior: "smooth",
+        });
       }),
   );
   $$("[data-save-item]", panel).forEach(
@@ -589,7 +859,7 @@ async function importTracks(number) {
 }
 function linkTrack() {
   const d = modal(
-    '<h2>စာမျက်နှာနဲ့ Track ချိတ်မယ်</h2><form id="track-form"><label>မူရင်းစာအုပ်ပေါ်က Track နံပါတ်<input id="track-number" type="number" min="1" max="9999" value="1" required></label><button class="primary">အသံဖိုင်ရွေးပြီး ချိတ်မယ်</button></form>',
+    `<h2>စာမျက်နှာနဲ့ Track ချိတ်မယ်</h2><form id="track-form"><label>မူရင်းစာအုပ်ပေါ်က Track နံပါတ်<input id="track-number" type="number" min="1" max="9999" value="${Number(pageText.match(/track\s*0*(\d+)/i)?.[1]) || 1}" required></label><button class="primary">အသံဖိုင်ရွေးပြီး ချိတ်မယ်</button></form>`,
   );
   $("#track-form", d).onsubmit = (e) => {
     e.preventDefault();
@@ -614,33 +884,17 @@ function renderTrackControls() {
     ]),
   ];
   el.innerHTML = numbers.length
-    ? `<div class="row" style="margin-top:15px">${numbers.map((n) => `<button data-track="${n}" class="small">${icon("play")} Track ${String(n).padStart(2, "0")}</button>`).join("")}</div><div id="track-player"></div>`
+    ? `<div class="row" style="margin-top:15px">${numbers.map((n) => `<button data-track="${n}" class="small">${icon("play")} Track ${String(n).padStart(2, "0")}</button>`).join("")}</div>`
     : "";
-  $$("[data-track]").forEach(
+  $$("#track-controls [data-track]").forEach(
     (btn) =>
       (btn.onclick = (e) =>
-        action(e.currentTarget, async () => {
-          const number = Number(btn.dataset.track);
-          let track = state.tracks.find(
-            (t) => t.bookId === book.id && t.number === number,
-          );
-          if (!track) {
-            await importTracks(number);
-            track = state.tracks.find(
-              (t) => t.bookId === book.id && t.number === number,
-            );
-          }
-          if (track) {
-            const b = await call(bridge.media(track.file));
-            const url = URL.createObjectURL(new Blob([b]));
-            blobUrls.push(url);
-            $("#track-player").innerHTML =
-              `<p class="muted small">မူရင်း Track ${number} · ${esc(track.title)}</p><audio controls autoplay id="track-audio"></audio>`;
-            $("#track-audio").src = url;
-          }
-        })),
+        action(e.currentTarget, () =>
+          playTrackNumber(Number(btn.dataset.track)),
+        )),
   );
 }
+
 function showNotebook(filter) {
   const entries = [...state.annotations, ...state.notebook]
     .filter((x) => !filter || x.bookId === filter)
@@ -666,7 +920,16 @@ function showNotebook(filter) {
         (b.onclick = () => {
           const n = entries.find((x) => x.id === b.dataset.noteSource);
           d.close();
-          openBook(n.bookId, n.page);
+          action(null, async () => {
+            await openBook(n.bookId, n.page);
+            selection = n.quote;
+            markPage(selection);
+            renderSelection();
+            $("#text-layer .source-hit")?.scrollIntoView({
+              block: "center",
+              inline: "nearest",
+            });
+          });
         }),
     );
     $$("[data-delete-note]", d).forEach(
@@ -852,6 +1115,362 @@ async function ensureSession(title = "Practice", source = null) {
   }
   return sessionId;
 }
+function renderPdfTracks() {
+  const layer = $("#pdf-track-layer");
+  if (!layer) return;
+  layer.replaceChildren();
+  // Use PDF.js's exact positioned text spans, including imported books.
+  for (const span of $$("#text-layer span")) {
+    const match = span.textContent.match(/(?:track|트랙|트렉)\s*0*(\d{1,4})/i);
+    if (!match) continue;
+    const frame = $("#pdf-frame").getBoundingClientRect(),
+      r = span.getBoundingClientRect();
+    const b = document.createElement("button");
+    b.className = "pdf-track-hit";
+    b.dataset.track = Number(match[1]);
+    b.setAttribute("aria-label", "Track " + match[1]);
+    b.title = "Track " + match[1] + " · မူရင်းအသံ";
+    Object.assign(b.style, {
+      left: Math.max(0, r.left - frame.left - 18) + "px",
+      top: Math.max(0, r.top - frame.top - 8) + "px",
+      width: r.width + 28 + "px",
+      height: r.height + 16 + "px",
+    });
+    b.onclick = (e) =>
+      action(e.currentTarget, () => playTrackNumber(Number(match[1])));
+    layer.append(b);
+  }
+}
+async function playTrackNumber(number) {
+  const id = book.id;
+  let track = state.tracks.find((t) => t.bookId === id && t.number === number);
+  if (!track) {
+    await importTracks(number);
+    track = state.tracks.find((t) => t.bookId === id && t.number === number);
+  }
+  if (!track || book?.id !== id) return;
+  const b = await call(bridge.media(track.file));
+  if (book?.id !== id || !$("#track-player")) return;
+  const url = URL.createObjectURL(new Blob([b]));
+  blobUrls.push(url);
+  $("#track-player").innerHTML =
+    `<p class="muted small">မူရင်း Track ${number} · ${esc(track.title)}</p><audio controls autoplay id="track-audio"></audio>`;
+  $("#track-audio").src = url;
+}
+async function chooseBookRole() {
+  if (!canLeaveRole()) return;
+  const turns = dialogueForPage(book, pageNo, pageText);
+  const d = modal(
+    `<div class="eyebrow">BOOK ROLEPLAY</div><h2>မင်း ဘယ်ဇာတ်ကောင် ပြောမလဲ?</h2><p class="muted small">ဒီစာမျက်နှာရဲ့ စကားပြောကို သုံးမယ်။ Start နှိပ်မှသာ လေ့ကျင့်မှုဖွင့်မည်။</p><div id="role-characters"></div><details ${turns.length ? "" : "open"}><summary>ဝါကျ / ဇာတ်ကောင်တွေကို ကိုယ်တိုင်ပြင်မယ်</summary><label>တစ်ကြောင်းလျှင် ဇာတ်ကောင်နာမည်: ကိုရီးယားဝါကျ<textarea id="role-source-editor" rows="7" placeholder="A: 안녕하세요.&#10;B: 네, 안녕하세요.">${esc(turns.map((t) => t.speaker + ": " + t.text).join("\n"))}</textarea></label><button id="role-parse" class="small" type="button">ဇာတ်ကောင် ခွဲမယ်</button><p class="muted small">စကင်ပုံ / စကားပြောမပါတဲ့စာမျက်နှာဆိုရင် ဝါကျကို ကိုယ်တိုင်ထည့်ပေးနိုင်သည်။ ထည့်ထားတာကို မူရင်းစာအုပ်ရဲ့အတည်ပြုစာသားဟု မသတ်မှတ်ပါ။</p></details><div class="spacer"></div><label>လေ့ကျင့်မည့်ပုံစံ<select id="role-mode"><option value="exact">မူရင်းစကားပြောအတိုင်း</option><option value="free">ဒီအခြေအနေမှာ လွတ်လပ်စကားပြော</option></select></label><label class="toggle-label">ကိုယ့်အဖြေအတွက် ဝါကျနမူနာပြမယ်<input id="role-hint" type="checkbox" checked></label><div class="error" id="role-setup-error" hidden></div><p class="muted small">စာသားနဲ့လည်း လေ့ကျင့်နိုင်သည်။ အသံပြော/နားထောင်ဖို့ Gemini key လိုသည်။</p><button id="role-start" class="primary">${icon("mic")} စကားဝိုင်း စတင်မယ်</button>`,
+  );
+  let selectedTurns = turns,
+    myRole = speakersOf(turns)[0],
+    manual = false;
+  const characters = () => {
+    const names = speakersOf(selectedTurns);
+    $("#role-characters", d).innerHTML =
+      names.length >= 2
+        ? `<div class="role-characters">${names.map((n) => `<button type="button" data-role-choice="${esc(n)}" aria-pressed="${n === myRole}"><span class="role-avatar">${esc(n[0])}</span><strong>${esc(n)}</strong><small>ငါ = ${esc(n)}</small></button>`).join("")}</div><p class="small muted">ကျန်ဇာတ်ကောင်${names.length > 2 ? "များ" : ""}ကို AI က ပြောမည်။</p>`
+        : '<div class="notice">ဒီစာမျက်နှာမှာ ဇာတ်ကောင်နှစ်ယောက်ပါတဲ့ စကားပြော မတွေ့ပါ။ စကားပြောပါတဲ့ စာမျက်နှာကို ရွေးပါ၊ သို့မဟုတ် အောက်မှာ ကိုယ်တိုင်ထည့်ပါ။</div>';
+    $$("[data-role-choice]", d).forEach(
+      (b) =>
+        (b.onclick = () => {
+          myRole = b.dataset.roleChoice;
+          characters();
+        }),
+    );
+  };
+  characters();
+  $("#role-parse", d).onclick = () => {
+    selectedTurns = parseDialogue($("#role-source-editor", d).value, pageNo);
+    manual = true;
+    myRole = speakersOf(selectedTurns)[0];
+    characters();
+  };
+  $("#role-start", d).onclick = (e) =>
+    action(e.currentTarget, async () => {
+      const raw = $("#role-source-editor", d).value;
+      if (
+        raw !== turns.map((t) => t.speaker + ": " + t.text).join("\n") &&
+        !manual
+      ) {
+        selectedTurns = parseDialogue(raw, pageNo);
+        manual = true;
+        myRole = speakersOf(selectedTurns)[0];
+        characters();
+      }
+      const names = speakersOf(selectedTurns);
+      if (names.length < 2 || selectedTurns.length < 2) {
+        $("#role-setup-error", d).hidden = false;
+        $("#role-setup-error", d).textContent =
+          "အနည်းဆုံး ဇာတ်ကောင်နှစ်ယောက်နဲ့ ဝါကျနှစ်ကြောင်း လိုပါသည်။";
+        return;
+      }
+      stopBookRole();
+      const rp = {
+        bookId: book.id,
+        page: pageNo,
+        title: book.title,
+        myRole,
+        aiRole: names.filter((n) => n !== myRole).join(", "),
+        mode: $("#role-mode", d).value,
+        hint: $("#role-hint", d).checked,
+        turns: selectedTurns,
+        turn: 0,
+        session: null,
+        busy: false,
+        result: null,
+        heard: "",
+        history: [],
+        manual,
+        audio: null,
+      };
+      if (state.preferences.record)
+        rp.session = (
+          await call(
+            bridge.session(
+              "Roleplay · " + myRole + " · " + book.title.slice(0, 100),
+              { bookId: book.id, page: pageNo },
+            ),
+          )
+        ).id;
+      roleplay = rp;
+      readerPanel = true;
+      readerFocus = false;
+      readerMode = "pdf";
+      document.body.classList.remove("reader-focus");
+      d.close();
+      await updateReaderLayout();
+      renderBookRole();
+      if (
+        selectedTurns[0].speaker !== myRole &&
+        state.preferences.autoSpeak &&
+        settings.geminiKeySaved
+      )
+        action(null, () => roleReference(rp));
+    });
+}
+function stopBookRole() {
+  if (roleplay?.audio) roleplay.audio.pause();
+  roleplay = null;
+  selection = "";
+  selectionRects = [];
+  if (book && $("#selection-tools")) {
+    renderSelection();
+    markPage();
+  }
+  if ($("#book-role-panel")) {
+    $("#book-role-panel").hidden = true;
+    $("#teaching-tools").hidden = false;
+    $("#selection-tools").hidden = false;
+  }
+  if ($("#reader-roleplay"))
+    $("#reader-roleplay").textContent = "ဇာတ်ကောင်နဲ့ ပြောမယ်";
+}
+function renderBookRole() {
+  const rp = roleplay;
+  if (!rp || !$("#book-role-panel")) return;
+  $("#teaching-tools").hidden = true;
+  $("#selection-tools").hidden = true;
+  $("#book-role-panel").hidden = false;
+  $("#reader-roleplay").textContent = "ဇာတ်ကောင်ပြောင်း";
+  const t = rp.turns[rp.turn],
+    mine = t.speaker === rp.myRole;
+  selection = rp.manual ? "" : t.text;
+  markPage(selection);
+  const result = rp.result;
+  $("#book-role-panel").innerHTML =
+    `<div class="row between"><span class="tag">${rp.mode === "exact" ? "မူရင်းအတိုင်း" : "လွတ်လပ်စကားပြော"}</span><button id="role-stop" class="small ghost">ရပ်မယ်</button></div><h3>ငါ = ${esc(rp.myRole)} · AI = ${esc(rp.aiRole)}</h3><small class="muted">အလှည့် ${rp.turn + 1} / ${rp.turns.length}${rp.manual ? " · ကိုယ်တိုင်ထည့်ထားသော စကားပြော" : ""}</small><div class="role-turn ${mine ? "my-turn" : ""}"><small>${mine ? "မင်းအလှည့်" : "AI အလှည့်"} · ${esc(t.speaker)}</small><div class="korean">${mine && !rp.hint ? "ကိုယ့်အဖြေကို ပြောပါ" : esc(t.text)}</div></div><button id="role-current-source" class="small ghost">မူရင်းဝါကျနေရာ ကြည့်</button>${mine ? `<form id="role-answer-form"><label>ကိုရီးယားလို ဖြေမယ်<input id="role-answer" required maxlength="10000" placeholder="ကိုယ့်အဖြေကို ရိုက်ထည့်ပါ" ${rp.busy ? "disabled" : ""}></label><button id="role-send" class="primary small" ${rp.busy ? "disabled" : ""}>အဖြေစစ်မယ်</button></form><div class="role-mic"><button id="role-mic" class="mic-button ${recorder ? "recording" : ""}" aria-label="Record character answer" ${rp.busy ? "disabled" : ""}>${icon(recorder ? "stop" : "mic")}</button><div class="small muted">${recorder ? "အသံဖမ်းနေသည် · ထပ်နှိပ်ပြီး ရပ်ပါ" : rp.busy ? "အဖြေစစ်နေသည်…" : "Mic နှိပ်ပြီး ပြောပါ"}</div></div>` : `<button id="role-listen" class="primary" ${rp.busy ? "disabled" : ""}>${icon("sound")} AI စကားကို နားထောင်</button>`}${rp.heard ? `<div class="notice"><small>ကြားရသော ကိုယ့်စကား</small><p>${esc(rp.heard)}</p></div>` : ""}${rp.error ? `<div class="error" role="alert">${esc(rp.error)}</div>` : ""}${result ? `<div class="role-feedback">${result.reply ? `<div class="korean">${esc(result.reply)}</div><p>${esc(result.meaning)}</p>` : ""}<p>${esc(result.correction || result.explanation)}</p><small>စာသား / အဓိပ္ပာယ် စစ်ခြင်းသာ · အသံထွက်အမှတ် မဟုတ်ပါ</small></div>` : ""}<div class="row"><button id="role-repeat" class="small" ${rp.busy || recorder ? "disabled" : ""}>ပြန်လေ့ကျင့်</button><button id="role-next" class="primary small" ${rp.busy || recorder ? "disabled" : ""}>${rp.turn === rp.turns.length - 1 ? "ပြီးပြီ · စာဖတ်မယ်" : "Next →"}</button></div><p class="muted small">ကိုယ်တိုင် Next နှိပ်မှ ဆက်မည်။ အသံမှတ်တမ်း ${state.preferences.record ? "ဖွင့်ထားသည် · Replays မှာ ပြန်နားထောင်နိုင်သည်" : "ပိတ်ထားသည်"}။</p>`;
+  $("#role-stop").onclick = () => {
+    if (recorder) recorder.stop();
+    stopBookRole();
+    readerPanel = false;
+    action(null, updateReaderLayout);
+  };
+  $("#role-current-source").onclick = () => {
+    if (rp.manual)
+      return toast(
+        "ကိုယ်တိုင်ထည့်ထားသော ဝါကျဖြစ်လို့ မူရင်း PDF ထဲကနေ တိတိကျကျ မပြနိုင်ပါ။",
+      );
+    readerMode = "pdf";
+    updateReadingMode();
+    markPage(t.text);
+    $("#text-layer .source-hit")?.scrollIntoView({
+      block: "center",
+      inline: "nearest",
+      behavior: "smooth",
+    });
+  };
+  $("#role-repeat").onclick = () => {
+    rp.result = null;
+    rp.error = "";
+    rp.heard = "";
+    renderBookRole();
+  };
+  $("#role-next").onclick = () => {
+    if (!canLeaveRole()) return;
+    rp.audio?.pause();
+    const next =
+      rp.mode === "free"
+        ? rp.turns.findIndex((t, i) => i > rp.turn && t.speaker === rp.myRole)
+        : rp.turn + 1;
+    if (next < 0 || next >= rp.turns.length) {
+      $("#role-stop").click();
+      return;
+    }
+    rp.turn = next;
+    rp.result = null;
+    rp.error = "";
+    rp.heard = "";
+    renderBookRole();
+    if (
+      rp.turns[rp.turn].speaker !== rp.myRole &&
+      state.preferences.autoSpeak &&
+      settings.geminiKeySaved
+    )
+      action(null, () => roleReference(rp));
+  };
+  if ($("#role-listen"))
+    $("#role-listen").onclick = (e) =>
+      action(e.currentTarget, () => roleReference(rp));
+  if ($("#role-answer-form"))
+    $("#role-answer-form").onsubmit = (e) => {
+      e.preventDefault();
+      action(null, () => roleAnswer(rp, $("#role-answer").value));
+    };
+  if ($("#role-mic"))
+    $("#role-mic").onclick = (e) => {
+      if (recorder) {
+        recorder.stop();
+        return;
+      }
+      action(e.currentTarget, async () => {
+        if (!settings.geminiKeySaved)
+          throw Error("အသံနားလည်ဖို့ Me → API မှာ Gemini key ထည့်ပါ။");
+        rp.audio?.pause();
+        await startRecording(async (blob) => {
+          rp.busy = true;
+          rp.error = "";
+          renderBookRole();
+          try {
+            const raw = new Uint8Array(await blob.arrayBuffer());
+            const clip = await roleClip(
+              rp,
+              "user",
+              "အသံဖမ်းထားသည်",
+              raw,
+              "webm",
+            );
+            if (roleplay !== rp) return;
+            const heard = await call(
+              bridge.api("transcribe", {
+                audio: { data: toBase64(raw), mime: blob.type.split(";")[0] },
+              }),
+            );
+            if (clip)
+              await call(
+                bridge.save("clip-text", {
+                  sessionId: rp.session,
+                  clipId: clip.id,
+                  text: heard,
+                }),
+              );
+            rp.busy = false;
+            await roleAnswer(rp, heard, true);
+          } catch (e) {
+            rp.busy = false;
+            rp.error = e.message;
+            renderBookRole();
+          }
+        });
+        renderBookRole();
+      });
+    };
+}
+async function roleClip(rp, speaker, value, audio, ext) {
+  if (!state.preferences.record) return null;
+  if (!rp.session)
+    rp.session = (
+      await call(
+        bridge.session("Roleplay · " + rp.myRole, {
+          bookId: rp.bookId,
+          page: rp.page,
+        }),
+      )
+    ).id;
+  return call(
+    bridge.clip(rp.session, {
+      speaker,
+      text: value,
+      ...(audio ? { audio, ext } : {}),
+    }),
+  );
+}
+async function roleVoice(rp, value) {
+  const a = await call(bridge.api("speech", { text: value }));
+  const raw = fromBase64(a.data);
+  await roleClip(rp, "ai", value, raw, "wav");
+  if (roleplay !== rp) return;
+  rp.audio?.pause();
+  const url = URL.createObjectURL(new Blob([raw], { type: a.mime }));
+  blobUrls.push(url);
+  rp.audio = new Audio(url);
+  rp.audio.onended = () => URL.revokeObjectURL(url);
+  await rp.audio.play();
+}
+async function roleReference(rp) {
+  if (rp.busy) return;
+  rp.busy = true;
+  rp.error = "";
+  renderBookRole();
+  try {
+    await roleVoice(rp, rp.turns[rp.turn].text);
+  } catch (e) {
+    rp.error = e.message;
+  } finally {
+    rp.busy = false;
+    renderBookRole();
+  }
+}
+async function roleAnswer(rp, prompt, alreadySaved = false) {
+  if (roleplay !== rp || rp.busy || !prompt.trim()) return;
+  rp.busy = true;
+  rp.heard = prompt;
+  rp.error = "";
+  renderBookRole();
+  try {
+    if (!alreadySaved) await roleClip(rp, "user", prompt);
+    const r = await call(
+      bridge.api("roleplay", {
+        source: rp.turns
+          .map((t) => t.speaker + ": " + t.text)
+          .join("\n")
+          .slice(0, 16000),
+        myRole: rp.myRole,
+        aiRole: rp.aiRole,
+        mode: rp.mode,
+        expected: rp.turns[rp.turn].text,
+        prompt,
+        history: rp.history.slice(-10).join("\n"),
+      }),
+    );
+    if (roleplay !== rp) return;
+    rp.result = r;
+    rp.history.push(rp.myRole + ": " + prompt);
+    if (r.reply) {
+      rp.history.push(rp.aiRole + ": " + r.reply);
+      if (state.preferences.autoSpeak && settings.geminiKeySaved)
+        await roleVoice(rp, r.reply);
+      else await roleClip(rp, "ai", r.reply);
+    }
+  } catch (e) {
+    rp.error = e.message;
+  } finally {
+    rp.busy = false;
+    renderBookRole();
+  }
+}
+
 function interaction(title, context, source = null) {
   const container = $("#practice-interaction");
   container.innerHTML = `<div id="chat-thread" class="chat-thread">${history.map(bubbleHtml).join("")}</div><form id="practice-form"><div class="row" style="align-items:stretch"><input id="learner-input" style="flex:1" placeholder="ကိုရီးယား / မြန်မာလို ရေးနိုင်သည်" required maxlength="10000"><button class="primary" id="send-practice">ပို့မယ်</button></div></form><button class="mic-button" id="record-mic" aria-label="Record answer">${icon("mic")}</button><div class="mic-label" id="record-label">Mic နှိပ်ပြီး ပြောပါ · တစ်ကြိမ် ၉၀ စက္ကန့်</div><p class="muted small">${state.preferences.record ? "အသံမှတ်တမ်း ဖွင့်ထားသည် · Replays မှာ ပြန်နားထောင်နိုင်သည်" : "အသံမှတ်တမ်း ပိတ်ထားသည် · Me မှာ ဖွင့်နိုင်သည်"}</p>`;
@@ -1499,7 +2118,7 @@ function showMe() {
       "မင်းရဲ့ ကိုယ်ပိုင်လေ့လာရေးနေရာ",
       "မှတ်စု၊ အသံ၊ API နဲ့ app ရွေးချယ်မှုတွေကို ဒီနေရာမှာ စီမံပါ။",
     ) +
-    `<div class="stats"><div class="stat"><strong>${notes}</strong><small>သိမ်းထားသော မှတ်စုများ</small></div><div class="stat"><strong>${state.sessions.length}</strong><small>စကားဝိုင်းမှတ်တမ်း</small></div><div class="stat"><strong>${Object.values(state.practice).filter((p) => p.completed).length}</strong><small>ပြီးခဲ့သော သင်ခန်းစာ</small></div></div><div class="settings-grid"><section class="card"><div class="row between"><div class="eyebrow">AI & APIs</div><span class="tag">WINDOWS ENCRYPTED STORAGE</span></div><h2>ကိုယ့် API နဲ့ ဆက်လေ့လာပါ</h2><p class="muted small">Key မပါဝင်ပါ။ ကိုယ်တိုင်ထည့်ထားတဲ့ key ကို ဒီ Windows account မှာသာ ဖွင့်ဖတ်နိုင်အောင် သိမ်းထားသည်။</p><form id="api-form"><label>စာသား / PDF အတွက် provider<select name="provider"><option value="gemini" ${settings.provider !== "nvidia" ? "selected" : ""}>Gemini</option><option value="nvidia" ${settings.provider === "nvidia" ? "selected" : ""}>NVIDIA · Text only</option></select></label><label>Gemini API key ${settings.geminiKeySaved ? "· သိမ်းထားပြီး ✓" : ""}<input name="geminiKey" type="password" autocomplete="off" placeholder="${settings.geminiKeySaved ? "မပြောင်းချင်ရင် အလွတ်ထားပါ" : "Gemini key ထည့်ပါ"}"></label><label>NVIDIA API key ${settings.nvidiaKeySaved ? "· သိမ်းထားပြီး ✓" : ""}<input name="nvidiaKey" type="password" autocomplete="off" placeholder="${settings.nvidiaKeySaved ? "မပြောင်းချင်ရင် အလွတ်ထားပါ" : "NVIDIA key ထည့်ပါ"}"></label><div class="form-pair"><label>Gemini Text/PDF model<input name="geminiModel" value="${esc(settings.geminiModel || "gemini-3.5-flash-lite")}" list="gemini-models"></label><label>NVIDIA Text model<input name="nvidiaModel" value="${esc(settings.nvidiaModel || "z-ai/glm-5.3-flash")}" list="nvidia-models"></label></div><div class="form-pair"><label>Gemini Speech model<input name="speechModel" value="${esc(settings.speechModel || "gemini-3.8-flash-tts")}" list="gemini-models"></label><label>Gemini Live model<input name="liveModel" value="${esc(settings.liveModel || "gemini-3.8-live")}" list="gemini-models"></label></div><datalist id="gemini-models"></datalist><datalist id="nvidia-models"></datalist><button class="primary" id="save-api">API settings သိမ်းမယ်</button></form><div class="spacer"></div><div class="row"><select id="probe-provider" aria-label="Test provider"><option value="gemini">Gemini</option><option value="nvidia">NVIDIA</option></select><button id="load-models" class="small">Models ရယူမယ်</button></div><div class="row" style="margin-top:12px">${[
+    `<div class="stats"><div class="stat"><strong>${notes}</strong><small>သိမ်းထားသော မှတ်စုများ</small></div><div class="stat"><strong>${state.sessions.length}</strong><small>စကားဝိုင်းမှတ်တမ်း</small></div><div class="stat"><strong>${Object.values(state.practice).filter((p) => p.completed).length}</strong><small>ပြီးခဲ့သော သင်ခန်းစာ</small></div></div><div class="settings-grid"><section class="card"><div class="row between"><div class="eyebrow">AI & APIs</div><span class="tag">WINDOWS ENCRYPTED STORAGE</span></div><h2>ကိုယ့် API နဲ့ ဆက်လေ့လာပါ</h2><p class="muted small">Key မပါဝင်ပါ။ ကိုယ်တိုင်ထည့်ထားတဲ့ key ကို ဒီ Windows account မှာသာ ဖွင့်ဖတ်နိုင်အောင် သိမ်းထားသည်။</p><form id="api-form"><label>စာသား / PDF အတွက် provider<select name="provider"><option value="gemini" ${settings.provider !== "nvidia" ? "selected" : ""}>Gemini</option><option value="nvidia" ${settings.provider === "nvidia" ? "selected" : ""}>NVIDIA · Text only</option></select></label><label>Gemini API key ${settings.geminiKeySaved ? "· သိမ်းထားပြီး ✓" : ""}<div class="key-row"><input name="geminiKey" type="password" autocomplete="off" placeholder="${settings.geminiKeySaved ? "မပြောင်းချင်ရင် အလွတ်ထားပါ" : "Gemini key ထည့်ပါ"}"><button type="button" class="small" data-paste-key="geminiKey">Paste</button><button type="button" class="small" data-show-key="geminiKey">ပြ</button></div></label><label>NVIDIA API key ${settings.nvidiaKeySaved ? "· သိမ်းထားပြီး ✓" : ""}<div class="key-row"><input name="nvidiaKey" type="password" autocomplete="off" placeholder="${settings.nvidiaKeySaved ? "မပြောင်းချင်ရင် အလွတ်ထားပါ" : "NVIDIA key ထည့်ပါ"}"><button type="button" class="small" data-paste-key="nvidiaKey">Paste</button><button type="button" class="small" data-show-key="nvidiaKey">ပြ</button></div></label><p class="muted small">Ctrl+V၊ Right-click → Paste သို့မဟုတ် Paste ခလုတ်ကို သုံးနိုင်သည်။ သိမ်းပြီးသား key ကို ပြန်မဖော်ပြပါ။</p><div class="form-pair"><label>Gemini Text/PDF model<input name="geminiModel" value="${esc(settings.geminiModel || "gemini-3.5-flash-lite")}" list="gemini-models"></label><label>NVIDIA Text model<input name="nvidiaModel" value="${esc(settings.nvidiaModel || "z-ai/glm-5.3-flash")}" list="nvidia-models"></label></div><div class="form-pair"><label>Gemini Speech model<input name="speechModel" value="${esc(settings.speechModel || "gemini-3.8-flash-tts")}" list="gemini-models"></label><label>Gemini Live model<input name="liveModel" value="${esc(settings.liveModel || "gemini-3.8-live")}" list="gemini-models"></label></div><datalist id="gemini-models"></datalist><datalist id="nvidia-models"></datalist><button class="primary" id="save-api">API settings သိမ်းမယ်</button></form><div class="spacer"></div><div class="row"><select id="probe-provider" aria-label="Test provider"><option value="gemini">Gemini</option><option value="nvidia">NVIDIA</option></select><button id="load-models" class="small">Models ရယူမယ်</button></div><div class="row" style="margin-top:12px">${[
       ["text", "Text"],
       ["pdf", "PDF"],
       ["speech", "Speech"],
@@ -1510,6 +2129,24 @@ function showMe() {
       .join(
         "",
       )}</div><div id="probe-result"></div><p class="muted small">PDF test က နမူနာစာသားကို စစ်သည်။ Transcribe test က AI အသံနမူနာကို သုံးသည်။ Mic အစစ်က Practice မှာ စမ်းပါ။</p><div id="operation-error" class="error" hidden></div><details><summary class="small muted">Key ဖျက်ရန်</summary><div class="row"><button class="small danger" data-clear-key="gemini">Gemini key ဖျက်မယ်</button><button class="small danger" data-clear-key="nvidia">NVIDIA key ဖျက်မယ်</button></div></details></section><div><section class="card"><div class="eyebrow">PREFERENCES</div><form id="preferences-form"><label>Display name<input name="displayName" maxlength="100" value="${esc(state.preferences.displayName)}" placeholder="မင်းနာမည်"></label><div class="form-pair"><label>Theme<select name="theme">${["system", "light", "dark"].map((t) => `<option ${state.preferences.theme === t ? "selected" : ""}>${t}</option>`).join("")}</select></label><label>Korean voice<select name="voice">${["Kore", "Puck", "Aoede", "Charon", "Fenrir", "Leda", "Orus", "Zephyr"].map((v) => `<option ${state.preferences.voice === v ? "selected" : ""}>${v}</option>`).join("")}</select></label></div><label class="toggle-label">အသံမှတ်တမ်း သိမ်းမယ်<input type="checkbox" name="record" ${state.preferences.record ? "checked" : ""}></label><label class="toggle-label">AI ကိုရီးယားအသံ အလိုအလျောက်ဖွင့်မယ်<input type="checkbox" name="autoSpeak" ${state.preferences.autoSpeak ? "checked" : ""}></label><button>ရွေးချယ်မှု သိမ်းမယ်</button></form></section><div class="spacer"></div><section class="card"><div class="eyebrow">YOUR NOTEBOOK</div><h3>မမေ့ချင်တဲ့ စကားလုံးနဲ့ မှတ်စုများ</h3><p class="muted small">မူရင်းစာမျက်နှာနဲ့ တွဲသိမ်းထားပြီး ပြန်ရှာနိုင်သည်။</p><button id="open-notebook">ကိုယ်ပိုင်မှတ်စုစာအုပ်</button></section><div class="spacer"></div><section class="card"><div class="eyebrow">BACKUP & RESTORE</div><h3>ကိုယ့်တိုးတက်မှုကို သိမ်းထားပါ</h3><p class="muted small">ဒီ Windows app ရဲ့ PDF၊ Track၊ အသံနဲ့ မှတ်စုပါဝင်သည်။ API key မပါဝင်ပါ။ Android backup နဲ့ format မတူသေးပါ။</p><div class="row"><button id="backup" class="primary">Export backup</button><button id="restore">Restore backup</button></div><p class="muted small" style="margin-top:12px">Windows app ဒေတာက Android နဲ့ အလိုအလျောက် sync မလုပ်သေးပါ။</p></section></div></div>`;
+  $$("[data-paste-key]").forEach(
+    (b) =>
+      (b.onclick = (e) =>
+        action(e.currentTarget, async () => {
+          const input = $('[name="' + b.dataset.pasteKey + '"]');
+          input.value = await call(bridge.pasteKey());
+          input.focus();
+          toast("Key ထည့်ပြီးပြီ။ API settings သိမ်းမယ် ကို နှိပ်ပါ။");
+        })),
+  );
+  $$("[data-show-key]").forEach(
+    (b) =>
+      (b.onclick = () => {
+        const input = $('[name="' + b.dataset.showKey + '"]');
+        input.type = input.type === "password" ? "text" : "password";
+        b.textContent = input.type === "password" ? "ပြ" : "ဖျောက်";
+      }),
+  );
   $("#api-form").onsubmit = (e) => {
     e.preventDefault();
     action($("#save-api"), async () => {

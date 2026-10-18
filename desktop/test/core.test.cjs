@@ -138,3 +138,25 @@ test("JSON fences tolerated; truncated or plain prose fails explicitly", () => {
   assert.throws(() => parseJson("a Myanmar prose response"));
   assert.throws(() => parseJson('{"reply":'));
 });
+test("annotation coordinates survive backup and reject invalid values", () => {
+  const { annotationRects, safeState, defaults } = require("../lib/core.cjs");
+  assert.deepEqual(annotationRects([[0.1, 0.2, 0.3, 0.04]]), [
+    [0.1, 0.2, 0.3, 0.04],
+  ]);
+  for (const bad of [[[NaN, 0, 0.2, 0.1]], [[1.5, 0, 0.1, 0.1]], [[0, 0, 1]]])
+    assert.throws(() => annotationRects(bad));
+  const s = defaults();
+  s.annotations.push({
+    id: "note",
+    bookId: "book",
+    page: 15,
+    kind: "highlight",
+    quote: "안녕",
+    note: "",
+    rects: [[0.1, 0.2, 0.3, 0.04]],
+  });
+  assert.deepEqual(
+    safeState(JSON.parse(JSON.stringify(s))).annotations[0].rects,
+    [[0.1, 0.2, 0.3, 0.04]],
+  );
+});

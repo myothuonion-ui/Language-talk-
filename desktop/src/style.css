@@ -989,3 +989,361 @@ dialog form {
   user-select: none;
   cursor: default;
 }
+
+/* Study Desk: original page owns the window; companion is optional. */
+[hidden] {
+  display: none !important;
+}
+body.reading {
+  overflow: hidden;
+}
+body.reading .sidebar {
+  width: 58px;
+  padding: 18px 5px;
+}
+body.reading .brand {
+  padding: 0 5px 25px;
+}
+body.reading .brand img {
+  width: 34px;
+  height: 34px;
+}
+body.reading .brand > div,
+body.reading .sidebar-bottom {
+  display: none;
+}
+body.reading nav {
+  gap: 13px;
+}
+body.reading nav button {
+  display: flex;
+  justify-content: center;
+  padding: 12px 7px;
+  font-size: 0;
+}
+body.reading nav button small {
+  display: none;
+}
+body.reading .main {
+  margin-left: 58px;
+  width: calc(100% - 58px);
+}
+body.reading .topbar {
+  height: 50px;
+  padding: 0 20px;
+  background: var(--surface);
+}
+body.reading #content {
+  padding: 0;
+  max-width: none;
+  height: calc(100vh - 50px);
+}
+body.reader-focus .sidebar {
+  display: none;
+}
+body.reader-focus .main {
+  margin-left: 0;
+  width: 100%;
+}
+body.reading #toast {
+  left: 50%;
+  max-width: min(680px, 90vw);
+}
+.study-desk {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.reader-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 13px 20px 9px;
+}
+.reader-heading > div:first-child {
+  min-width: 0;
+}
+.reader-heading strong {
+  display: block;
+  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reader-toolbar {
+  padding: 0 20px 12px;
+  margin: 0;
+  justify-content: space-between;
+}
+.reader-toolbar .row {
+  gap: 5px;
+}
+.reader-toolbar select {
+  font-size: 12px;
+  padding: 6px 8px;
+}
+.reader-toolbar button[aria-pressed="true"] {
+  background: var(--soft);
+  border-color: var(--teal);
+  color: var(--teal);
+}
+.reader-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  flex: 1;
+  min-height: 0;
+  gap: 0;
+  align-items: stretch;
+  border-top: 1px solid var(--border);
+}
+.reader-layout.panel-hidden {
+  grid-template-columns: minmax(0, 1fr);
+}
+.reader-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  background: var(--bg);
+}
+.pdf-area {
+  position: relative;
+  inset: auto;
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  border-radius: 0;
+  overflow: auto;
+  padding: 18px;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.reader-side {
+  display: block;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  padding: 18px;
+  overflow-y: auto;
+  min-width: 0;
+}
+.reader-side .tabs {
+  flex-wrap: wrap;
+  overflow: visible;
+  gap: 2px;
+  margin: 15px 0;
+}
+.reader-side .tabs button {
+  padding: 7px 9px;
+  font-size: 11px;
+  white-space: normal;
+}
+.reader-side p,
+.reader-side .source-quote {
+  overflow-wrap: anywhere;
+}
+.reader-side .source-quote {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: 17px;
+}
+.reader-side .selected-quote {
+  font-size: 16px;
+  max-height: 150px;
+}
+.reader-side #selection-tools .row {
+  gap: 5px;
+}
+.reader-side #selection-tools button {
+  padding: 5px 7px;
+  font-size: 11px;
+}
+.reader-caption {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 7px 18px;
+  font-size: 11px;
+  color: var(--muted);
+  border-top: 1px solid var(--border);
+}
+.reader-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.reader-footer #track-controls .row {
+  margin-top: 0 !important;
+}
+.reader-footer #track-player:empty {
+  display: none;
+}
+.reader-footer #track-player {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.reader-footer #track-player p {
+  margin: 0;
+  flex: 1;
+}
+.reader-footer audio {
+  width: min(340px, 50%);
+  height: 34px;
+}
+#annotation-layer,
+#pdf-track-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+}
+.pdf-mark {
+  position: absolute;
+  pointer-events: none;
+}
+.pdf-mark.highlight {
+  background: #ffcb0060;
+}
+.pdf-mark.underline {
+  border-bottom: 2px solid #268e7b;
+}
+.textLayer span.marked-under {
+  box-shadow: inset 0 -2px #268e7b;
+}
+.textLayer span.source-hit {
+  background: #71c2c955;
+}
+.pdf-track-hit {
+  position: absolute;
+  pointer-events: auto;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  padding: 0;
+}
+.pdf-track-hit:hover,
+.pdf-track-hit:focus-visible {
+  background: #71c2c944;
+  outline: 2px solid var(--teal);
+}
+#reader-text-main {
+  background: var(--surface);
+  padding: 24px 32px;
+  border-radius: 6px;
+}
+#reader-text-main .reader-text {
+  max-height: none;
+  overflow: visible;
+  line-height: 2;
+}
+.key-row {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+.key-row input {
+  width: 0;
+  flex: 1;
+}
+.key-row button {
+  flex-shrink: 0;
+}
+.role-characters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.role-characters button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.role-characters button[aria-pressed="true"] {
+  background: var(--soft);
+  border-color: var(--teal);
+}
+.role-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--soft);
+  color: var(--teal);
+  display: grid;
+  place-items: center;
+}
+.role-turn {
+  background: var(--soft);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 12px 0;
+}
+.role-turn.my-turn {
+  background: var(--warm);
+}
+.role-turn .korean,
+.role-feedback .korean {
+  font-size: 20px;
+  margin-top: 9px;
+  overflow-wrap: anywhere;
+}
+#role-answer-form {
+  display: grid;
+  gap: 9px;
+  margin: 12px 0;
+}
+.role-mic {
+  text-align: center;
+}
+.role-mic .mic-button {
+  width: 64px;
+  height: 64px;
+  margin: 10px;
+}
+.role-feedback {
+  border-left: 3px solid var(--teal);
+  padding: 10px 13px;
+  margin: 15px 0;
+}
+.role-feedback p {
+  white-space: pre-wrap;
+  font-size: 13px;
+}
+@media (max-width: 1150px) {
+  .reader-layout {
+    grid-template-columns: minmax(0, 1fr) 285px;
+  }
+  .reader-toolbar {
+    gap: 7px;
+  }
+  .reader-heading,
+  .reader-toolbar {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+@media (max-height: 780px) {
+  .reader-heading {
+    padding-top: 8px;
+    padding-bottom: 6px;
+  }
+  .reader-toolbar {
+    padding-bottom: 8px;
+  }
+  .reader-heading .eyebrow {
+    display: none;
+  }
+  .reader-caption {
+    display: none;
+  }
+}

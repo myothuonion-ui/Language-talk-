@@ -5,6 +5,8 @@ const {
   dialog,
   safeStorage,
   session,
+  clipboard,
+  Menu,
 } = require("electron");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -19,6 +21,7 @@ const {
   bytes,
   hash,
   trackNumber,
+  annotationRects,
   wav,
 } = require("./lib/core.cjs");
 const { Providers, MODELS, TUTOR } = require("./lib/providers.cjs");
@@ -131,6 +134,12 @@ app
       ),
       settings: publicSettings(),
     }));
+    handle("paste-key", async () => {
+      const value = (await clipboard.readText()).trim();
+      if (!value || value.length > 600 || /[\r\n\s]/.test(value))
+        throw Error("API key တစ်ခုတည်းကို Copy လုပ်ပြီး Paste နှိပ်ပါ။");
+      return value;
+    });
     handle("settings", (input) => {
       for (const field of [
         "provider",
@@ -159,6 +168,7 @@ app
             "displayName",
             "voice",
             "autoSpeak",
+            "readerFit",
           ])
             if (d[k] !== undefined) store.state.preferences[k] = d[k];
           break;
@@ -177,6 +187,7 @@ app
             quote: text(d.quote, 4000),
             note: text(d.note || "", 6000),
             kind: d.kind,
+            rects: annotationRects(d.rects),
             createdAt: Date.now(),
           };
           store.state.annotations.push(item);
@@ -330,6 +341,8 @@ app
           return providers.catalog(d.provider);
         case "tutor":
           return providers.tutor(d);
+        case "roleplay":
+          return providers.roleplay(d);
         case "section":
           return providers.section(d);
         case "ask":
@@ -643,6 +656,39 @@ app
       (contents, permission, _origin, details) =>
         trustedMedia(contents, permission, details),
     );
+    Menu.setApplicationMenu(
+      Menu.buildFromTemplate([
+        { label: "Language Talk", submenu: [{ role: "quit" }] },
+        {
+          label: "Edit",
+          submenu: [
+            { role: "undo" },
+            { role: "redo" },
+            { type: "separator" },
+            { role: "cut" },
+            { role: "copy" },
+            { role: "paste" },
+            { role: "selectAll" },
+          ],
+        },
+        { label: "View", submenu: [{ role: "togglefullscreen" }] },
+      ]),
+    );
+    win.setMenuBarVisibility(false);
+    win.webContents.on("context-menu", (_event, params) => {
+      if (params.isEditable)
+        Menu.buildFromTemplate([
+          { role: "undo", enabled: params.editFlags.canUndo },
+          { role: "redo", enabled: params.editFlags.canRedo },
+          { type: "separator" },
+          { role: "cut", enabled: params.editFlags.canCut },
+          { role: "copy", enabled: params.editFlags.canCopy },
+          { role: "paste", enabled: params.editFlags.canPaste },
+          { role: "selectAll" },
+        ]).popup({ window: win });
+      else if (params.selectionText)
+        Menu.buildFromTemplate([{ role: "copy" }]).popup({ window: win });
+    });
     win.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
     win.webContents.on("will-navigate", (e) => e.preventDefault());
     win.webContents.on("will-attach-webview", (e) => e.preventDefault());

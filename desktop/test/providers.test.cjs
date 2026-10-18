@@ -141,3 +141,40 @@ test("quota, offline, missing key and timeouts never report success or expose cr
     (e) => !e.message.includes("secret"),
   );
 });
+test("character tutor binds AI and learner roles and never auto-advances or scores pronunciation from text", async () => {
+  const { p, request } = mock(
+    root({
+      reply: "",
+      meaning: "",
+      explanation: "အဓိပ္ပာယ်မှန်ပါသည်။",
+      correction: "",
+      assessment: "PASSED",
+    }),
+  );
+  await p.roleplay({
+    source: "성찬: 안녕하세요.\n지연: 반가워요.",
+    myRole: "지연",
+    aiRole: "성찬",
+    mode: "exact",
+    expected: "반가워요.",
+    prompt: "반가워요.",
+  });
+  const body = request().body;
+  assert.match(body.system_instruction, /learner plays 지연/);
+  assert.match(body.system_instruction, /ONLY 성찬/);
+  assert.match(body.system_instruction, /Do not advance/);
+  assert.match(
+    body.system_instruction,
+    /Never assess pronunciation from transcript/,
+  );
+  await assert.rejects(
+    p.roleplay({
+      source: "x",
+      myRole: "A",
+      aiRole: "A",
+      mode: "exact",
+      prompt: "x",
+    }),
+    /distinct/,
+  );
+});

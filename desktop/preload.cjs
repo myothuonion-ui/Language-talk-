@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require("electron");
 const call = (channel, ...args) => ipcRenderer.invoke(channel, ...args);
 contextBridge.exposeInMainWorld("languageTalk", {
   boot: () => call("boot"),
+  pasteKey: () => call("paste-key"),
   save: (action, data) => call("save", action, data),
   importPdf: () => call("import-pdf"),
   pdf: (id) => call("pdf", id),

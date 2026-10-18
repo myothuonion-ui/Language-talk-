@@ -1,7 +1,7 @@
 {
   "name": "language-talk-desktop",
   "productName": "Language Talk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Language Talk for Windows — Korean books, speaking practice and voice replays with Myanmar explanations",
   "author": "Myo Min Thu",
   "license": "UNLICENSED",
@@ -10,7 +10,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test test/*.test.cjs",
-    "test:ui": "node test/smoke.cjs",
+    "test:ui": "node test/smoke.cjs && node test/study-desk.cjs",
     "build:win": "electron-builder --win nsis portable --x64 --publish never"
   },
   "dependencies": {
