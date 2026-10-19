@@ -990,7 +990,7 @@ dialog form {
   cursor: default;
 }
 
-/* Study Desk: original page owns the window; companion is optional. */
+/* Reading First: a thin bar keeps the original page close to the title bar. */
 [hidden] {
   display: none !important;
 }
@@ -1029,14 +1029,12 @@ body.reading .main {
   width: calc(100% - 58px);
 }
 body.reading .topbar {
-  height: 50px;
-  padding: 0 20px;
-  background: var(--surface);
+  display: none;
 }
 body.reading #content {
   padding: 0;
   max-width: none;
-  height: calc(100vh - 50px);
+  height: 100vh;
 }
 body.reader-focus .sidebar {
   display: none;
@@ -1055,22 +1053,77 @@ body.reading #toast {
   flex-direction: column;
   min-height: 0;
 }
-.reader-heading {
+.reader-minibar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 15px;
-  padding: 13px 20px 9px;
+  gap: 8px;
+  min-height: 34px;
+  padding: 3px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
 }
-.reader-heading > div:first-child {
-  min-width: 0;
+.reader-minibar .row {
+  gap: 4px;
 }
-.reader-heading strong {
+.reader-minibar button {
+  font-size: 12px;
+  line-height: 1.6;
+  padding: 2px 7px;
+  min-height: 26px;
+}
+#reader-controls-toggle[aria-expanded="true"] {
+  color: var(--teal);
+  background: var(--soft);
+}
+.reader-controls {
+  position: fixed;
+  inset: 42px 14px auto 72px;
+  width: auto;
+  margin: 0;
+  max-height: calc(100vh - 70px);
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 14px 50px #0002;
+}
+body.reader-focus .reader-controls {
+  left: 14px;
+}
+.reader-controls-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.reader-controls-heading > div:first-child {
+  flex: 1;
+  min-width: 200px;
+}
+.reader-controls-heading strong {
   display: block;
   font-size: 15px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+.reader-controls .reader-toolbar {
+  padding: 0;
+  gap: 12px;
+}
+.reader-controls .reader-toolbar .row {
+  gap: 6px;
+}
+.reader-controls .reader-toolbar input[type="number"] {
+  width: 65px;
+}
+.reader-controls #reader-controls-close {
+  font-size: 18px;
+  padding: 2px 8px;
 }
 .reader-toolbar {
   padding: 0 20px 12px;
@@ -1160,14 +1213,13 @@ body.reading #toast {
   font-size: 11px;
 }
 .reader-caption {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 5px;
-  padding: 7px 18px;
-  font-size: 11px;
-  color: var(--muted);
-  border-top: 1px solid var(--border);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .reader-footer {
   display: flex;
@@ -1326,23 +1378,11 @@ body.reading #toast {
   .reader-toolbar {
     gap: 7px;
   }
-  .reader-heading,
-  .reader-toolbar {
-    padding-left: 14px;
-    padding-right: 14px;
+  .reader-controls {
+    padding: 14px;
   }
 }
 @media (max-height: 780px) {
-  .reader-heading {
-    padding-top: 8px;
-    padding-bottom: 6px;
-  }
-  .reader-toolbar {
-    padding-bottom: 8px;
-  }
-  .reader-heading .eyebrow {
-    display: none;
-  }
   .reader-caption {
     display: none;
   }

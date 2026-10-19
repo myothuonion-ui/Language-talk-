@@ -290,7 +290,7 @@ function showReader() {
   $("#breadcrumb").textContent = "Language Talk / Study Desk";
   document.body.classList.add("reading");
   document.body.classList.toggle("reader-focus", readerFocus);
-  el.innerHTML = `<section class="study-desk"><div class="reader-heading"><div><div class="eyebrow no-margin">STUDY DESK</div><strong>${esc(book.title)}</strong></div><div class="row"><button id="reader-back" class="small">← စာအုပ်စင်</button>${book.chapters ? '<button id="reader-chapters" class="small">အခန်းများ</button>' : ""}<button id="reader-bookmark" class="small">${state.annotations.some((a) => a.bookId === book.id && a.page === pageNo && a.kind === "save" && !a.quote) ? "မှတ်သားပြီး ✓" : "စာမျက်နှာ မှတ်သား"}</button></div></div><div class="toolbar reader-toolbar"><div class="row"><button id="prev-page" class="small" aria-label="Previous page">←</button><label class="row small">Page <input id="page-input" type="number" min="1" max="${pdf.numPages}" value="${pageNo}"> / ${pdf.numPages}</label><button id="next-page" class="small" aria-label="Next page">→</button></div><div class="row"><select id="reading-mode" aria-label="Reading mode"><option value="pdf" ${readerMode === "pdf" ? "selected" : ""}>မူရင်း PDF</option><option value="text" ${readerMode === "text" ? "selected" : ""}>Text mode</option></select><button id="fit-width" class="small" aria-pressed="${readerFit === "width"}">Fit width</button><button id="fit-page" class="small" aria-pressed="${readerFit === "page"}">Fit page</button><button id="zoom-out" class="small" aria-label="Zoom out">−</button><span id="zoom-label" class="small">${Math.round(zoom * 100)}%</span><button id="zoom-in" class="small" aria-label="Zoom in">＋</button><select id="reader-theme" aria-label="Reader theme">${["paper", "sepia", "night"].map((t) => `<option value="${t}" ${state.preferences.readerTheme === t ? "selected" : ""}>${t === "paper" ? "Original" : t === "sepia" ? "Sepia" : "Night"}</option>`).join("")}</select></div><div class="row"><button id="reader-focus" class="small">${readerFocus ? "Focus ပိတ်" : "Focus"}</button><button id="reader-panel-toggle" class="small" aria-expanded="${readerPanel}">${readerPanel ? "AI / panel ပိတ်" : "AI ဖွင့်"}</button></div></div><div class="reader-layout ${readerPanel ? "" : "panel-hidden"}"><div class="reader-page"><div id="pdf-area" class="pdf-area ${state.preferences.readerTheme}"><div id="pdf-frame" class="pdf-frame"><canvas id="pdf-canvas"></canvas><div id="text-layer" class="textLayer"></div><div id="annotation-layer"></div><div id="pdf-track-layer"></div></div><div id="reader-text-main" ${readerMode === "text" ? "" : "hidden"}></div></div><div class="reader-caption"><span id="reader-mode-caption">မူရင်း PDF · ပုံနဲ့ layout မပြောင်းထားပါ</span><span>Mouse နဲ့စာသားရွေး / ဝါကျကိုနှိပ်ပါ</span></div></div><aside class="reader-side" ${readerPanel ? "" : "hidden"}><div class="row between"><div><div class="eyebrow no-margin">READING COMPANION</div><h3 class="no-margin">စာဖတ်ဖော်</h3></div><button id="reader-side-close" class="small ghost" aria-label="Close companion">×</button></div><div id="selection-tools"></div><section id="teaching-tools"><div class="tabs">${[
+  el.innerHTML = `<section class="study-desk"><div class="reader-minibar"><div class="row"><button id="reader-controls-toggle" class="small ghost" popovertarget="reader-controls" aria-controls="reader-controls" aria-expanded="false">ခလုတ်များ</button><button id="reader-page-label" class="small ghost" popovertarget="reader-controls" popovertargetaction="show" aria-label="Go to page">Page ${pageNo} / ${pdf.numPages}</button></div><div class="row"><button id="prev-page" class="small ghost" aria-label="Previous page">←</button><button id="next-page" class="small ghost" aria-label="Next page">→</button><button id="reader-panel-toggle" class="small ghost" aria-expanded="${readerPanel}">${readerPanel ? "AI ပိတ်" : "AI"}</button><button id="reader-focus" class="small ghost">${readerFocus ? "Focus ပိတ်" : "Focus"}</button></div></div><section id="reader-controls" class="reader-controls" popover="auto" aria-label="စာဖတ်ခလုတ်များ"><div class="reader-controls-heading"><div><div class="eyebrow no-margin">READING FIRST</div><strong>${esc(book.title)}</strong></div><div class="row"><button id="reader-back" class="small">← စာအုပ်စင်</button>${book.chapters ? '<button id="reader-chapters" class="small">အခန်းများ</button>' : ""}<button id="reader-bookmark" class="small">${state.annotations.some((a) => a.bookId === book.id && a.page === pageNo && a.kind === "save" && !a.quote) ? "မှတ်သားပြီး ✓" : "စာမျက်နှာ မှတ်သား"}</button><button id="reader-controls-close" class="small ghost" popovertarget="reader-controls" popovertargetaction="hide" aria-label="Hide reader controls">×</button></div></div><div class="toolbar reader-toolbar"><label class="row small">Page <input id="page-input" type="number" min="1" max="${pdf.numPages}" value="${pageNo}"> / ${pdf.numPages}</label><div class="row"><select id="reading-mode" aria-label="Reading mode"><option value="pdf" ${readerMode === "pdf" ? "selected" : ""}>မူရင်း PDF</option><option value="text" ${readerMode === "text" ? "selected" : ""}>Text mode</option></select><button id="fit-width" class="small" aria-pressed="${readerFit === "width"}">Fit width</button><button id="fit-page" class="small" aria-pressed="${readerFit === "page"}">Fit page</button><button id="zoom-out" class="small" aria-label="Zoom out">−</button><span id="zoom-label" class="small">${Math.round(zoom * 100)}%</span><button id="zoom-in" class="small" aria-label="Zoom in">＋</button><select id="reader-theme" aria-label="Reader theme">${["paper", "sepia", "night"].map((t) => `<option value="${t}" ${state.preferences.readerTheme === t ? "selected" : ""}>${t === "paper" ? "Original" : t === "sepia" ? "Sepia" : "Night"}</option>`).join("")}</select></div></div></section><div class="reader-layout ${readerPanel ? "" : "panel-hidden"}"><div class="reader-page"><div id="pdf-area" class="pdf-area ${state.preferences.readerTheme}"><div id="pdf-frame" class="pdf-frame"><canvas id="pdf-canvas"></canvas><div id="text-layer" class="textLayer"></div><div id="annotation-layer"></div><div id="pdf-track-layer"></div></div><div id="reader-text-main" ${readerMode === "text" ? "" : "hidden"}></div></div><div class="reader-caption"><span id="reader-mode-caption">မူရင်း PDF · ပုံနဲ့ layout မပြောင်းထားပါ</span><span>Mouse နဲ့စာသားရွေး / ဝါကျကိုနှိပ်ပါ</span></div></div><aside class="reader-side" ${readerPanel ? "" : "hidden"}><div class="row between"><div><div class="eyebrow no-margin">READING COMPANION</div><h3 class="no-margin">စာဖတ်ဖော်</h3></div><button id="reader-side-close" class="small ghost" aria-label="Close companion">×</button></div><div id="selection-tools"></div><section id="teaching-tools"><div class="tabs">${[
     ["meaning", "အဓိပ္ပာယ်"],
     ["vocabulary", "ဝေါဟာရ"],
     ["grammar", "Grammar"],
@@ -304,6 +304,19 @@ function showReader() {
     .join(
       "",
     )}</div><div id="reader-panel"></div></section><section id="book-role-panel" hidden></section></aside></div><footer class="reader-footer"><div class="row"><div id="track-controls"></div><button id="track-link" class="small">Track ချိတ်</button><button id="track-import" class="small ghost">Track ဖိုင်များထည့်</button></div><div class="row"><button id="reader-notes" class="small">မှတ်စု</button><button id="reader-roleplay" class="primary small">${icon("mic")} ဇာတ်ကောင်နဲ့ ပြောမယ်</button></div><div id="track-player"></div></footer></section>`;
+  $("#reader-controls").addEventListener("toggle", () => {
+    $("#reader-controls-toggle").setAttribute(
+      "aria-expanded",
+      String($("#reader-controls").matches(":popover-open")),
+    );
+  });
+  $("#reader-page-label").onclick = () =>
+    requestAnimationFrame(() => {
+      if ($("#reader-controls")?.matches(":popover-open")) {
+        $("#page-input").focus();
+        $("#page-input").select();
+      }
+    });
   $("#reader-back").onclick = () => navigate("books");
   if ($("#reader-chapters"))
     $("#reader-chapters").onclick = () => chooseChapter(book.id);
@@ -457,13 +470,21 @@ function canLeaveRole() {
 function updateReaderButtons() {
   if (!$("#reader-focus")) return;
   $("#reader-focus").textContent = readerFocus ? "Focus ပိတ်" : "Focus";
-  $("#reader-panel-toggle").textContent = readerPanel
-    ? "AI / panel ပိတ်"
-    : "AI ဖွင့်";
+  $("#reader-panel-toggle").textContent = readerPanel ? "AI ပိတ်" : "AI";
   $("#reader-panel-toggle").setAttribute("aria-expanded", String(readerPanel));
   for (const f of ["width", "page"])
     $("#fit-" + f).setAttribute("aria-pressed", String(readerFit === f));
   $("#zoom-label").textContent = Math.round(zoom * 100) + "%";
+  $("#reader-page-label").textContent = `Page ${pageNo} / ${pdf.numPages}`;
+  $("#reader-bookmark").textContent = state.annotations.some(
+    (a) =>
+      a.bookId === book.id &&
+      a.page === pageNo &&
+      a.kind === "save" &&
+      !a.quote,
+  )
+    ? "မှတ်သားပြီး ✓"
+    : "စာမျက်နှာ မှတ်သား";
 }
 async function updateReaderLayout() {
   $(".reader-layout").classList.toggle("panel-hidden", !readerPanel);
@@ -502,6 +523,7 @@ async function changePage(n) {
   pageText = "";
   pageImage = "";
   $("#page-input").value = pageNo;
+  updateReaderButtons();
   $("#pdf-area").scrollTo(0, 0);
   await renderPdf();
 }
@@ -2261,6 +2283,7 @@ document.addEventListener("keydown", (e) => {
     book &&
     pdf &&
     !$("dialog[open]") &&
+    !$("#reader-controls")?.matches(":popover-open") &&
     !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)
   ) {
     if (e.key === "ArrowRight") changePage(pageNo + 1);

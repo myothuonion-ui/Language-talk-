@@ -63,23 +63,20 @@ jobs:
       - uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main'
         with:
-          tag_name: windows-v0.2.0
-          name: Language Talk for Windows v0.2.0 · Study Desk
+          tag_name: windows-v0.2.1
+          name: Language Talk for Windows v0.2.1 · Reading First
           prerelease: true
           make_latest: false
           body: |
-            Study Desk update for Language Talk. The app name and existing local data are preserved.
+            Reading First brings the original PDF up under a thin reader bar, replacing the three stacked reader headers.
 
-            - Original PDF pages with a compact navigation rail and optional companion panel
-            - Focus, Fit width / Fit page, whole-page zoom and separate main Text mode
-            - Native API key Paste buttons, Ctrl+V, and right-click editing menu
-            - Source-position highlights and underlines; bold in Text mode; page bookmarks and notebook links
-            - Printed PDF Track hotspots and persistent audio by book and Track number
-            - Choose your book character; AI plays the other characters; exact or free conversation
-            - Explicit Next, optional microphone, stop to read, Myanmar feedback
-            - Original user and AI audio paired in Replays with speaker filters, speed and A–B repeat
-            - New PDFs supported; manual character mapping when dialogue cannot be detected
-            - Both bundled Korean books, daily practice, native Gemini Live and encrypted per-user keys
+            - Controls opens an overlay toolbar without reducing the PDF reading area
+            - Close controls with the close button, Escape or a click outside
+            - Full book title, bookshelf, chapters, page bookmarks, page input, Fit width/page, zoom, Text mode and reader themes in the overlay
+            - Page shortcuts, previous/next, Focus and AI toggle stay available in the thin bar
+            - App status and API settings remain available in Me
+            - Existing source annotations, Track playback, character practice, paired recordings and Replays are included
+            - App name and local data remain compatible with the previous Windows release
 
             Windows 10/11 x64. Use Setup to install or Portable to run without installation.
             API-backed features require your own Gemini/NVIDIA key and internet.

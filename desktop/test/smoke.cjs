@@ -41,6 +41,14 @@ const os = require("node:os");
       timeout: 30000,
     });
     const page = await app.firstWindow();
+    const openReaderControls = async () => {
+      if (
+        !(await page
+          .locator("#reader-controls")
+          .evaluate((e) => e.matches(":popover-open")))
+      )
+        await page.locator("#reader-controls-toggle").click();
+    };
     await page.setViewportSize({ width: 1380, height: 900 });
     fs.mkdirSync(path.join(__dirname, "../test-output"), { recursive: true });
     page.on("pageerror", (e) => errors.push(e.message));
@@ -57,11 +65,13 @@ const os = require("node:os");
       () => document.querySelector("#pdf-canvas")?.height > 0,
     );
     await page.waitForTimeout(500);
+    await openReaderControls();
     await page.locator("#page-input").fill("13");
     await page.locator("#page-input").press("Tab");
     await page.waitForFunction(() =>
       document.querySelector("#text-layer")?.textContent.includes("안녕하세요"),
     );
+    await page.locator("#reader-controls-close").click();
     await page.screenshot({
       path: path.join(__dirname, "../test-output/reader.png"),
     });

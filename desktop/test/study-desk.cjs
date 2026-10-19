@@ -40,6 +40,14 @@ const { Store, wav } = require("../lib/core.cjs");
       env: { ...process.env, LANGUAGE_TALK_TEST_DIR: dir },
     });
     const p = await app.firstWindow();
+    const openReaderControls = async () => {
+      if (
+        !(await p
+          .locator("#reader-controls")
+          .evaluate((e) => e.matches(":popover-open")))
+      )
+        await p.locator("#reader-controls-toggle").click();
+    };
     p.setDefaultTimeout(15000);
     await p.setViewportSize({ width: 1380, height: 900 });
     p.on("pageerror", (e) => errors.push(e.message));
@@ -75,6 +83,45 @@ const { Store, wav } = require("../lib/core.cjs");
         .querySelector("#text-layer")
         ?.textContent.includes("처음 뵙겠습니다"),
     );
+    assert.equal(await p.locator(".topbar").isVisible(), false);
+    assert.equal(
+      await p
+        .locator("#reader-controls")
+        .evaluate((e) => e.matches(":popover-open")),
+      false,
+    );
+    const areaClosed = await p.locator("#pdf-area").boundingBox();
+    assert.ok(areaClosed.y <= 40, JSON.stringify(areaClosed));
+    assert.ok((await p.locator(".reader-minibar").boundingBox()).height <= 40);
+    await openReaderControls();
+    assert.ok(
+      (
+        await p.locator(".reader-controls-heading strong").textContent()
+      ).includes("For Beginners"),
+    );
+    const areaOpen = await p.locator("#pdf-area").boundingBox();
+    assert.equal(areaOpen.y, areaClosed.y);
+    assert.equal(areaOpen.height, areaClosed.height);
+    await p.locator("#reader-controls-close").click();
+    await p.waitForFunction(
+      () =>
+        !document.querySelector("#reader-controls").matches(":popover-open"),
+    );
+    await openReaderControls();
+    await p.keyboard.press("Escape");
+    await p.waitForFunction(
+      () =>
+        !document.querySelector("#reader-controls").matches(":popover-open"),
+    );
+    await openReaderControls();
+    await p.locator(".reader-footer").click({ position: { x: 200, y: 3 } });
+    await p.waitForFunction(
+      () =>
+        !document.querySelector("#reader-controls").matches(":popover-open"),
+    );
+    await p.locator("#reader-page-label").click();
+    await p.waitForFunction(() => document.activeElement?.id === "page-input");
+    await p.keyboard.press("Escape");
     const initial = await p
       .locator("#pdf-canvas")
       .evaluate((c) => c.getBoundingClientRect().width);
@@ -87,21 +134,26 @@ const { Store, wav } = require("../lib/core.cjs");
     );
     await p.locator("#reader-focus").click();
     assert.equal(await p.locator(".sidebar").isVisible(), false);
+    await openReaderControls();
     await p.locator("#fit-page").click();
     await p.waitForTimeout(400);
     const fit = await p.locator("#pdf-frame").boundingBox(),
       area = await p.locator("#pdf-area").boundingBox();
     assert.ok(fit.height <= area.height + 1);
+    await openReaderControls();
     await p.locator("#fit-width").click();
     const before = await p.locator("#pdf-canvas").evaluate((c) => c.width);
+    await openReaderControls();
     await p.locator("#zoom-in").click();
     await p.waitForFunction(
       (w) => document.querySelector("#pdf-canvas").width > w,
       before,
     );
+    await openReaderControls();
     await p.locator("#zoom-out").click();
     await p.locator("#reader-focus").click();
     await p.locator("#reader-panel-toggle").click();
+    await p.locator(".reader-footer").click({ position: { x: 200, y: 3 } });
     await p.waitForTimeout(600);
     await p.screenshot({ path: path.join(out, "study-desk.png") });
     await p.locator('.pdf-track-hit[data-track="3"]').click();
@@ -127,6 +179,7 @@ const { Store, wav } = require("../lib/core.cjs");
     await p.locator('[data-annotate="bold"]').click();
     assert.equal(await p.locator("#reading-mode").inputValue(), "text");
     assert.ok((await p.locator("#reader-text-main strong").count()) > 0);
+    await openReaderControls();
     await p.locator("#reading-mode").selectOption("pdf");
     await p.locator("#reader-roleplay").click();
     await p.locator('[data-role-choice="지연"]').click();
@@ -214,7 +267,8 @@ const { Store, wav } = require("../lib/core.cjs");
       });
     }, importedPdf);
     await p.locator("#import-pdf").click();
-    await p.waitForSelector("#page-input");
+    await p.waitForSelector("#reader-controls-toggle");
+    await openReaderControls();
     await p.locator("#page-input").fill("15");
     await p.locator("#page-input").press("Tab");
     await p.waitForFunction(() =>
@@ -233,6 +287,14 @@ const { Store, wav } = require("../lib/core.cjs");
     }));
     assert.ok(dims.scroll <= dims.w);
     await p.screenshot({ path: path.join(out, "study-desk-small.png") });
+    await openReaderControls();
+    const menu = await p.locator("#reader-controls").boundingBox();
+    assert.ok(
+      menu.x >= 0 && menu.x + menu.width <= 960 && menu.y + menu.height <= 700,
+      JSON.stringify(menu),
+    );
+    await p.waitForTimeout(500);
+    await p.screenshot({ path: path.join(out, "reading-first-controls.png") });
     assert.deepEqual(errors, []);
     await app.close();
     app = null;
